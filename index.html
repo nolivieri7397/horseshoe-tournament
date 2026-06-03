@@ -1,94 +1,472 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Horseshoe Tournament</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-sans); }
-.container { padding: 1rem; max-width: 100%; }
-.section { margin-bottom: 1.5rem; }
-h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1rem; }
-h3 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.75rem; }
-.input-row { display: flex; gap: 8px; margin-bottom: 0.75rem; }
-input[type=text], input[type=number], select { flex: 1; }
-.btn { padding: 8px 16px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; font-size: 14px; }
-.btn:hover { background: var(--color-background-secondary); }
-.btn-primary { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
-.btn-primary:hover { opacity: 0.85; }
-.btn-danger { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
-.player-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 4px 12px; font-size: 13px; margin: 4px; }
-.player-chip button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 16px; line-height: 1; padding: 0; }
-.player-chip button:hover { color: var(--color-text-danger); }
-.chips-wrap { display: flex; flex-wrap: wrap; margin-bottom: 0.75rem; min-height: 40px; }
-.bracket-wrap { overflow-x: auto; }
-.bracket { display: flex; gap: 24px; align-items: flex-start; }
-.round { display: flex; flex-direction: column; gap: 0; min-width: 160px; }
-.round-label { font-size: 12px; color: var(--color-text-secondary); text-align: center; margin-bottom: 8px; font-weight: 500; }
-.match { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); overflow: hidden; margin-bottom: 16px; background: var(--color-background-primary); }
-.match-player { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 13px; border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; gap: 6px; }
-.match-player:last-child { border-bottom: none; }
-.match-player:hover { background: var(--color-background-secondary); }
-.match-player.winner { background: var(--color-background-success); color: var(--color-text-success); font-weight: 500; }
-.match-player.tbd { color: var(--color-text-secondary); font-style: italic; }
-.score-input { width: 36px; border: 0.5px solid var(--color-border-secondary); border-radius: 4px; text-align: center; font-size: 13px; padding: 2px 4px; background: var(--color-background-primary); color: var(--color-text-primary); }
-.notify-section { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
-.notify-form { display: flex; flex-direction: column; gap: 8px; }
-.status-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
-.badge { font-size: 12px; padding: 3px 10px; border-radius: 99px; font-weight: 500; }
-.badge-blue { background: var(--color-background-info); color: var(--color-text-info); }
-.badge-green { background: var(--color-background-success); color: var(--color-text-success); }
-.badge-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
-.empty-state { color: var(--color-text-secondary); font-size: 14px; text-align: center; padding: 2rem; border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); }
-.notif-log { margin-top: 0.75rem; max-height: 100px; overflow-y: auto; }
-.notif-item { font-size: 12px; color: var(--color-text-secondary); padding: 4px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.spacer { flex: 1; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161921;
+    --surface2: #1e2230;
+    --border: rgba(255,255,255,0.08);
+    --accent: #f0a500;
+    --accent2: #e05c00;
+    --text: #f0f0f0;
+    --muted: #7a8099;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --radius: 10px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--text); }
+  .nav-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+  }
+  .hero h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 16px; max-width: 480px; margin: 0 auto 2rem; }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .step.active { color: var(--text); }
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--muted);
+  }
+  .step.active .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .step.done .step-num {
+    background: var(--success);
+    border-color: var(--success);
+    color: #000;
+  }
+  .step-divider { width: 32px; height: 1px; background: var(--border); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* INPUTS */
+  .input-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  input[type=text], select {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent); }
+  input[type=number].score-box {
+    width: 44px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 4px 6px;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+  }
+  input[type=number].score-box:focus { border-color: var(--accent); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: rgba(255,255,255,0.2); background: #252b3b; }
+  .btn-accent {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { background: #ffb820; border-color: #ffb820; }
+  .btn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: rgba(231,76,60,0.1); }
+
+  /* PLAYER CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; min-height: 36px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 5px 12px 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    animation: popIn 0.15s ease;
+  }
+  @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .chip-remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 16px; line-height: 1;
+    padding: 0; transition: color 0.15s;
+  }
+  .chip-remove:hover { color: var(--danger); }
+
+  /* FORMAT SELECT */
+  .format-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+  .format-opt {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .format-opt:hover { border-color: rgba(240,165,0,0.4); }
+  .format-opt.selected { border-color: var(--accent); background: rgba(240,165,0,0.08); }
+  .format-opt .fmt-icon { font-size: 22px; margin-bottom: 4px; }
+  .format-opt .fmt-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .format-opt .fmt-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* STATUS BAR */
+  .status-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .stat-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 5px 14px;
+    font-size: 13px; font-weight: 500;
+  }
+  .stat-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-amber { background: var(--accent); }
+  .dot-green { background: var(--success); }
+  .dot-blue { background: #4e9ef5; }
+
+  /* BRACKET */
+  .bracket-scroll { overflow-x: auto; padding-bottom: 1rem; }
+  .bracket { display: flex; gap: 0; align-items: flex-start; width: max-content; }
+  .round-col { display: flex; flex-direction: column; min-width: 180px; }
+  .round-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 0 0 10px 12px;
+  }
+  .matches-col { display: flex; flex-direction: column; }
+
+  .match-wrap { display: flex; align-items: center; }
+  .match {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    width: 160px;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .match:hover { border-color: rgba(255,255,255,0.15); }
+
+  .match-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 6px;
+    min-height: 38px;
+  }
+  .match-row:last-child { border-bottom: none; }
+  .match-row:hover { background: rgba(255,255,255,0.04); }
+  .match-row.winner {
+    background: rgba(46,204,113,0.1);
+    color: var(--success);
+  }
+  .match-row.winner .match-name { font-weight: 600; }
+  .match-row.tbd { color: var(--muted); font-style: italic; cursor: default; }
+  .match-row.tbd:hover { background: transparent; }
+  .match-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seed { font-size: 10px; color: var(--muted); min-width: 14px; }
+
+  /* CONNECTOR LINES */
+  .connector {
+    display: flex; flex-direction: column; justify-content: center;
+    width: 24px; flex-shrink: 0;
+    position: relative;
+  }
+  .conn-top, .conn-bot {
+    flex: 1;
+    border-right: 1px solid var(--border);
+  }
+  .conn-top { border-bottom: 1px solid var(--border); }
+  .conn-bot { border-top: 1px solid var(--border); }
+  .conn-mid { height: 1px; background: var(--border); width: 100%; }
+
+  /* CHAMPION */
+  .champion-card {
+    background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(224,92,0,0.1));
+    border: 1px solid rgba(240,165,0,0.4);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 1.5rem;
+    animation: popIn 0.3s ease;
+  }
+  .champion-icon { font-size: 32px; }
+  .champion-label { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .champion-name { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; text-transform: uppercase; }
+
+  /* NOTIFY */
+  .notify-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  .notify-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .notif-log { margin-top: 1rem; }
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .notif-time { color: var(--accent); font-weight: 600; white-space: nowrap; font-size: 12px; min-width: 52px; }
+  .notif-text { color: var(--muted); }
+  .notif-text strong { color: var(--text); }
+
+  /* EMPTY */
+  .empty {
+    text-align: center; padding: 3rem 1rem; color: var(--muted);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 0.75rem; opacity: 0.4; }
+  .empty p { font-size: 14px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 600px) {
+    .format-grid { grid-template-columns: 1fr; }
+    .steps { gap: 4px; }
+    .step-divider { width: 16px; }
+  }
 </style>
+</head>
+<body>
 
-<div class="container">
-  <h2><i class="ti ti-trophy" aria-hidden="true"></i> Horseshoe Tournament</h2>
+<nav>
+  <div class="nav-logo">🧲 Shoe<span>Bracket</span></div>
+  <div class="nav-badge">Live</div>
+</nav>
 
-  <div class="section" id="setup-section">
-    <h3>Add players</h3>
-    <div class="input-row">
-      <input type="text" id="player-input" placeholder="Player name" />
-      <button class="btn btn-primary" onclick="addPlayer()"><i class="ti ti-plus"></i> Add</button>
+<div class="page">
+  <div class="hero">
+    <h1>Horseshoe <span>Tournament</span><br>Bracket Generator</h1>
+    <p>Add players, pick a format, and run your tournament with live scoring and player alerts.</p>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="step active" id="step1"><div class="step-num">1</div> Add Players</div>
+    <div class="step-divider"></div>
+    <div class="step" id="step2"><div class="step-num">2</div> Choose Format</div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3"><div class="step-num">3</div> Run Tournament</div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="setup-panel">
+    <div class="card">
+      <div class="card-title"><div class="dot"></div> Add Players</div>
+      <div class="input-row">
+        <input type="text" id="player-input" placeholder="Enter player name…" />
+        <button class="btn btn-accent" onclick="addPlayer()">+ Add</button>
+      </div>
+      <div class="chips" id="chips">
+        <span style="font-size:13px; color:var(--muted); align-self:center;">No players yet — add some above</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; margin-top:0.25rem;">
+        <span id="player-count">0 players added</span>
+        <span>·</span>
+        <span id="bracket-size-hint"></span>
+      </div>
     </div>
-    <div class="chips-wrap" id="chips"></div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <select id="format-select" style="max-width:180px;">
-        <option value="single">Single elimination</option>
-        <option value="double">Double elimination</option>
-        <option value="roundrobin">Round robin</option>
-      </select>
-      <button class="btn btn-primary" onclick="generateBracket()" id="gen-btn" disabled>
-        Generate bracket ↗
+
+    <div class="card">
+      <div class="card-title"><div class="dot"></div> Choose Format</div>
+      <div class="format-grid">
+        <div class="format-opt selected" onclick="selectFormat('single', this)">
+          <div class="fmt-icon">🏆</div>
+          <div class="fmt-name">Single Elim</div>
+          <div class="fmt-desc">One loss and you're out</div>
+        </div>
+        <div class="format-opt" onclick="selectFormat('double', this)">
+          <div class="fmt-icon">🔁</div>
+          <div class="fmt-name">Double Elim</div>
+          <div class="fmt-desc">Two losses to eliminate</div>
+        </div>
+        <div class="format-opt" onclick="selectFormat('roundrobin', this)">
+          <div class="fmt-icon">⚡</div>
+          <div class="fmt-name">Round Robin</div>
+          <div class="fmt-desc">Everyone plays everyone</div>
+        </div>
+      </div>
+      <button class="btn btn-accent" id="gen-btn" disabled onclick="generateBracket()" style="width:100%; font-size:16px; padding:14px;">
+        Generate Bracket →
       </button>
-      <button class="btn" onclick="resetAll()">Reset</button>
     </div>
   </div>
 
-  <div id="bracket-section" style="display:none;">
+  <!-- BRACKET PANEL -->
+  <div id="bracket-panel" style="display:none;">
+    <div id="champion-area"></div>
+
     <div class="status-bar" id="status-bar"></div>
-    <div class="section">
-      <h3>Bracket — click a player to mark as winner, enter scores</h3>
-      <div class="bracket-wrap">
+
+    <div class="card">
+      <div class="card-title"><div class="dot"></div> Bracket — click a player to advance them</div>
+      <div class="bracket-scroll">
         <div class="bracket" id="bracket"></div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="notify-section">
-        <h3><i class="ti ti-bell" aria-hidden="true"></i> Player notifications</h3>
-        <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:0.75rem;">Send an SMS-style alert to a player that they're almost up.</p>
-        <div class="notify-form">
-          <div class="input-row">
-            <select id="notify-player" style="flex:1;"></select>
-            <button class="btn btn-primary" onclick="sendNotification()"><i class="ti ti-send"></i> Alert</button>
-          </div>
-          <input type="text" id="notify-msg" placeholder="Custom message (optional)" />
-        </div>
-        <div class="notif-log" id="notif-log"></div>
+    <div class="notify-card">
+      <div class="card-title" style="margin-bottom:1rem;"><div class="dot"></div> Notify a Player</div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:1rem;">Alert a player that their match is coming up soon.</p>
+      <div class="notify-row">
+        <select id="notify-player" style="flex:1; max-width:220px;"></select>
+        <input type="text" id="notify-msg" placeholder="Custom message (optional)" style="flex:2;" />
+        <button class="btn btn-accent" onclick="sendNotification()">Send Alert</button>
       </div>
+      <div class="notif-log" id="notif-log"></div>
+    </div>
+
+    <div style="margin-top:1.5rem; text-align:center;">
+      <button class="btn btn-danger" onclick="resetAll()">↺ Reset Tournament</button>
     </div>
   </div>
 </div>
+
+<footer>ShoeBracket · Built for horseshoe tournaments · Notify players · Track live scores</footer>
 
 <script>
 let players = [];
@@ -101,24 +479,56 @@ playerInput.addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(
 
 function addPlayer() {
   const name = playerInput.value.trim();
-  if (!name || players.includes(name)) { playerInput.value = ''; return; }
+  if (!name) return;
+  if (players.map(p=>p.toLowerCase()).includes(name.toLowerCase())) {
+    playerInput.select(); return;
+  }
   players.push(name);
   playerInput.value = '';
+  playerInput.focus();
   renderChips();
-  document.getElementById('gen-btn').disabled = players.length < 2;
+  updateGenBtn();
+  updateSteps();
 }
 
-function removePlayer(name) {
-  players = players.filter(p => p !== name);
+function removePlayer(idx) {
+  players.splice(idx, 1);
   renderChips();
-  document.getElementById('gen-btn').disabled = players.length < 2;
+  updateGenBtn();
+  updateSteps();
 }
 
 function renderChips() {
   const wrap = document.getElementById('chips');
-  wrap.innerHTML = players.map(p =>
-    `<span class="player-chip">${p}<button onclick="removePlayer('${p.replace(/'/g,"\\'")}')">×</button></span>`
-  ).join('');
+  if (!players.length) {
+    wrap.innerHTML = `<span style="font-size:13px; color:var(--muted); align-self:center;">No players yet — add some above</span>`;
+  } else {
+    wrap.innerHTML = players.map((p, i) =>
+      `<span class="chip">${p}<button class="chip-remove" onclick="removePlayer(${i})">×</button></span>`
+    ).join('');
+  }
+  document.getElementById('player-count').textContent = `${players.length} player${players.length !== 1 ? 's' : ''} added`;
+  const size = nextPow2(players.length);
+  document.getElementById('bracket-size-hint').textContent = players.length >= 2 ? `Bracket size: ${size}` : '';
+}
+
+function selectFormat(f, el) {
+  format = f;
+  document.querySelectorAll('.format-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  updateSteps();
+}
+
+function updateGenBtn() {
+  document.getElementById('gen-btn').disabled = players.length < 2;
+}
+
+function updateSteps() {
+  const s1 = document.getElementById('step1');
+  const s2 = document.getElementById('step2');
+  if (players.length >= 2) { s1.className = 'step done'; s1.querySelector('.step-num').textContent = '✓'; }
+  else { s1.className = 'step active'; s1.querySelector('.step-num').textContent = '1'; }
+  s2.className = players.length >= 2 ? 'step active' : 'step';
 }
 
 function shuffle(arr) {
@@ -130,36 +540,36 @@ function shuffle(arr) {
   return a;
 }
 
-function nextPowerOf2(n) {
-  let p = 1; while (p < n) p *= 2; return p;
-}
+function nextPow2(n) { let p = 1; while (p < n) p *= 2; return p; }
 
 function generateBracket() {
-  format = document.getElementById('format-select').value;
   const shuffled = shuffle(players);
-  const size = nextPowerOf2(shuffled.length);
+  const size = nextPow2(shuffled.length);
   const seeded = [...shuffled];
   while (seeded.length < size) seeded.push(null);
 
   bracket = [];
-  const r1matches = [];
+  const r1 = [];
   for (let i = 0; i < size; i += 2) {
-    r1matches.push({ p1: seeded[i], p2: seeded[i+1], s1: '', s2: '', winner: null, id: `0-${i/2}` });
+    r1.push({ p1: seeded[i], p2: seeded[i+1], s1: '', s2: '', winner: null, id: `0-${i/2}` });
   }
-  bracket.push(r1matches);
-
-  let prev = r1matches;
+  bracket.push(r1);
+  let prev = r1;
   while (prev.length > 1) {
     const next = [];
     for (let i = 0; i < prev.length; i += 2) {
-      next.push({ p1: null, p2: null, s1: '', s2: '', winner: null, id: `${bracket.length}-${i/2}`, from: [prev[i].id, prev[i+1].id] });
+      next.push({ p1: null, p2: null, s1: '', s2: '', winner: null, id: `${bracket.length}-${i/2}`, from: [prev[i].id, prev[i+1] ? prev[i+1].id : null] });
     }
     bracket.push(next);
     prev = next;
   }
 
-  document.getElementById('setup-section').style.display = '';
-  document.getElementById('bracket-section').style.display = '';
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('bracket-panel').style.display = '';
+  document.getElementById('step2').className = 'step done';
+  document.getElementById('step2').querySelector('.step-num').textContent = '✓';
+  document.getElementById('step3').className = 'step active';
+
   renderBracket();
   renderNotifyPlayers();
   updateStatus();
@@ -168,39 +578,71 @@ function generateBracket() {
 function renderBracket() {
   const el = document.getElementById('bracket');
   el.innerHTML = '';
+  const totalRounds = bracket.length;
+
   bracket.forEach((round, ri) => {
-    const roundDiv = document.createElement('div');
-    roundDiv.className = 'round';
-    const totalRounds = bracket.length;
-    const label = ri === totalRounds - 1 ? 'Final' : ri === totalRounds - 2 ? 'Semifinals' : `Round ${ri + 1}`;
-    roundDiv.innerHTML = `<div class="round-label">${label}</div>`;
-    const spacer = Math.pow(2, ri) * 8;
+    const col = document.createElement('div');
+    col.className = 'round-col';
+    const labels = ['Final', 'Semifinals', 'Quarterfinals'];
+    const label = ri >= totalRounds - labels.length
+      ? labels[totalRounds - 1 - ri] || `Round ${ri+1}`
+      : `Round ${ri+1}`;
+    col.innerHTML = `<div class="round-header">${label}</div>`;
+
+    const matchesCol = document.createElement('div');
+    matchesCol.className = 'matches-col';
+
+    const spacing = Math.pow(2, ri);
+    const topPad = (spacing - 1) * 38;
+    const betweenPad = (spacing * 2 - 1) * 38;
+
     round.forEach((match, mi) => {
-      const matchDiv = document.createElement('div');
-      matchDiv.className = 'match';
-      if (ri > 0) matchDiv.style.marginTop = `${spacer}px`;
-      matchDiv.innerHTML = playerRow(match, 'p1', 's1') + playerRow(match, 'p2', 's2');
-      roundDiv.appendChild(matchDiv);
+      const wrap = document.createElement('div');
+      wrap.className = 'match-wrap';
+      wrap.style.marginTop = mi === 0 ? `${topPad}px` : `${betweenPad}px`;
+
+      const matchEl = document.createElement('div');
+      matchEl.className = 'match';
+      matchEl.innerHTML = buildRow(match, 'p1', 's1', 1) + buildRow(match, 'p2', 's2', 2);
+      wrap.appendChild(matchEl);
+
+      if (ri < totalRounds - 1) {
+        const conn = document.createElement('div');
+        conn.className = 'connector';
+        conn.innerHTML = `<div class="conn-top"></div><div class="conn-mid"></div><div class="conn-bot"></div>`;
+        wrap.appendChild(conn);
+      }
+
+      matchesCol.appendChild(wrap);
     });
-    el.appendChild(roundDiv);
+
+    col.appendChild(matchesCol);
+    el.appendChild(col);
   });
 }
 
-function playerRow(match, pk, sk) {
+function buildRow(match, pk, sk, seed) {
   const name = match[pk];
   const score = match[sk];
   const isWinner = match.winner === name && name !== null;
   const isTbd = name === null;
-  const cls = isWinner ? 'match-player winner' : isTbd ? 'match-player tbd' : 'match-player';
+  let cls = 'match-row';
+  if (isWinner) cls += ' winner';
+  if (isTbd) cls += ' tbd';
   const displayName = isTbd ? 'TBD' : name;
-  const scoreEl = (!isTbd) ? `<input class="score-input" type="number" min="0" value="${score}" placeholder="0" onchange="setScore('${match.id}','${sk}',this.value)" onclick="event.stopPropagation()" />` : '';
-  const onclick = (!isTbd) ? `onclick="setWinner('${match.id}','${pk}')"` : '';
-  return `<div class="${cls}" ${onclick} title="${!isTbd ? 'Click to mark as winner' : ''}">${displayName}<span style="display:flex;align-items:center;gap:4px;">${scoreEl}</span></div>`;
+  const onclick = !isTbd ? `onclick="setWinner('${match.id}','${pk}')"` : '';
+  const scoreEl = !isTbd
+    ? `<input type="number" class="score-box" min="0" value="${score}" placeholder="-" onchange="setScore('${match.id}','${sk}',this.value)" onclick="event.stopPropagation()" />`
+    : '';
+  return `<div class="${cls}" ${onclick} title="${!isTbd ? 'Click to mark as winner' : ''}">
+    <span class="seed">#${seed}</span>
+    <span class="match-name">${displayName}</span>
+    ${scoreEl}
+  </div>`;
 }
 
 function findMatch(id) {
-  for (const round of bracket) for (const m of round) if (m.id === id) return m;
-  return null;
+  for (const r of bracket) for (const m of r) if (m.id === id) return m;
 }
 
 function setScore(id, sk, val) {
@@ -212,31 +654,43 @@ function setWinner(id, pk) {
   const m = findMatch(id);
   if (!m || !m[pk]) return;
   m.winner = m[pk];
-  propagateWinner(id, m.winner);
-  renderBracket();
-  updateStatus();
-}
-
-function propagateWinner(fromId, winner) {
   for (const round of bracket) {
     for (const match of round) {
       if (!match.from) continue;
-      const idx = match.from.indexOf(fromId);
-      if (idx === 0) { match.p1 = winner; }
-      if (idx === 1) { match.p2 = winner; }
+      const idx = match.from.indexOf(id);
+      if (idx === 0) match.p1 = m.winner;
+      if (idx === 1) match.p2 = m.winner;
     }
+  }
+  renderBracket();
+  updateStatus();
+  checkChampion();
+}
+
+function checkChampion() {
+  const final = bracket[bracket.length - 1][0];
+  const area = document.getElementById('champion-area');
+  if (final.winner) {
+    area.innerHTML = `
+      <div class="champion-card">
+        <div class="champion-icon">🏆</div>
+        <div>
+          <div class="champion-label">Tournament Champion</div>
+          <div class="champion-name">${final.winner}</div>
+        </div>
+      </div>`;
+  } else {
+    area.innerHTML = '';
   }
 }
 
 function updateStatus() {
   const total = bracket.reduce((s, r) => s + r.length, 0);
   const done = bracket.reduce((s, r) => s + r.filter(m => m.winner).length, 0);
-  const champion = bracket[bracket.length - 1][0].winner;
-  const bar = document.getElementById('status-bar');
-  bar.innerHTML = `
-    <span class="badge badge-blue"><i class="ti ti-users" aria-hidden="true"></i> ${players.length} players</span>
-    <span class="badge badge-amber"><i class="ti ti-tournament" aria-hidden="true"></i> ${done}/${total} matches done</span>
-    ${champion ? `<span class="badge badge-green"><i class="ti ti-trophy" aria-hidden="true"></i> Champion: ${champion}</span>` : ''}
+  document.getElementById('status-bar').innerHTML = `
+    <div class="stat-pill"><div class="dot dot-blue"></div> ${players.length} Players</div>
+    <div class="stat-pill"><div class="dot dot-amber"></div> ${done} / ${total} Matches Done</div>
+    <div class="stat-pill"><div class="dot dot-green"></div> ${bracket.length} Rounds</div>
   `;
 }
 
@@ -247,27 +701,38 @@ function renderNotifyPlayers() {
 
 function sendNotification() {
   const player = document.getElementById('notify-player').value;
-  const customMsg = document.getElementById('notify-msg').value.trim();
-  const msg = customMsg || `${player}, you're almost up! Get ready for your horseshoe match.`;
+  const custom = document.getElementById('notify-msg').value.trim();
+  const msg = custom || `${player}, your match is coming up — get ready!`;
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   notifLog.unshift({ player, msg, time });
   renderNotifLog();
   document.getElementById('notify-msg').value = '';
-  alert(`📱 Notification sent to ${player}:\n"${msg}"\n\n(In a real app, this would send an SMS via Twilio or similar.)`);
+  alert(`📱 Alert sent to ${player}:\n"${msg}"\n\n(Real SMS requires Twilio backend integration.)`);
 }
 
 function renderNotifLog() {
   const log = document.getElementById('notif-log');
   if (!notifLog.length) { log.innerHTML = ''; return; }
   log.innerHTML = notifLog.map(n =>
-    `<div class="notif-item"><strong>${n.time}</strong> → ${n.player}: ${n.msg}</div>`
+    `<div class="notif-item"><span class="notif-time">${n.time}</span><span class="notif-text"><strong>${n.player}</strong> — ${n.msg}</span></div>`
   ).join('');
 }
 
 function resetAll() {
+  if (!confirm('Reset the whole tournament? This cannot be undone.')) return;
   players = []; bracket = []; notifLog = [];
   renderChips();
-  document.getElementById('bracket-section').style.display = 'none';
-  document.getElementById('gen-btn').disabled = true;
+  updateGenBtn();
+  document.getElementById('bracket-panel').style.display = 'none';
+  document.getElementById('setup-panel').style.display = '';
+  document.getElementById('champion-area').innerHTML = '';
+  document.getElementById('step1').className = 'step active';
+  document.getElementById('step1').querySelector('.step-num').textContent = '1';
+  document.getElementById('step2').className = 'step';
+  document.getElementById('step2').querySelector('.step-num').textContent = '2';
+  document.getElementById('step3').className = 'step';
+  document.getElementById('step3').querySelector('.step-num').textContent = '3';
 }
 </script>
+</body>
+</html>
