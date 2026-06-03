@@ -416,45 +416,43 @@ function mkMatch(id,t1,t2,bracket){
 
 function buildLB(){
   LB=[];
-  // LB Round 1: losers from WB R1 face each other
-  const wbR1=WB[0].filter(m=>!m.bye);
-  if(wbR1.length===0)return;
-  const lb0=[];
-  for(let i=0;i<wbR1.length;i+=2){
-    const m=mkMatch(`L0-${lb0.length}`,null,null,'L');
-    m.fromLoss=[wbR1[i].id];
-    if(i+1<wbR1.length)m.fromLoss.push(wbR1[i+1].id);
-    lb0.push(m);
-  }
-  if(lb0.length>0)LB.push(lb0);
-  // Continue LB rounds: winners of prev LB round + losers from next WB round
-  let lbPrev=lb0,wbRound=1;
-  while(lbPrev.length>1||wbRound<WB.length){
-    const next=[];
-    // Mix in losers from the corresponding WB round
-    const wbLosers=wbRound<WB.length?WB[wbRound].filter(m=>!m.bye):[];
-    const maxLen=Math.max(lbPrev.length,Math.ceil(wbLosers.length/2));
-    for(let i=0;i<lbPrev.length;i++){
-      const m=mkMatch(`L${LB.length}-${next.length}`,null,null,'L');
-      m.from=[lbPrev[i].id];
-      // Drop in a WB loser as opponent
-      if(wbLosers[i]) m.fromLoss=[wbLosers[i].id];
-      next.push(m);
+  // Each WB round produces losers who drop into the LB
+  // LB is built round by round, max rounds = 2*(WB.length-1)
+  let lbPrev=[];
+  for(let wbRi=0;wbRi<WB.length-1;wbRi++){
+    const wbLosers=WB[wbRi].filter(m=>!m.bye);
+    if(!wbLosers.length)continue;
+    // Round A: LB survivors vs WB dropins
+    const roundA=[];
+    if(lbPrev.length===0){
+      // First LB round: pair WB losers against each other
+      for(let i=0;i+1<wbLosers.length;i+=2){
+        const m=mkMatch(`L${LB.length}-${roundA.length}`,null,null,'L');
+        m.fromLoss=[wbLosers[i].id,wbLosers[i+1].id];
+        roundA.push(m);
+      }
+      if(roundA.length>0){LB.push(roundA);lbPrev=roundA;}
+    } else {
+      // Pair LB survivors with WB losers
+      const count=Math.min(lbPrev.length,wbLosers.length);
+      for(let i=0;i<count;i++){
+        const m=mkMatch(`L${LB.length}-${roundA.length}`,null,null,'L');
+        m.from=[lbPrev[i].id];
+        m.fromLoss=[wbLosers[i].id];
+        roundA.push(m);
+      }
+      if(roundA.length>0){LB.push(roundA);lbPrev=roundA;}
     }
-    if(next.length>0)LB.push(next);
-    lbPrev=next;wbRound++;
-    if(next.length<=1)break;
-  }
-  // Final LB rounds until 1 remains
-  while(lbPrev.length>1){
-    const next=[];
-    for(let i=0;i<lbPrev.length;i+=2){
-      const m=mkMatch(`L${LB.length}-${next.length}`,null,null,'L');
-      m.from=[lbPrev[i].id];
-      if(i+1<lbPrev.length)m.from.push(lbPrev[i+1].id);
-      next.push(m);
+    // Round B: LB survivors play each other (if more than 1)
+    if(lbPrev.length>1){
+      const roundB=[];
+      for(let i=0;i+1<lbPrev.length;i+=2){
+        const m=mkMatch(`L${LB.length}-${roundB.length}`,null,null,'L');
+        m.from=[lbPrev[i].id,lbPrev[i+1].id];
+        roundB.push(m);
+      }
+      if(roundB.length>0){LB.push(roundB);lbPrev=roundB;}
     }
-    LB.push(next);lbPrev=next;
   }
 }
 
