@@ -650,7 +650,8 @@ function propagateWBWin(id,winner,loser){
 }
 
 function dropToLB(wbMatchId,loser){
-  for(const r of LB)for(const m of r){
+  const allLB=LB.flat();
+  for(const m of allLB){
     if(m.fromLoss&&m.fromLoss.includes(wbMatchId)){
       if(!m.t1){m.t1=loser;if(m.bye){m.bye=false;m.winner=null;}return;}
       if(!m.t2){m.t2=loser;return;}
@@ -659,29 +660,38 @@ function dropToLB(wbMatchId,loser){
 }
 
 function propagateLBWin(id,winner){
-  let found=false;
-  for(const r of LB)for(const m of r){
+  // Flatten LB to avoid nested-loop break issues
+  const allLB=LB.flat();
+  for(const m of allLB){
     if(m.fromLB===id){
       if(!m.t1)m.t1=winner;else if(!m.t2)m.t2=winner;
-      // if bye, auto advance
       if(m.bye&&!m.winner){m.winner=winner;propagateLBWin(m.id,winner);}
-      found=true;break;
+      checkLBFinal();return;
     }
     if(m.fromLB2&&m.fromLB2.includes(id)){
       const i=m.fromLB2.indexOf(id);
       if(i===0&&!m.t1)m.t1=winner;
-      if(i===1&&!m.t2)m.t2=winner;
+      else if(i===1&&!m.t2)m.t2=winner;
       if(m.bye&&!m.winner){m.winner=winner;propagateLBWin(m.id,winner);}
-      found=true;break;
+      checkLBFinal();return;
     }
   }
   checkLBFinal();
 }
 
 function checkLBFinal(){
-  if(!LB.length)return;
-  const lbF=LB[LB.length-1][0];
-  if(lbF&&lbF.winner&&GF&&!GF.t2)GF.t2=lbF.winner;
+  if(!LB.length||!GF)return;
+  // Find last non-bye LB match with a winner — that's our LB finalist
+  const allLB=LB.flat();
+  for(let i=allLB.length-1;i>=0;i--){
+    const m=allLB[i];
+    if(m.winner&&!m.bye){
+      // Check nothing downstream in LB awaits this winner
+      const hasNext=allLB.some(mm=>mm.fromLB===m.id||mm.fromLB2&&mm.fromLB2.includes(m.id));
+      if(!hasNext&&!GF.t2){GF.t2=m.winner;return;}
+      break;
+    }
+  }
 }
 
 function clickWBWinner(id,tk){
