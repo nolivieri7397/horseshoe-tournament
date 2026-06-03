@@ -659,12 +659,20 @@ function dropToLB(wbMatchId,loser){
 }
 
 function propagateLBWin(id,winner){
+  let found=false;
   for(const r of LB)for(const m of r){
-    if(m.fromLB===id){if(!m.t1)m.t1=winner;else if(!m.t2)m.t2=winner;return;}
+    if(m.fromLB===id){
+      if(!m.t1)m.t1=winner;else if(!m.t2)m.t2=winner;
+      // if bye, auto advance
+      if(m.bye&&!m.winner){m.winner=winner;propagateLBWin(m.id,winner);}
+      found=true;break;
+    }
     if(m.fromLB2&&m.fromLB2.includes(id)){
       const i=m.fromLB2.indexOf(id);
       if(i===0&&!m.t1)m.t1=winner;
-      if(i===1&&!m.t2)m.t2=winner;return;
+      if(i===1&&!m.t2)m.t2=winner;
+      if(m.bye&&!m.winner){m.winner=winner;propagateLBWin(m.id,winner);}
+      found=true;break;
     }
   }
   checkLBFinal();
@@ -677,20 +685,80 @@ function checkLBFinal(){
 }
 
 function clickWBWinner(id,tk){
-  const m=getM(id);if(!m||!m[tk]||m.winner)return;
+  const m=getM(id);if(!m||!m[tk])return;
+  if(m.winner===m[tk]){
+    // un-pick: clear winner and undo propagation
+    undoWBWin(id);
+    saveState();renderAll();checkChamp(false);return;
+  }
+  if(m.winner)return; // already has a different winner, ignore
   const loser=m[tk==='t1'?'t2':'t1'];
   m.winner=m[tk];
   propagateWBWin(id,m.winner,loser);
   saveState();renderAll();checkChamp(false);
 }
+function undoWBWin(id){
+  const m=getM(id);if(!m)return;
+  const prevWinner=m.winner;
+  const prevLoser=prevWinner===m.t1?m.t2:m.t1;
+  m.winner=null;
+  // Clear downstream WB slots that got this winner
+  for(const r of WB)for(const mm of r){
+    if(!mm.fromWin)continue;
+    if(mm.fromWin.includes(id)){
+      if(mm.t1===prevWinner){mm.t1=null;if(mm.winner===prevWinner){undoWBWin(mm.id);}}
+      if(mm.t2===prevWinner){mm.t2=null;if(mm.winner===prevWinner){undoWBWin(mm.id);}}
+    }
+  }
+  // Clear loser from LB
+  if(prevLoser) undoLBDrop(id,prevLoser);
+  // Clear GF t1 if it was this winner
+  if(GF&&GF.t1===prevWinner)GF.t1=null;
+  if(GF)GF.winner=null;if(GF2)GF2=null;
+}
+function undoLBDrop(wbId,loser){
+  for(const r of LB)for(const m of r){
+    if(m.fromLoss&&m.fromLoss.includes(wbId)){
+      if(m.t1===loser){m.t1=null;if(m.winner){undoLBWin(m.id);}}
+      if(m.t2===loser){m.t2=null;if(m.winner){undoLBWin(m.id);}}
+    }
+  }
+}
+function undoLBWin(id){
+  const m=getM(id);if(!m)return;
+  const prevWinner=m.winner;m.winner=null;
+  // Clear downstream LB
+  for(const r of LB)for(const mm of r){
+    if(mm.fromLB===id){if(mm.t1===prevWinner){mm.t1=null;if(mm.winner)undoLBWin(mm.id);}if(mm.t2===prevWinner){mm.t2=null;if(mm.winner)undoLBWin(mm.id);}return;}
+    if(mm.fromLB2&&mm.fromLB2.includes(id)){
+      const i=mm.fromLB2.indexOf(id);
+      if(i===0&&mm.t1===prevWinner){mm.t1=null;if(mm.winner)undoLBWin(mm.id);}
+      if(i===1&&mm.t2===prevWinner){mm.t2=null;if(mm.winner)undoLBWin(mm.id);}
+      return;
+    }
+  }
+  if(GF&&GF.t2===prevWinner)GF.t2=null;
+  if(GF)GF.winner=null;if(GF2)GF2=null;
+}
 function clickLBWinner(id,tk){
-  const m=getM(id);if(!m||!m[tk]||m.winner)return;
+  const m=getM(id);if(!m||!m[tk])return;
+  if(m.winner===m[tk]){
+    undoLBWin(id);
+    saveState();renderAll();checkChamp(false);return;
+  }
+  if(m.winner)return;
   m.winner=m[tk];
   propagateLBWin(id,m.winner);
   saveState();renderAll();checkChamp(false);
 }
 function clickGF(id,tk){
-  const m=id==='GF'?GF:GF2;if(!m||!m[tk]||m.winner)return;
+  const m=id==='GF'?GF:GF2;if(!m||!m[tk])return;
+  if(m.winner===m[tk]){
+    // un-pick GF
+    m.winner=null;if(id==='GF'){GF2=null;}
+    saveState();renderAll();checkChamp(false);return;
+  }
+  if(m.winner)return;
   m.winner=m[tk];
   if(id==='GF'&&m.winner===m.t2){
     GF2=mkMatch('GF2',m.t1,m.t2,'GF2');
@@ -769,9 +837,9 @@ function buildRow(match,tk,sk,seed,spec,type){
   const isW=match.winner===name&&!!name,isEmpty=!name;
   let cls='match-row';
   if(isW)cls+=' winner';if(isEmpty)cls+=' tbd';
-  if(!isEmpty&&!spec&&!match.bye&&!match.winner)cls+=' clickable';
+  if(!isEmpty&&!spec&&!match.bye)cls+=' clickable';
   const fn=type==='L'?'clickLBWinner':'clickWBWinner';
-  const oc=(!isEmpty&&!spec&&!match.bye&&!match.winner)?`onclick="${fn}('${match.id}','${tk}')"`:'' ;
+  const oc=(!isEmpty&&!spec&&!match.bye)?`onclick="${fn}('${match.id}','${tk}')"`:'' ;
   const sc=(!isEmpty&&!spec&&!match.bye&&!match.winner)
     ?`<input type="number" class="score-box" min="0" value="${score}" placeholder="-" onchange="setScore('${match.id}','${sk}',this.value)" onclick="event.stopPropagation()"/>`
     :(score?`<span style="font-size:12px;font-weight:600;color:var(--accent);">${score}</span>`:'');
