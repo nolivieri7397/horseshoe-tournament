@@ -370,7 +370,6 @@ let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
 
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
-window.addEventListener('load', function(){
 if(isSpec){
   document.getElementById('admin-view').style.display='none';
   document.getElementById('spectator-view').style.display='';
@@ -998,7 +997,7 @@ function resetAll(){
   document.getElementById('champion-area').innerHTML='';
   refreshChips(); setStep(1);
 }
-}); // end window.onload
+
 </script>
 </body>
 </html>
