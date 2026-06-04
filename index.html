@@ -3,25 +3,28 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Horseshoe Tournament</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<title>Godfathers Horseshoe Tournament</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#0d0f14;--surface:#161921;--surface2:#1e2230;
-  --border:rgba(255,255,255,0.08);--accent:#f0a500;
-  --text:#f0f0f0;--muted:#7a8099;--success:#2ecc71;
-  --danger:#e74c3c;--info:#4e9ef5;--radius:10px;
-  --wb:#2ecc71;--lb:#e74c3c;--gf:#f0a500;
+  --bg:#0a1628;--surface:#0f1e35;--surface2:#162440;
+  --border:rgba(212,175,55,0.2);--accent:#d4af37;
+  --accent2:#f0c040;--text:#f5ecd7;--muted:#8a9bb5;
+  --success:#2ecc71;--danger:#e74c3c;--info:#4e9ef5;--radius:10px;
+  --wb:#2ecc71;--lb:#e74c3c;--gf:#d4af37;
+  --gold:#d4af37;--navy:#0a1628;--cream:#f5ecd7;
 }
-body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;min-height:100vh;}
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
-.nav-logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px;color:var(--accent);text-transform:uppercase;}
-.nav-logo span{color:var(--text);}
-.nav-badge{background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;min-height:100vh;
+  background-image: radial-gradient(ellipse at top, #1a2f50 0%, #0a1628 60%);
+}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:64px;background:linear-gradient(135deg,#0a1628,#162440);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;letter-spacing:1px;color:var(--gold);text-transform:uppercase;}
+.nav-logo span{color:var(--cream);}
+.nav-badge{background:var(--gold);color:#0a1628;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;font-family:'Oswald',sans-serif;letter-spacing:1px;}
 .nav-badge.spectator{background:var(--info);color:#000;}
 .page{max-width:1400px;margin:0 auto;padding:2rem 1.5rem;}
 .hero{text-align:center;padding:2rem 1rem 1.5rem;}
@@ -29,20 +32,20 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 2rem
 .hero h1 span{color:var(--accent);}
 .hero p{color:var(--muted);font-size:14px;max-width:420px;margin:0 auto;}
 .steps{display:flex;gap:8px;justify-content:center;margin:1.5rem 0;flex-wrap:wrap;}
-.step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
 .step.active{color:var(--text);}
 .step-num{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);}
-.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#000;}
-.step.done .step-num{background:var(--success);border-color:var(--success);color:#000;}
+.step.active .step-num{background:var(--gold);border-color:var(--gold);color:#0a1628;}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#0a1628;}
 .step-divider{width:28px;height:1px;background:var(--border);}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
-.card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 2px 20px rgba(0,0,0,0.3);}
+.card-title{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;}
 .card-title .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
 .input-row{display:flex;gap:8px;margin-bottom:1rem;}
 input[type=text],input[type=number],select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
 input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);}
 input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-size:12px!important;text-align:center;}
-.btn{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.btn{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
 .btn:hover{border-color:rgba(255,255,255,0.2);background:#252b3b;}
 .btn-accent{background:var(--accent);color:#000;border-color:var(--accent);}
 .btn-accent:hover{background:#ffb820;}
@@ -56,7 +59,7 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .chip-remove:hover{color:var(--danger);}
 .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:1.25rem;}
 .team-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
-.team-label{font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.team-label{font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Oswald',sans-serif;}
 .team-players span{display:block;font-size:14px;font-weight:500;padding:1px 0;}
 .team-players .amp{color:var(--muted);font-size:11px;}
 .format-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem;}
@@ -64,7 +67,7 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .format-opt:hover{border-color:rgba(240,165,0,0.4);}
 .format-opt.selected{border-color:var(--accent);background:rgba(240,165,0,0.08);}
 .fmt-icon{font-size:24px;margin-bottom:4px;}
-.fmt-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;}
+.fmt-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;}
 .fmt-desc{font-size:11px;color:var(--muted);margin-top:2px;}
 .status-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;}
 .stat-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:5px 14px;font-size:13px;font-weight:500;}
@@ -73,16 +76,16 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .dot-green{background:var(--success);}
 .dot-blue{background:var(--info);}
 /* PRIZE */
-.prize-pool-card{background:linear-gradient(135deg,rgba(240,165,0,0.08),rgba(224,92,0,0.05));border:1px solid rgba(240,165,0,0.25);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
+.prize-pool-card{background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:1px solid rgba(212,175,55,0.35);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;}
 .prize-total{text-align:center;padding:0.75rem 0 1rem;}
 .prize-total-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;}
-.prize-total-amount{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:800;color:var(--accent);line-height:1;}
+.prize-total-amount{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--gold);line-height:1;}
 .prize-splits{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1rem;}
 .prize-split-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;}
 .prize-split-place{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
 .prize-split-place.first{color:#ffd700;}
 .prize-split-place.second{color:#c0c0c0;}
-.prize-split-amount{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;}
+.prize-split-amount{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:var(--gold);}
 .prize-split-pct{font-size:12px;color:var(--muted);margin-top:2px;}
 .prize-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem;}
 .prize-input-group{display:flex;flex-direction:column;gap:4px;}
@@ -94,7 +97,7 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 /* BRACKET */
 .bracket-section{margin-bottom:2rem;}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.section-badge{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:5px 14px;border-radius:6px;}
+.section-badge{font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:5px 14px;border-radius:6px;}
 .section-badge.wb{background:rgba(46,204,113,0.12);color:var(--wb);border:1px solid rgba(46,204,113,0.25);}
 .section-badge.lb{background:rgba(231,76,60,0.12);color:var(--lb);border:1px solid rgba(231,76,60,0.25);}
 .section-badge.gf{background:rgba(240,165,0,0.12);color:var(--gf);border:1px solid rgba(240,165,0,0.3);}
@@ -102,12 +105,12 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .bracket-scroll{overflow-x:auto;padding-bottom:0.5rem;}
 .bracket-row{display:flex;align-items:flex-start;width:max-content;}
 .round-col{display:flex;flex-direction:column;min-width:185px;}
-.round-header{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 0 8px 10px;}
+.round-header{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 0 8px 10px;}
 .matches-col{display:flex;flex-direction:column;}
 .match-wrap{display:flex;align-items:center;}
 .match{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;width:170px;flex-shrink:0;}
-.match.wb-match{border-left:3px solid rgba(46,204,113,0.5);}
-.match.lb-match{border-left:3px solid rgba(231,76,60,0.5);}
+.match.wb-match{border-left:3px solid rgba(46,204,113,0.6);}
+.match.lb-match{border-left:3px solid rgba(231,76,60,0.6);}
 .mrow{display:flex;align-items:center;padding:7px 9px;font-size:12px;font-weight:500;border-bottom:1px solid var(--border);gap:5px;min-height:38px;transition:background 0.15s;}
 .mrow:last-child{border-bottom:none;}
 .mrow.can-click{cursor:pointer;}
@@ -125,8 +128,8 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .conn-bot{border-top:1px solid var(--border);}
 .conn-mid{height:1px;background:var(--border);width:100%;}
 /* GF */
-.gf-arena{background:radial-gradient(ellipse at center top,rgba(240,165,0,0.1) 0%,transparent 65%);border:1px solid rgba(240,165,0,0.3);border-radius:16px;padding:2rem;text-align:center;}
-.gf-title{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;text-transform:uppercase;letter-spacing:3px;color:var(--accent);margin-bottom:4px;}
+.gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
+.gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
 .gf-subtitle{font-size:12px;color:var(--muted);margin-bottom:1.25rem;}
 .gf-note{font-size:12px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:8px 16px;display:inline-block;margin-bottom:1.5rem;}
 .gf-matchup{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem;}
@@ -145,10 +148,10 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .gf-vs{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--muted);}
 .reset-banner{background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:10px;padding:10px 20px;margin:1rem auto;font-size:13px;color:var(--accent);font-weight:500;display:inline-block;}
 /* CHAMPION */
-.champ-banner{background:linear-gradient(135deg,rgba(240,165,0,0.18),rgba(224,92,0,0.08));border:1px solid rgba(240,165,0,0.45);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;}
+.champ-banner{background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:2px solid var(--gold);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 40px rgba(212,175,55,0.15);}
 .champ-trophy{font-size:48px;margin-bottom:8px;}
-.champ-label{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
-.champ-name{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;text-transform:uppercase;line-height:1;}
+.champ-label{font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-family:'Oswald',sans-serif;}
+.champ-name{font-family:'Playfair Display',serif;font-size:44px;font-weight:900;text-transform:uppercase;line-height:1;color:var(--gold);}
 .qr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;}
 .qr-box{background:#fff;padding:10px;border-radius:8px;flex-shrink:0;}
 .qr-info h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
@@ -167,14 +170,28 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 </head>
 <body>
 <nav>
-  <div class="nav-logo">🧲 Shoe<span>Bracket</span></div>
+  <div class="nav-logo">🧲 Godfathers <span>Horseshoes</span></div>
   <div class="nav-badge" id="nav-badge">Admin</div>
 </nav>
 <div class="page">
 <div id="admin-view">
-  <div class="hero">
-    <h1>Horseshoe <span>Tournament</span></h1>
-    <p>Add players, pair teams, and run the bracket live.</p>
+  <!-- FLYER + HERO -->
+  <div style="text-align:center;padding:2rem 1rem 1rem;">
+    <img src="https://raw.githubusercontent.com/nolivieri7397/horseshoe-tournament/main/GodFather_Invite.PNG" 
+         alt="Godfathers Horseshoe Tournament" 
+         style="max-width:340px;width:90%;border-radius:12px;border:3px solid var(--gold);box-shadow:0 8px 40px rgba(0,0,0,0.5);margin-bottom:1.5rem;"
+         onerror="this.style.display='none'"/>
+    <div>
+      <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:4px;">4th Annual</div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(32px,6vw,60px);font-weight:900;text-transform:uppercase;letter-spacing:2px;line-height:1;color:var(--cream);margin-bottom:4px;">Godfathers <span style="color:var(--gold);">Horseshoe</span></h1>
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,50px);font-weight:900;text-transform:uppercase;letter-spacing:3px;line-height:1;color:var(--gold);margin-bottom:1rem;">Tournament</h1>
+      <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:0.5rem;">
+        <span>📍 10609 Del Rio Rd</span>
+        <span>📅 June 20th</span>
+        <span>⏰ Starts at 12pm</span>
+        <span>💰 $20 Buy-in</span>
+      </div>
+    </div>
   </div>
   <div class="steps">
     <div class="step active" id="step1"><div class="step-num">1</div> Players</div>
@@ -305,7 +322,10 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     <div style="font-size:24px;">👀</div>
     <p><strong>Spectator Mode</strong> — Live view. Auto-refreshes every 10s.</p>
   </div>
-  <div class="hero" style="padding-top:0;"><h1>Horseshoe <span>Tournament</span></h1></div>
+  <div style="text-align:center;padding:1rem 1rem 0.5rem;">
+    <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:4px;">4th Annual</div>
+    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);font-weight:900;text-transform:uppercase;color:var(--cream);line-height:1;margin-bottom:4px;">Godfathers <span style="color:var(--gold);">Horseshoe</span> Tournament</h1>
+  </div>
   <div id="s-champion-area"></div>
   <div class="status-bar" id="s-status-bar"></div>
   <div class="prize-pool-card" id="s-prize" style="display:none;">
@@ -333,7 +353,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
   </div>
 </div>
 
-<footer>ShoeBracket · Horseshoe Tournaments · Double Elimination · Prize Pool</footer>
+<footer>4th Annual Godfathers Horseshoe Tournament · June 20th · 10609 Del Rio Rd</footer>
 
 <script>
 // ─── FIREBASE ─────────────────────────────────────────────────────────────────
