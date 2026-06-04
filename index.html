@@ -323,6 +323,40 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 <footer>ShoeBracket · Horseshoe Tournaments · Double Elimination · Prize Pool</footer>
 
 <script>
+// ─── FIREBASE ─────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDSzRgcI1_QTruAZZqzO-7P0Pq2prxRu4I",
+  authDomain: "horseshoe-tournament.firebaseapp.com",
+  databaseURL: "https://horseshoe-tournament-default-rtdb.firebaseio.com",
+  projectId: "horseshoe-tournament",
+  storageBucket: "horseshoe-tournament.firebasestorage.app",
+  messagingSenderId: "434651431946",
+  appId: "1:434651431946:web:0b9dec0c57027447f5cbf3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('tournament');
+
+function save(){
+  const state = {players,teams,matches,WBrounds,LBrounds,gfId,gf2Id,format,buyIn,pct1,pct2,_mid};
+  stateRef.set(state);
+}
+function applyState(data){
+  if(!data) return;
+  players = data.players||[];
+  teams = data.teams||[];
+  matches = data.matches||{};
+  WBrounds = data.WBrounds||[];
+  LBrounds = data.LBrounds||[];
+  gfId = data.gfId||null;
+  gf2Id = data.gf2Id||null;
+  format = data.format||'single';
+  buyIn = data.buyIn||20;
+  pct1 = data.pct1||70;
+  pct2 = data.pct2||30;
+  _mid = data._mid||0;
+}
+
 // ─── STATE ───────────────────────────────────────────────────────────────────
 // Each match: { id, t1, t2, winner, s1, s2 }
 // WB/LB: flat arrays of matches in order
@@ -336,6 +370,7 @@ let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
 
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
+window.addEventListener('load', function(){
 if(isSpec){
   document.getElementById('admin-view').style.display='none';
   document.getElementById('spectator-view').style.display='';
@@ -370,46 +405,7 @@ if(isSpec){
   });
 }
 
-// ─── FIREBASE ─────────────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyDSzRgcI1_QTruAZZqzO-7P0Pq2prxRu4I",
-  authDomain: "horseshoe-tournament.firebaseapp.com",
-  databaseURL: "https://horseshoe-tournament-default-rtdb.firebaseio.com",
-  projectId: "horseshoe-tournament",
-  storageBucket: "horseshoe-tournament.firebasestorage.app",
-  messagingSenderId: "434651431946",
-  appId: "1:434651431946:web:0b9dec0c57027447f5cbf3"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const stateRef = db.ref('tournament');
 
-// Save entire state to Firebase
-function save(){
-  const state = {players,teams,matches,WBrounds,LBrounds,gfId,gf2Id,format,buyIn,pct1,pct2,_mid};
-  stateRef.set(state);
-}
-
-// Load state from Firebase snapshot
-function applyState(data){
-  if(!data) return;
-  players = data.players||[];
-  teams = data.teams||[];
-  matches = data.matches||{};
-  WBrounds = data.WBrounds||[];
-  LBrounds = data.LBrounds||[];
-  gfId = data.gfId||null;
-  gf2Id = data.gf2Id||null;
-  format = data.format||'single';
-  buyIn = data.buyIn||20;
-  pct1 = data.pct1||70;
-  pct2 = data.pct2||30;
-  _mid = data._mid||0;
-}
-
-function loadState(){
-  // For spectator: just read once (listener set up separately)
-}
 
 // ─── PRIZE ────────────────────────────────────────────────────────────────────
 function calcPrize(){
@@ -995,13 +991,14 @@ function setStep(n){
 function resetAll(){
   if(!confirm('Reset the whole tournament?')) return;
   players=[];teams=[];matches={};WBrounds=[];LBrounds=[];gfId=null;gf2Id=null;_mid=0;
-  stateRef.remove(); // clear Firebase
+  stateRef.remove();
   document.getElementById('panel-bracket').style.display='none';
   document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-players').style.display='';
   document.getElementById('champion-area').innerHTML='';
   refreshChips(); setStep(1);
 }
+}); // end window.onload
 </script>
 </body>
 </html>
