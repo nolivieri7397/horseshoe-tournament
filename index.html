@@ -170,12 +170,47 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;max-width:420px;width:90%;}
 .modal h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin-bottom:1rem;}
 footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-top:1px solid var(--border);margin-top:3rem;}
+
+/* BIGGEST LOSER */
+.loser-banner{background:linear-gradient(135deg,rgba(231,76,60,0.15),rgba(231,76,60,0.05));border:2px solid rgba(231,76,60,0.4);border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+.loser-emoji{font-size:48px;margin-bottom:6px;animation:sad-shake 1.5s ease infinite;}
+@keyframes sad-shake{0%,100%{transform:translateX(0) rotate(0deg);}15%{transform:translateX(-6px) rotate(-3deg);}30%{transform:translateX(6px) rotate(3deg);}45%{transform:translateX(-4px) rotate(-2deg);}60%{transform:translateX(4px) rotate(2deg);}75%{transform:translateX(-2px) rotate(-1deg);}}
+.loser-label{font-size:12px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:2px;font-family:'Oswald',sans-serif;margin-bottom:6px;}
+.loser-name{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,36px);font-weight:900;text-transform:uppercase;color:var(--danger);}
+.loser-sub{font-size:12px;color:var(--muted);margin-top:6px;}
+.rain-drop{position:absolute;font-size:14px;animation:rain-fall linear infinite;opacity:0;}
+@keyframes rain-fall{0%{transform:translateY(-20px);opacity:1;}100%{transform:translateY(200px);opacity:0;}}
+
+/* FULLSCREEN PIT BOARD */
+.pit-board-overlay{position:fixed;inset:0;background:#0a1628;z-index:500;display:flex;flex-direction:column;overflow:hidden;}
+.pit-board-header{background:linear-gradient(135deg,#0f1e35,#162440);border-bottom:2px solid var(--gold);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.pit-board-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:2px;}
+.pit-board-body{flex:1;display:grid;gap:1.5rem;padding:1.5rem;align-content:center;}
+.pit-board-card{background:linear-gradient(135deg,#0f1e35,#162440);border:2px solid var(--gold);border-radius:16px;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.pit-board-card.empty{border-color:rgba(212,175,55,0.2);opacity:0.5;}
+.pit-board-num{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:var(--gold);min-width:80px;text-align:center;}
+.pit-board-match{flex:1;text-align:center;}
+.pit-board-teams{font-family:'Oswald',sans-serif;font-size:clamp(18px,3vw,28px);font-weight:700;color:var(--cream);text-transform:uppercase;line-height:1.3;}
+.pit-board-vs{font-size:14px;color:var(--muted);margin:4px 0;}
+.pit-board-status{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:99px;}
+.pit-board-status.playing{background:rgba(46,204,113,0.15);color:var(--success);border:1px solid rgba(46,204,113,0.3);}
+.pit-board-status.open{background:rgba(212,175,55,0.1);color:var(--gold);border:1px solid rgba(212,175,55,0.2);}
+
+/* MOBILE SPECTATOR PIT CARDS */
+.s-pit-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.s-pit-card.active{border-color:var(--gold);background:rgba(212,175,55,0.06);}
+.s-pit-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold);min-width:36px;text-align:center;}
+.s-pit-info{flex:1;}
+.s-pit-teams{font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;color:var(--cream);text-transform:uppercase;line-height:1.3;}
+.s-pit-badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-top:4px;display:inline-block;}
+.s-pit-badge.playing{background:rgba(46,204,113,0.15);color:var(--success);}
+.s-pit-badge.open{background:rgba(212,175,55,0.1);color:var(--gold);}
 @media(max-width:600px){.format-grid{grid-template-columns:1fr;}.qr-card{flex-direction:column;}.prize-inputs{grid-template-columns:1fr;}.prize-splits{grid-template-columns:1fr;}.gf-matchup{flex-direction:column;}}
 </style>
 </head>
 <body>
 <nav>
-  <div class="nav-logo">🧲 Godfathers <span>Horseshoes</span></div>
+  <div class="nav-logo"><img src="horseshoe.png" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;margin-right:6px;filter:brightness(1.2);"/> Godfathers <span>Horseshoes</span></div>
   <div class="nav-badge" id="nav-badge">Admin</div>
 </nav>
 <div class="page">
@@ -307,6 +342,16 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
       <div id="bracket-container"></div>
     </div>
 
+    <!-- BIGGEST LOSER ADMIN -->
+    <div id="biggest-loser-area"></div>
+
+    <!-- FULLSCREEN PIT BOARD -->
+    <div class="card" style="text-align:center;">
+      <div class="card-title"><div class="dot"></div> Pit Status Board</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Open on a TV or shared screen so everyone can see which teams are on which pit.</p>
+      <button class="btn btn-accent" onclick="openPitBoard()" style="font-size:16px;padding:12px 32px;">🏟 Open Fullscreen Pit Board</button>
+    </div>
+
     <div class="qr-card">
       <div class="qr-box" id="qr-code"></div>
       <div class="qr-info">
@@ -323,26 +368,45 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 </div>
 
 <div id="spectator-view" style="display:none;">
-  <div class="spectator-banner">
-    <div style="font-size:24px;">👀</div>
-    <p><strong>Spectator Mode</strong> — Live view. Auto-refreshes every 10s.</p>
-  </div>
-  <div style="text-align:center;padding:1.5rem 1rem 1rem;">
+  <!-- POSTER -->
+  <div style="text-align:center;padding:1rem 1rem 0.75rem;">
     <img src="GodFather_Invite.PNG" alt="Godfathers Horseshoe Tournament"
-      style="max-width:320px;width:85%;border-radius:12px;border:3px solid var(--gold);box-shadow:0 8px 40px rgba(0,0,0,0.5);margin-bottom:1.25rem;display:block;margin-left:auto;margin-right:auto;"/>
-    <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:4px;">4th Annual</div>
-    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(26px,5vw,44px);font-weight:900;text-transform:uppercase;color:var(--cream);line-height:1;margin-bottom:4px;">Godfathers <span style="color:var(--gold);">Horseshoe</span> Tournament</h1>
-    <div style="font-size:13px;color:var(--muted);margin-top:6px;">📍 10609 Del Rio Rd &nbsp;·&nbsp; 📅 June 20th &nbsp;·&nbsp; ⏰ Starts at 12pm</div>
+      style="max-width:300px;width:88%;border-radius:12px;border:3px solid var(--gold);box-shadow:0 8px 40px rgba(0,0,0,0.6);display:block;margin:0 auto 1rem;"/>
+    <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:2px;">4th Annual</div>
+    <div style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,36px);font-weight:900;text-transform:uppercase;color:var(--cream);line-height:1;">Godfathers <span style="color:var(--gold);">Horseshoe</span> Tournament</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px;">📍 10609 Del Rio Rd · 📅 June 20th · ⏰ 12pm</div>
   </div>
+
+  <!-- CHAMPION -->
   <div id="s-champion-area"></div>
-  <div class="status-bar" id="s-status-bar"></div>
-  <div class="prize-pool-card" id="s-prize" style="display:none;">
-    <div class="prize-total"><div class="prize-total-label">Prize Pool</div><div class="prize-total-amount" id="s-prize-total">$0</div></div>
+
+  <!-- BIGGEST LOSER -->
+  <div id="s-biggest-loser-area"></div>
+
+  <!-- PRIZE POOL -->
+  <div class="prize-pool-card" id="s-prize" style="display:none;margin:0 0 1rem;">
+    <div class="prize-total" style="padding:0.5rem 0 0.75rem;">
+      <div class="prize-total-label">Prize Pool</div>
+      <div class="prize-total-amount" id="s-prize-total">$0</div>
+    </div>
     <div class="prize-splits">
-      <div class="prize-split-card"><div class="prize-split-place first">🥇 1st</div><div class="prize-split-amount" id="s-prize-1">$0</div></div>
-      <div class="prize-split-card"><div class="prize-split-place second">🥈 2nd</div><div class="prize-split-amount" id="s-prize-2">$0</div></div>
+      <div class="prize-split-card"><div class="prize-split-place first">🥇 1st Place</div><div class="prize-split-amount" id="s-prize-1">$0</div></div>
+      <div class="prize-split-card"><div class="prize-split-place second">🥈 2nd Place</div><div class="prize-split-amount" id="s-prize-2">$0</div></div>
     </div>
   </div>
+
+  <!-- PIT STATUS — MOBILE FRIENDLY -->
+  <div id="s-pit-status" style="display:none;margin-bottom:1rem;">
+    <div class="card" style="padding:1rem;">
+      <div class="card-title" style="margin-bottom:0.75rem;"><div class="dot"></div> Currently Playing</div>
+      <div id="s-pit-cards" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="s-status-bar" style="padding:0 0 0.5rem;"></div>
+
+  <!-- BRACKET -->
   <div class="card">
     <div class="card-title"><div class="dot"></div> Live Bracket</div>
     <div id="s-bracket-container"></div>
@@ -854,13 +918,13 @@ function setPit(matchId,val){
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
-function renderAll(){ renderBracket('bracket-container',false); updateStatus(); }
+function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); }
 function renderSpectator(){
-  if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet.</div>'; return; }
+  if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet — check back soon!</div>'; return; }
   renderBracket('s-bracket-container',true);
   const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye), done=all.filter(m=>m.winner).length;
   document.getElementById('s-status-bar').innerHTML=`<div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div><div class="stat-pill"><div class="dot dot-amber"></div>${done}/${all.length} Done</div>`;
-  renderSpectatorPrize(); checkChamp(true);
+  renderSpectatorPrize(); checkChamp(true); renderBiggestLoser(true); renderSpectatorPits();
 }
 
 function renderBracket(containerId, spec){
@@ -1062,6 +1126,115 @@ function generateQR(){
   new QRCode(el,{text:url,width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
 }
 function copyLink(){ navigator.clipboard.writeText(location.origin+location.pathname+'?view=spectator').then(()=>alert('Copied!')); }
+
+// ─── FULLSCREEN PIT BOARD ─────────────────────────────────────────────────────
+function openPitBoard(){
+  const overlay=document.createElement('div');
+  overlay.className='pit-board-overlay';
+  overlay.id='pit-board-overlay';
+  
+  let pitsHTML='';
+  for(let p=1;p<=numPits;p++){
+    const matchId=Object.keys(matches).find(id=>matches[id]&&matches[id].pit==p);
+    const m=matchId?matches[matchId]:null;
+    const active=m&&!m.winner&&m.t1&&m.t2;
+    pitsHTML+=`<div class="pit-board-card${active?'':' empty'}">
+      <div class="pit-board-num">${p}</div>
+      <div class="pit-board-match">
+        ${active?`<div class="pit-board-teams">${m.t1}</div><div class="pit-board-vs">vs</div><div class="pit-board-teams">${m.t2}</div>`
+          :'<div style="font-family:Oswald,sans-serif;font-size:18px;color:var(--muted);text-transform:uppercase;">Open</div>'}
+      </div>
+      <div><span class="pit-board-status ${active?'playing':'open'}">${active?'Playing':'Open'}</span></div>
+    </div>`;
+  }
+
+  overlay.innerHTML=`
+    <div class="pit-board-header">
+      <div class="pit-board-title">🏟 Pit Status Board</div>
+      <button class="btn btn-sm" onclick="document.getElementById('pit-board-overlay').remove()">✕ Close</button>
+    </div>
+    <div class="pit-board-body" style="grid-template-columns:${numPits<=2?'1fr':'repeat(2,1fr)'};">${pitsHTML}</div>`;
+  document.body.appendChild(overlay);
+}
+
+// ─── BIGGEST LOSER ────────────────────────────────────────────────────────────
+function getBiggestLoser(){
+  // First team to lose ALL their matches (eliminated first)
+  // In single elim: first team with a loss
+  // In double elim: first team eliminated from LB (2 losses)
+  const allM=Object.values(matches).filter(m=>m&&m.winner&&!m.bye&&!m.lbBye);
+  if(!allM.length) return null;
+  
+  // Track losses per team
+  const losses={};
+  const lossTime={};
+  allM.forEach((m,idx)=>{
+    const loser=m.winner===m.t1?m.t2:m.t1;
+    if(!loser) return;
+    losses[loser]=(losses[loser]||0)+1;
+    if(!lossTime[loser]) lossTime[loser]=idx;
+  });
+
+  const neededLosses=format==='double'?2:1;
+  // Find who hit neededLosses first (earliest lossTime)
+  let firstElim=null, firstTime=Infinity;
+  Object.keys(losses).forEach(team=>{
+    if(losses[team]>=neededLosses && lossTime[team]<firstTime){
+      firstElim=team; firstTime=lossTime[team];
+    }
+  });
+  return firstElim;
+}
+
+function renderBiggestLoser(spec){
+  const loser=getBiggestLoser();
+  const areaId=spec?'s-biggest-loser-area':'biggest-loser-area';
+  const area=document.getElementById(areaId);
+  if(!area) return;
+  if(!loser){area.innerHTML='';return;}
+  
+  let raindrops='';
+  for(let i=0;i<15;i++){
+    const left=Math.random()*100;
+    const delay=Math.random()*2;
+    const dur=1+Math.random()*1.5;
+    raindrops+=`<span class="rain-drop" style="left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s;">😢</span>`;
+  }
+
+  area.innerHTML=`<div class="loser-banner">
+    <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">${raindrops}</div>
+    <div class="loser-emoji">😭</div>
+    <div class="loser-label">🏆 Biggest Loser Award 🏆</div>
+    <div class="loser-name">${loser}</div>
+    <div class="loser-sub">First team eliminated from the tournament</div>
+  </div>`;
+}
+
+// ─── SPECTATOR PIT CARDS ─────────────────────────────────────────────────────
+function renderSpectatorPits(){
+  const area=document.getElementById('s-pit-status');
+  const cards=document.getElementById('s-pit-cards');
+  if(!area||!cards) return;
+  
+  let hasAny=false;
+  let html='';
+  for(let p=1;p<=numPits;p++){
+    const matchId=Object.keys(matches).find(id=>matches[id]&&matches[id].pit==p);
+    const m=matchId?matches[matchId]:null;
+    const active=m&&!m.winner&&m.t1&&m.t2;
+    hasAny=true;
+    html+=`<div class="s-pit-card${active?' active':''}">
+      <div class="s-pit-num">${p}</div>
+      <div class="s-pit-info">
+        ${active?`<div class="s-pit-teams">${m.t1}<br><span style="font-size:11px;color:var(--muted);font-weight:400;">vs</span><br>${m.t2}</div>`
+          :`<div class="s-pit-teams" style="color:var(--muted);">No match assigned</div>`}
+        <span class="s-pit-badge ${active?'playing':'open'}">${active?'⚡ Playing':'Open'}</span>
+      </div>
+    </div>`;
+  }
+  cards.innerHTML=html;
+  area.style.display=hasAny?'':'none';
+}
 function setStep(n){
   for(let i=1;i<=3;i++){
     const el=document.getElementById(`step${i}`); if(!el) continue;
