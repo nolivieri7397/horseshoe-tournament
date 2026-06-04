@@ -328,12 +328,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 
     <div class="card">
       <div class="card-title"><div class="dot"></div> Manage Teams</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Add or remove teams at any time.</p>
-      <div class="input-row">
-        <input type="text" id="new-p1" placeholder="Player 1"/>
-        <input type="text" id="new-p2" placeholder="Player 2"/>
-        <button class="btn btn-accent" onclick="addTeamMid()">+ Add Team</button>
-      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Edit team names or remove a team. Removing a team counts as a loss for them in the bracket.</p>
       <div class="teams-grid" id="live-teams-grid"></div>
     </div>
 
@@ -573,15 +568,51 @@ function pairTeams(){
 }
 function renderTeamsGrid(id){
   const el=document.getElementById(id); if(!el)return;
-  el.innerHTML=teams.map((t,i)=>`
-    <div class="team-card">
-      <div class="team-label" style="display:flex;justify-content:space-between;">Team ${i+1}
-        ${id==='live-teams-grid'?`<button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>`:''}
-      </div>
-      <div class="team-players"><span>${t.p1}</span><span class="amp">&amp;</span><span>${t.p2}</span></div>
-    </div>`).join('');
+  if(id==='live-teams-grid'){
+    // Editable names, remove button, no add
+    el.innerHTML=teams.map((t,i)=>`
+      <div class="team-card">
+        <div class="team-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Team ${i+1}</span>
+          <button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">
+          <input type="text" value="${t.p1}" style="font-size:13px;padding:5px 8px;" onchange="editPlayerName(${i},'p1',this.value)" placeholder="Player 1"/>
+          <input type="text" value="${t.p2}" style="font-size:13px;padding:5px 8px;" onchange="editPlayerName(${i},'p2',this.value)" placeholder="Player 2"/>
+        </div>
+      </div>`).join('');
+  } else {
+    el.innerHTML=teams.map((t,i)=>`
+      <div class="team-card">
+        <div class="team-label">Team ${i+1}</div>
+        <div class="team-players"><span>${t.p1}</span><span class="amp">&amp;</span><span>${t.p2}</span></div>
+      </div>`).join('');
+  }
 }
 function selectFormat(f,el){format=f;document.querySelectorAll('.format-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
+
+function editPlayerName(teamIdx, slot, newName){
+  if(!newName.trim()) return;
+  const t=teams[teamIdx];
+  const oldName=t[slot];
+  const oldTeamName=t.name;
+  // Update player name
+  t[slot]=newName.trim();
+  t.name=`${t.p1} & ${t.p2}`;
+  // Update in players array
+  const pi=players.indexOf(oldName);
+  if(pi>-1) players[pi]=newName.trim();
+  // Update team name in all matches
+  Object.values(matches).forEach(m=>{
+    if(!m) return;
+    if(m.t1===oldTeamName) m.t1=t.name;
+    if(m.t2===oldTeamName) m.t2=t.name;
+    if(m.winner===oldTeamName) m.winner=t.name;
+  });
+  if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
+  if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
+  save(); renderAll();
+}
 function addTeamMid(){
   const p1=document.getElementById('new-p1').value.trim(), p2=document.getElementById('new-p2').value.trim();
   if(!p1||!p2){alert('Enter both names.');return;}
@@ -591,7 +622,7 @@ function addTeamMid(){
 }
 function confirmRemove(i){
   document.getElementById('modal-title').textContent='Remove Team?';
-  document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;color:var(--muted);">Remove <strong style="color:var(--text);">${teams[i].name}</strong>? Their bracket matches will be cleared.</p>`;
+  document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;color:var(--muted);">Remove <strong style="color:var(--text);">${teams[i].name}</strong>? They will receive a <strong style="color:var(--danger);">forfeit loss</strong> in any active bracket matches.</p>`;
   const ok=document.getElementById('modal-ok'); ok.style.display=''; ok.onclick=()=>{removeTeamMid(i);closeModal();};
   document.getElementById('modal').style.display='flex';
 }
