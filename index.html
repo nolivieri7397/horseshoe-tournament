@@ -347,19 +347,24 @@ if(isSpec){
     renderSpectator();
   });
 } else {
-  // Admin: listen for changes made on other devices too
+  // Admin: load existing state from Firebase on page load
   stateRef.once('value', snapshot => {
-    if(snapshot.val()){
-      applyState(snapshot.val());
-      // If bracket already exists, show it
+    const data = snapshot.val();
+    if(data){
+      applyState(data);
       if(WBrounds.length){
+        // Bracket already exists — show it
         document.getElementById('panel-players').style.display='none';
+        document.getElementById('panel-teams').style.display='none';
         document.getElementById('panel-bracket').style.display='';
         setStep(3);
         document.getElementById('buyin').value=buyIn;
         document.getElementById('pct1').value=pct1;
         document.getElementById('pct2').value=pct2;
         calcPrize(); renderTeamsGrid('live-teams-grid'); generateQR(); renderAll();
+      } else if(players.length){
+        // Players added but no bracket yet — restore player list
+        refreshChips();
       }
     }
   });
@@ -990,7 +995,7 @@ function setStep(n){
 function resetAll(){
   if(!confirm('Reset the whole tournament?')) return;
   players=[];teams=[];matches={};WBrounds=[];LBrounds=[];gfId=null;gf2Id=null;_mid=0;
-  ['hs3_players','hs3_teams','hs3_matches','hs3_wbrounds','hs3_lbrounds','hs3_gf','hs3_fmt','hs3_prize'].forEach(k=>localStorage.removeItem(k));
+  stateRef.remove(); // clear Firebase
   document.getElementById('panel-bracket').style.display='none';
   document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-players').style.display='';
