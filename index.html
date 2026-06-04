@@ -1099,13 +1099,37 @@ function checkChamp(spec){
       const shape=Math.random()>0.5?'50%':'0%';
       confetti+=`<div class="confetti-piece" style="left:${left}%;background:${color};width:${size}px;height:${size}px;border-radius:${shape};animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
     }
+
+    // Figure out 2nd place
+    let second=null;
+    if(format==='double'){
+      const gfMatch=gf2Id&&gm(gf2Id)?gm(gf2Id):gm(gfId);
+      if(gfMatch&&gfMatch.winner) second=gfMatch.winner===gfMatch.t1?gfMatch.t2:gfMatch.t1;
+    } else {
+      const wbFinal=gm(WBrounds[WBrounds.length-1][0]);
+      if(wbFinal&&wbFinal.winner) second=wbFinal.winner===wbFinal.t1?wbFinal.t2:wbFinal.t1;
+    }
+
+    // Prize amounts
+    const total=players.length*buyIn;
+    const firstPrize=total*(pct1/100);
+    const secondPrize=total*(pct2/100);
+    const prizeStr=total>0?` · Won $${firstPrize.toFixed(2)}`:'';
+    const secondPrizeStr=total>0?` · Won $${secondPrize.toFixed(2)}`:'';
+
     area.innerHTML=`<div class="champ-banner">
       <div class="confetti-wrap">${confetti}</div>
       <div class="champ-trophy">🏆</div>
       <div class="champ-label">🎉 Tournament Champions 🎉</div>
       <div class="champ-name">${champ}</div>
-      <div class="champ-sub">Godfathers Horseshoe Tournament · June 20th</div>
-    </div>`;
+      <div class="champ-sub">1st Place${prizeStr} · Godfathers Horseshoe Tournament</div>
+    </div>
+    ${second?`<div style="background:linear-gradient(135deg,rgba(192,192,192,0.12),rgba(192,192,192,0.04));border:2px solid rgba(192,192,192,0.35);border-radius:14px;padding:1.25rem 1.5rem;text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:32px;margin-bottom:6px;">🥈</div>
+      <div style="font-size:11px;color:#c0c0c0;font-weight:700;text-transform:uppercase;letter-spacing:2px;font-family:'Oswald',sans-serif;margin-bottom:6px;">2nd Place</div>
+      <div style="font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,36px);font-weight:900;text-transform:uppercase;color:#c0c0c0;">${second}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">Runner Up${secondPrizeStr} · Godfathers Horseshoe Tournament</div>
+    </div>`:''}`;
   } else { area.innerHTML=''; }
 }
 
