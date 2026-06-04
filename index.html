@@ -87,6 +87,10 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .prize-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem;}
 .prize-input-group{display:flex;flex-direction:column;gap:4px;}
 .prize-input-label{font-size:12px;color:var(--muted);font-weight:500;}
+/* PIT */
+.pit-tag{font-size:10px;font-weight:700;color:var(--accent);background:rgba(240,165,0,0.1);padding:2px 8px;text-align:center;border-bottom:1px solid rgba(240,165,0,0.15);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
+.pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
+.pit-select:focus{outline:none;color:var(--accent);}
 /* BRACKET */
 .bracket-section{margin-bottom:2rem;}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
@@ -190,6 +194,15 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
       </div>
       <div class="chips" id="chips"><span style="font-size:13px;color:var(--muted);align-self:center;">No players yet</span></div>
       <div style="color:var(--muted);font-size:13px;margin-bottom:1.25rem;" id="player-count">0 players</div>
+      <div style="margin-bottom:1.25rem;">
+        <div style="font-size:12px;color:var(--muted);font-weight:500;margin-bottom:8px;">Number of Pits</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="pit-count-btn" onclick="changePits(-1)" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:18px;cursor:pointer;">−</button>
+          <span id="pit-display" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--accent);min-width:32px;text-align:center;">2</span>
+          <button class="pit-count-btn" onclick="changePits(1)" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:18px;cursor:pointer;">+</button>
+          <span style="font-size:13px;color:var(--muted);">pits available</span>
+        </div>
+      </div>
       <button class="btn btn-accent" id="pair-btn" disabled onclick="pairTeams()" style="width:100%;font-size:16px;padding:14px;">Randomly Pair into Teams →</button>
     </div>
   </div>
@@ -338,7 +351,7 @@ const db = firebase.database();
 const stateRef = db.ref('tournament');
 
 function save(){
-  const state = {players,teams,matches,WBrounds,LBrounds,gfId,gf2Id,format,buyIn,pct1,pct2,_mid};
+  const state = {players,teams,matches,WBrounds,LBrounds,gfId,gf2Id,format,buyIn,pct1,pct2,_mid,numPits};
   stateRef.set(state);
 }
 function applyState(data){
@@ -355,6 +368,7 @@ function applyState(data){
   pct1 = data.pct1||70;
   pct2 = data.pct2||30;
   _mid = data._mid||0;
+  numPits = data.numPits||2;
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -362,7 +376,7 @@ function applyState(data){
 // WB/LB: flat arrays of matches in order
 // We store which match feeds into which via explicit nextMatch/slot references
 
-let players=[], teams=[], format='single';
+let players=[], teams=[], format='single', numPits=2;
 let matches = {}; // id -> match object
 let WBrounds = []; // array of arrays of match ids
 let LBrounds = []; // array of arrays of match ids
@@ -446,6 +460,12 @@ function refreshChips(){
   w.innerHTML=n ? players.map((p,i)=>`<span class="chip">${p}<button class="chip-remove" onclick="removePlayer(${i})">×</button></span>`).join('')
     :`<span style="font-size:13px;color:var(--muted);align-self:center;">No players yet</span>`;
   document.getElementById('player-count').textContent=`${n} player${n!==1?'s':''} added${n>=2?` · ${Math.floor(n/2)} teams`:''}`;
+}
+function changePits(d){
+  numPits=Math.max(1,Math.min(10,numPits+d));
+  const el=document.getElementById('pit-display');
+  if(el) el.textContent=numPits;
+  save();
 }
 function backToPlayers(){document.getElementById('panel-teams').style.display='none';document.getElementById('panel-players').style.display='';setStep(1);}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
@@ -801,6 +821,9 @@ function clickGF(isReset, slot){
 function setScore(matchId,slot,val){
   const m=gm(matchId); if(m) m[slot]=val; save();
 }
+function setPit(matchId,val){
+  const m=gm(matchId); if(m){ m.pit=val; save(); renderAll(); }
+}
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 function renderAll(){ renderBracket('bracket-container',false); updateStatus(); }
@@ -866,7 +889,7 @@ function buildRoundsEl(rounds, type, spec){
       const wrap=document.createElement('div'); wrap.className='match-wrap';
       wrap.style.marginTop=mi===0?`${tp}px`:`${bp}px`;
       const me=document.createElement('div'); me.className=`match ${type}-match`;
-      me.innerHTML=buildMatchRow(m,'t1','s1',1,spec,type)+buildMatchRow(m,'t2','s2',2,spec,type);
+      me.innerHTML=buildPitTag(m,spec)+buildMatchRow(m,'t1','s1',1,spec,type)+buildMatchRow(m,'t2','s2',2,spec,type);
       wrap.appendChild(me);
       if(ri<total-1){
         const cn=document.createElement('div'); cn.className='connector';
@@ -894,6 +917,19 @@ function buildMatchRow(m, tk, sk, seed, spec, type){
   const sc=(!isEmpty&&!spec&&!m.winner)?`<input type="number" class="score-box" value="${score}" placeholder="-" onchange="setScore('${m.id}','${sk}',this.value)" onclick="event.stopPropagation()"/>`:
     (score?`<span style="font-size:11px;font-weight:600;color:var(--accent);">${score}</span>`:'');
   return `<div class="${cls}" ${oc}><span class="mseed">#${seed}</span><span class="mname">${disp}</span>${sc}${undo}</div>`;
+}
+
+function buildPitTag(m, spec){
+  const pit = m.pit||'';
+  if(spec){
+    return pit ? `<div class="pit-tag">🏟 Pit ${pit}</div>` : '';
+  }
+  // Build pit dropdown options
+  let opts=`<option value="">— No Pit —</option>`;
+  for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${pit==i?'selected':''}>${i}</option>`;
+  return `<select class="pit-select" onchange="setPit('${m.id}',this.value)" onclick="event.stopPropagation()">
+    ${opts}
+  </select>`;
 }
 
 function buildGFEl(spec){
