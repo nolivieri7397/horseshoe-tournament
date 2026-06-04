@@ -148,10 +148,15 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .gf-vs{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--muted);}
 .reset-banner{background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:10px;padding:10px 20px;margin:1rem auto;font-size:13px;color:var(--accent);font-weight:500;display:inline-block;}
 /* CHAMPION */
-.champ-banner{background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:2px solid var(--gold);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 40px rgba(212,175,55,0.15);}
-.champ-trophy{font-size:48px;margin-bottom:8px;}
-.champ-label{font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-family:'Oswald',sans-serif;}
-.champ-name{font-family:'Playfair Display',serif;font-size:44px;font-weight:900;text-transform:uppercase;line-height:1;color:var(--gold);}
+.champ-banner{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.05));border:2px solid var(--gold);border-radius:16px;padding:2.5rem 2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 60px rgba(212,175,55,0.2);}
+.champ-trophy{font-size:56px;margin-bottom:8px;animation:trophy-bounce 1s ease infinite alternate;}
+@keyframes trophy-bounce{from{transform:scale(1) rotate(-3deg);}to{transform:scale(1.12) rotate(3deg);}}
+.champ-label{font-size:13px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px;font-family:'Oswald',sans-serif;}
+.champ-name{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,52px);font-weight:900;text-transform:uppercase;line-height:1;color:var(--gold);text-shadow:0 0 30px rgba(212,175,55,0.5);}
+.champ-sub{font-size:13px;color:var(--muted);margin-top:10px;font-family:'Oswald',sans-serif;letter-spacing:1px;}
+.confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.confetti-piece{position:absolute;width:8px;height:8px;opacity:0;animation:confetti-fall linear forwards;}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(400px) rotate(720deg);opacity:0;}}
 .qr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;}
 .qr-box{background:#fff;padding:10px;border-radius:8px;flex-shrink:0;}
 .qr-info h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
@@ -322,9 +327,12 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     <div style="font-size:24px;">👀</div>
     <p><strong>Spectator Mode</strong> — Live view. Auto-refreshes every 10s.</p>
   </div>
-  <div style="text-align:center;padding:1rem 1rem 0.5rem;">
+  <div style="text-align:center;padding:1.5rem 1rem 1rem;">
+    <img src="GodFather_Invite.PNG" alt="Godfathers Horseshoe Tournament"
+      style="max-width:320px;width:85%;border-radius:12px;border:3px solid var(--gold);box-shadow:0 8px 40px rgba(0,0,0,0.5);margin-bottom:1.25rem;display:block;margin-left:auto;margin-right:auto;"/>
     <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:4px;">4th Annual</div>
-    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);font-weight:900;text-transform:uppercase;color:var(--cream);line-height:1;margin-bottom:4px;">Godfathers <span style="color:var(--gold);">Horseshoe</span> Tournament</h1>
+    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(26px,5vw,44px);font-weight:900;text-transform:uppercase;color:var(--cream);line-height:1;margin-bottom:4px;">Godfathers <span style="color:var(--gold);">Horseshoe</span> Tournament</h1>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;">📍 10609 Del Rio Rd &nbsp;·&nbsp; 📅 June 20th &nbsp;·&nbsp; ⏰ Starts at 12pm</div>
   </div>
   <div id="s-champion-area"></div>
   <div class="status-bar" id="s-status-bar"></div>
@@ -1014,7 +1022,26 @@ function checkChamp(spec){
   }
   const area=document.getElementById(spec?'s-champion-area':'champion-area');
   if(!area) return;
-  area.innerHTML=champ?`<div class="champ-banner"><div class="champ-trophy">🏆</div><div class="champ-label">Tournament Champions</div><div class="champ-name">${champ}</div></div>`:'';
+  if(champ){
+    const colors=['#d4af37','#f0c040','#ffffff','#2ecc71','#4e9ef5','#e74c3c'];
+    let confetti='';
+    for(let i=0;i<40;i++){
+      const color=colors[Math.floor(Math.random()*colors.length)];
+      const left=Math.random()*100;
+      const delay=Math.random()*2;
+      const dur=1.5+Math.random()*2;
+      const size=6+Math.random()*8;
+      const shape=Math.random()>0.5?'50%':'0%';
+      confetti+=`<div class="confetti-piece" style="left:${left}%;background:${color};width:${size}px;height:${size}px;border-radius:${shape};animation-duration:${dur}s;animation-delay:${delay}s;"></div>`;
+    }
+    area.innerHTML=`<div class="champ-banner">
+      <div class="confetti-wrap">${confetti}</div>
+      <div class="champ-trophy">🏆</div>
+      <div class="champ-label">🎉 Tournament Champions 🎉</div>
+      <div class="champ-name">${champ}</div>
+      <div class="champ-sub">Godfathers Horseshoe Tournament · June 20th</div>
+    </div>`;
+  } else { area.innerHTML=''; }
 }
 
 function updateStatus(){
