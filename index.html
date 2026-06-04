@@ -6,6 +6,8 @@
 <title>Horseshoe Tournament</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -339,36 +341,69 @@ if(isSpec){
   document.getElementById('spectator-view').style.display='';
   document.getElementById('nav-badge').textContent='Spectator';
   document.getElementById('nav-badge').className='nav-badge spectator';
-  loadState(); renderSpectator();
-  setInterval(()=>{loadState();renderSpectator();}, 10000);
+  // Listen for real-time updates from Firebase
+  stateRef.on('value', snapshot => {
+    applyState(snapshot.val());
+    renderSpectator();
+  });
+} else {
+  // Admin: listen for changes made on other devices too
+  stateRef.once('value', snapshot => {
+    if(snapshot.val()){
+      applyState(snapshot.val());
+      // If bracket already exists, show it
+      if(WBrounds.length){
+        document.getElementById('panel-players').style.display='none';
+        document.getElementById('panel-bracket').style.display='';
+        setStep(3);
+        document.getElementById('buyin').value=buyIn;
+        document.getElementById('pct1').value=pct1;
+        document.getElementById('pct2').value=pct2;
+        calcPrize(); renderTeamsGrid('live-teams-grid'); generateQR(); renderAll();
+      }
+    }
+  });
 }
 
-// ─── SAVE/LOAD ────────────────────────────────────────────────────────────────
+// ─── FIREBASE ─────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDSzRgcI1_QTruAZZqzO-7P0Pq2prxRu4I",
+  authDomain: "horseshoe-tournament.firebaseapp.com",
+  databaseURL: "https://horseshoe-tournament-default-rtdb.firebaseio.com",
+  projectId: "horseshoe-tournament",
+  storageBucket: "horseshoe-tournament.firebasestorage.app",
+  messagingSenderId: "434651431946",
+  appId: "1:434651431946:web:0b9dec0c57027447f5cbf3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const stateRef = db.ref('tournament');
+
+// Save entire state to Firebase
 function save(){
-  localStorage.setItem('hs3_players', JSON.stringify(players));
-  localStorage.setItem('hs3_teams', JSON.stringify(teams));
-  localStorage.setItem('hs3_matches', JSON.stringify(matches));
-  localStorage.setItem('hs3_wbrounds', JSON.stringify(WBrounds));
-  localStorage.setItem('hs3_lbrounds', JSON.stringify(LBrounds));
-  localStorage.setItem('hs3_gf', JSON.stringify({gfId,gf2Id}));
-  localStorage.setItem('hs3_fmt', format);
-  localStorage.setItem('hs3_prize', JSON.stringify({buyIn,pct1,pct2}));
+  const state = {players,teams,matches,WBrounds,LBrounds,gfId,gf2Id,format,buyIn,pct1,pct2,_mid};
+  stateRef.set(state);
 }
+
+// Load state from Firebase snapshot
+function applyState(data){
+  if(!data) return;
+  players = data.players||[];
+  teams = data.teams||[];
+  matches = data.matches||{};
+  WBrounds = data.WBrounds||[];
+  LBrounds = data.LBrounds||[];
+  gfId = data.gfId||null;
+  gf2Id = data.gf2Id||null;
+  format = data.format||'single';
+  buyIn = data.buyIn||20;
+  pct1 = data.pct1||70;
+  pct2 = data.pct2||30;
+  _mid = data._mid||0;
+}
+
 function loadState(){
-  try{
-    const p=localStorage.getItem('hs3_players'),t=localStorage.getItem('hs3_teams'),
-      m=localStorage.getItem('hs3_matches'),wb=localStorage.getItem('hs3_wbrounds'),
-      lb=localStorage.getItem('hs3_lbrounds'),gf=localStorage.getItem('hs3_gf'),
-      f=localStorage.getItem('hs3_fmt'),pr=localStorage.getItem('hs3_prize');
-    if(p)players=JSON.parse(p);
-    if(t)teams=JSON.parse(t);
-    if(m)matches=JSON.parse(m);
-    if(wb)WBrounds=JSON.parse(wb);
-    if(lb)LBrounds=JSON.parse(lb);
-    if(gf){const g=JSON.parse(gf);gfId=g.gfId;gf2Id=g.gf2Id;}
-    if(f)format=f;
-    if(pr){const pp=JSON.parse(pr);buyIn=pp.buyIn;pct1=pp.pct1;pct2=pp.pct2;}
-  }catch(e){}
+  // For spectator: just read once (listener set up separately)
 }
 
 // ─── PRIZE ────────────────────────────────────────────────────────────────────
