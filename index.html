@@ -874,9 +874,10 @@ function clickWB(matchId, slot){
   const clicked=slot==='t1'?m.t1:m.t2;
   if(!clicked) return;
   if(m.winner===clicked){ undoWBWin(matchId); save(); renderAll(); checkChamp(false); return; }
-  if(m.winner) return; // other team already won
+  if(m.winner) return;
   m.winner=clicked;
   advanceWB(matchId);
+  autoUpdatePitOnMatchEnd(matchId);
   save(); renderAll(); checkChamp(false);
 }
 
@@ -888,6 +889,7 @@ function clickLB(matchId, slot){
   if(m.winner) return;
   m.winner=clicked;
   advanceLB(matchId);
+  autoUpdatePitOnMatchEnd(matchId);
   save(); renderAll(); checkChamp(false);
 }
 
@@ -913,6 +915,27 @@ function clickGF(isReset, slot){
 
 function setScore(matchId,slot,val){
   const m=gm(matchId); if(m) m[slot]=val; save();
+}
+
+// ─── AUTO PIT UPDATE ON MATCH END ────────────────────────────────────────────
+// When a match finishes, find which pit it was on.
+// Then find the next pending match that the admin has pre-assigned to that pit
+// (i.e. another match with the same pit number), and keep it there.
+// If no pre-assigned match, clear the pit so admin can assign next.
+function autoUpdatePitOnMatchEnd(finishedMatchId){
+  const finished=gm(finishedMatchId); if(!finished) return;
+  const pit=finished.pit; if(!pit) return;
+
+  // Find if any OTHER match is already assigned to this pit (pre-queued by admin)
+  const nextMatch=Object.values(matches).find(m=>
+    m && m.id!==finishedMatchId && String(m.pit)===String(pit) && !m.winner && m.t1 && m.t2
+  );
+
+  if(!nextMatch){
+    // No pre-queued match — clear the pit so admin knows it's free
+    finished.pit='';
+  }
+  // If there IS a pre-queued match already on this pit, leave it — it will show up automatically
 }
 function setPit(matchId,val){
   const m=gm(matchId); if(m){ m.pit=val; save(); renderAll(); }
