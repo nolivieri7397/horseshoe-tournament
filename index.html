@@ -407,6 +407,12 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     <div class="card-title"><div class="dot"></div> Live Bracket</div>
     <div id="s-bracket-container"></div>
   </div>
+
+  <!-- TEAM ROSTER -->
+  <div class="card" id="s-roster" style="display:none;">
+    <div class="card-title"><div class="dot"></div> Team Roster</div>
+    <div id="s-roster-list"></div>
+  </div>
 </div>
 </div>
 
@@ -575,11 +581,15 @@ function renderTeamsGrid(id){
           <span style="font-size:11px;">Team ${i+1}</span>
           <button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin:4px 0 6px;font-style:italic;">${t.name}</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Team Name</div>
+            <input type="text" value="${t.name}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-weight:600;"
+              onchange="editTeamName(${i},this.value)" placeholder="Team name"/>
+          </div>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Player 1</div>
-            <input type="text" value="${t.p1}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);" 
+            <input type="text" value="${t.p1}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);"
               onchange="editPlayerName(${i},'p1',this.value)" placeholder="Player 1 name"/>
           </div>
           <div>
@@ -599,6 +609,23 @@ function renderTeamsGrid(id){
 }
 function selectFormat(f,el){format=f;document.querySelectorAll('.format-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
 
+function editTeamName(teamIdx, newName){
+  if(!newName.trim()) return;
+  const t=teams[teamIdx];
+  const oldName=t.name;
+  t.name=newName.trim();
+  // Update in all matches
+  Object.values(matches).forEach(m=>{
+    if(!m) return;
+    if(m.t1===oldName) m.t1=t.name;
+    if(m.t2===oldName) m.t2=t.name;
+    if(m.winner===oldName) m.winner=t.name;
+  });
+  if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldName)g.t1=t.name;if(g.t2===oldName)g.t2=t.name;if(g.winner===oldName)g.winner=t.name;}
+  if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldName)g.t1=t.name;if(g.t2===oldName)g.t2=t.name;if(g.winner===oldName)g.winner=t.name;}
+  save(); renderAll();
+}
+
 function editPlayerName(teamIdx, slot, newName){
   if(!newName.trim()) return;
   const t=teams[teamIdx];
@@ -606,20 +633,25 @@ function editPlayerName(teamIdx, slot, newName){
   const oldTeamName=t.name;
   // Update player name
   t[slot]=newName.trim();
-  t.name=`${t.p1} & ${t.p2}`;
+  // Only auto-update team name if it still matches the default "p1 & p2" format
+  if(t.name===oldTeamName || t.name===`${t.p1} & ${t.p2}`){
+    t.name=`${t.p1} & ${t.p2}`;
+  }
   // Update in players array
   const pi=players.indexOf(oldName);
   if(pi>-1) players[pi]=newName.trim();
-  // Update team name in all matches
-  Object.values(matches).forEach(m=>{
-    if(!m) return;
-    if(m.t1===oldTeamName) m.t1=t.name;
-    if(m.t2===oldTeamName) m.t2=t.name;
-    if(m.winner===oldTeamName) m.winner=t.name;
-  });
-  if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
-  if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
-  save(); renderAll();
+  // Update team name in all matches only if it changed
+  if(t.name!==oldTeamName){
+    Object.values(matches).forEach(m=>{
+      if(!m) return;
+      if(m.t1===oldTeamName) m.t1=t.name;
+      if(m.t2===oldTeamName) m.t2=t.name;
+      if(m.winner===oldTeamName) m.winner=t.name;
+    });
+    if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
+    if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
+  }
+  save(); renderAll(); renderTeamsGrid('live-teams-grid');
 }
 function addTeamMid(){
   const p1=document.getElementById('new-p1').value.trim(), p2=document.getElementById('new-p2').value.trim();
@@ -987,7 +1019,7 @@ function renderSpectator(){
   renderBracket('s-bracket-container',true);
   const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye), done=all.filter(m=>m.winner).length;
   document.getElementById('s-status-bar').innerHTML=`<div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div><div class="stat-pill"><div class="dot dot-amber"></div>${done}/${all.length} Done</div>`;
-  renderSpectatorPrize(); checkChamp(true); renderBiggestLoser(true); renderSpectatorPits();
+  renderSpectatorPrize(); checkChamp(true); renderBiggestLoser(true); renderSpectatorPits(); renderRoster();
 }
 
 function renderBracket(containerId, spec){
@@ -1213,6 +1245,21 @@ function generateQR(){
   new QRCode(el,{text:url,width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
 }
 function copyLink(){ navigator.clipboard.writeText(location.origin+location.pathname+'?view=spectator').then(()=>alert('Copied!')); }
+
+function renderRoster(){
+  const area=document.getElementById('s-roster');
+  const list=document.getElementById('s-roster-list');
+  if(!area||!list||!teams.length){if(area)area.style.display='none';return;}
+  area.style.display='';
+  list.innerHTML=teams.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:var(--gold);min-width:60px;text-transform:uppercase;letter-spacing:0.5px;">Team ${i+1}</div>
+      <div style="flex:1;">
+        <div style="font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;color:var(--cream);text-transform:uppercase;">${t.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:1px;">${t.p1} &amp; ${t.p2}</div>
+      </div>
+    </div>`).join('').replace(/<div style="[^"]*border-bottom[^"]*"([^>]*)>([^<]*)$/, (m)=>m.replace('border-bottom:1px solid var(--border);',''));
+}
 
 // ─── FULLSCREEN PIT BOARD ─────────────────────────────────────────────────────
 function openPitBoard(){
