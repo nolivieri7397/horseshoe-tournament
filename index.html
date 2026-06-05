@@ -1252,13 +1252,10 @@ function renderRoster(){
   if(!area||!list||!teams.length){if(area)area.style.display='none';return;}
   area.style.display='';
   list.innerHTML=teams.map((t,i)=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:var(--gold);min-width:60px;text-transform:uppercase;letter-spacing:0.5px;">Team ${i+1}</div>
-      <div style="flex:1;">
-        <div style="font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;color:var(--cream);text-transform:uppercase;">${t.name}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:1px;">${t.p1} &amp; ${t.p2}</div>
-      </div>
-    </div>`).join('').replace(/<div style="[^"]*border-bottom[^"]*"([^>]*)>([^<]*)$/, (m)=>m.replace('border-bottom:1px solid var(--border);',''));
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;">${t.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">${t.p1} &amp; ${t.p2}</div>
+    </div>`).join('');
 }
 
 // ─── FULLSCREEN PIT BOARD ─────────────────────────────────────────────────────
