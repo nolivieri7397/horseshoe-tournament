@@ -346,7 +346,9 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
       <div class="card-title"><div class="dot"></div> Pit Assignments</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Assign matches to pits here. Spectators see this live on their phones.</p>
       <div id="admin-pit-cards" style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem;"></div>
-      <button class="btn btn-accent" onclick="openPitBoard()" style="width:100%;font-size:15px;padding:10px;">🖥 Open Fullscreen Board</button>
+      <button class="btn btn-accent" onclick="openPitBoard()" style="width:100%;font-size:15px;padding:10px;margin-bottom:1rem;">🖥 Open Fullscreen Board</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Print or show these QR codes at each pit so players can keep score from their phones:</div>
+      <div id="pit-qr-section" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:1rem;"></div>
     </div>
 
     <div class="qr-card">
@@ -428,6 +430,17 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
   </div>
 </div>
 
+<!-- PIT SCORE PAGE -->
+<div id="pit-page" style="display:none;min-height:100vh;display:none;flex-direction:column;">
+  <div style="background:linear-gradient(135deg,#0f1e35,#162440);border-bottom:2px solid var(--gold);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--gold);">🏟 Court <span id="pit-page-num"></span></div>
+    <div style="font-size:11px;color:var(--muted);font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1px;">Score Keeper</div>
+  </div>
+  <div style="flex:1;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;" id="pit-page-body">
+    <div style="text-align:center;color:var(--muted);font-size:14px;padding:3rem;">Loading match...</div>
+  </div>
+</div>
+
 <footer>4th Annual Godfathers Horseshoe Tournament · June 20th · 10609 Del Rio Rd</footer>
 
 <script>
@@ -479,12 +492,26 @@ let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
 
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
-if(isSpec){
+const pitParam = new URLSearchParams(location.search).get('pit');
+const isPitPage = !!pitParam;
+if(isPitPage){
+  // PIT SCORE PAGE
+  document.getElementById('admin-view').style.display='none';
+  document.getElementById('spectator-view').style.display='none';
+  document.getElementById('pit-page').style.display='flex';
+  document.getElementById('nav-badge').textContent=`Court ${pitParam}`;
+  document.getElementById('nav-badge').className='nav-badge spectator';
+  document.getElementById('pit-page-num').textContent=pitParam;
+  // Listen for real-time updates
+  stateRef.on('value', snapshot => {
+    applyState(snapshot.val());
+    renderPitPage(parseInt(pitParam));
+  });
+} else if(isSpec){
   document.getElementById('admin-view').style.display='none';
   document.getElementById('spectator-view').style.display='';
   document.getElementById('nav-badge').textContent='Spectator';
   document.getElementById('nav-badge').className='nav-badge spectator';
-  // Listen for real-time updates from Firebase
   stateRef.on('value', snapshot => {
     applyState(snapshot.val());
     renderSpectator();
@@ -1014,7 +1041,7 @@ function setPit(matchId,val){
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
-function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); renderAdminPitBoard(); }
+function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); renderAdminPitBoard(); renderPitQRCodes(); }
 function renderSpectator(){
   if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet — check back soon!</div>'; return; }
   renderBracket('s-bracket-container',true);
@@ -1246,6 +1273,95 @@ function generateQR(){
   new QRCode(el,{text:url,width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
 }
 function copyLink(){ navigator.clipboard.writeText(location.origin+location.pathname+'?view=spectator').then(()=>alert('Copied!')); }
+
+// ─── PIT SCORE PAGE ───────────────────────────────────────────────────────────
+function renderPitPage(pitNum){
+  const body=document.getElementById('pit-page-body');
+  if(!body) return;
+  const m=getMatchOnPit(pitNum);
+  const active=m&&!m.winner&&m.t1&&m.t2;
+  const done=m&&m.winner;
+
+  if(!active&&!done){
+    body.innerHTML=`<div style="text-align:center;padding:4rem 1rem;">
+      <div style="font-size:48px;margin-bottom:1rem;">🏟</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:20px;color:var(--muted);text-transform:uppercase;">No match assigned to Court ${pitNum} yet</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:0.5rem;">Check back when your match starts</div>
+    </div>`;
+    return;
+  }
+
+  if(done){
+    body.innerHTML=`<div style="text-align:center;padding:4rem 1rem;">
+      <div style="font-size:48px;margin-bottom:1rem;">✅</div>
+      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--success);">${m.winner}</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:0.5rem;">Won this match</div>
+    </div>`;
+    return;
+  }
+
+  const btnBig=`width:64px;height:64px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:32px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+
+  body.innerHTML=`
+    <!-- Team 1 -->
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:16px;">
+      <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;color:var(--cream);margin-bottom:12px;text-align:center;">${m.t1}</div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+        <button style="${btnBig}" onclick="pitPageScore('${m.id}','s1',-1)">−</button>
+        <div style="font-family:'Playfair Display',serif;font-size:72px;font-weight:900;color:var(--gold);line-height:1;min-width:80px;text-align:center;">${m.s1||0}</div>
+        <button style="${btnBig}" onclick="pitPageScore('${m.id}','s1',1)">+</button>
+      </div>
+      <button style="width:100%;padding:14px;border-radius:10px;border:none;background:var(--gold);color:#0a1628;font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;" onclick="pitPageWinner('${m.id}','t1')">🏆 ${m.t1} Wins</button>
+    </div>
+
+    <div style="text-align:center;font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--muted);letter-spacing:2px;">VS</div>
+
+    <!-- Team 2 -->
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:16px;">
+      <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;color:var(--cream);margin-bottom:12px;text-align:center;">${m.t2}</div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+        <button style="${btnBig}" onclick="pitPageScore('${m.id}','s2',-1)">−</button>
+        <div style="font-family:'Playfair Display',serif;font-size:72px;font-weight:900;color:var(--gold);line-height:1;min-width:80px;text-align:center;">${m.s2||0}</div>
+        <button style="${btnBig}" onclick="pitPageScore('${m.id}','s2',1)">+</button>
+      </div>
+      <button style="width:100%;padding:14px;border-radius:10px;border:none;background:var(--gold);color:#0a1628;font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;" onclick="pitPageWinner('${m.id}','t2')">🏆 ${m.t2} Wins</button>
+    </div>`;
+}
+
+function pitPageScore(matchId, slot, delta){
+  const m=gm(matchId); if(!m) return;
+  m[slot]=Math.max(0,(parseInt(m[slot])||0)+delta);
+  save();
+}
+
+function pitPageWinner(matchId, slot){
+  if(!confirm('Confirm winner?')) return;
+  const m=gm(matchId); if(!m||!m[slot]) return;
+  m.winner=m[slot];
+  if(m.type==='L') advanceLB(matchId);
+  else advanceWB(matchId);
+  autoUpdatePitOnMatchEnd(matchId);
+  save();
+}
+
+// ─── PIT QR CODES IN ADMIN ───────────────────────────────────────────────────
+function renderPitQRCodes(){
+  const el=document.getElementById('pit-qr-section');
+  if(!el) return;
+  el.innerHTML='';
+  for(let p=1;p<=numPits;p++){
+    const url=location.origin+location.pathname+`?pit=${p}`;
+    const div=document.createElement('div');
+    div.style.cssText='text-align:center;';
+    div.innerHTML=`<div style="font-family:Oswald,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:6px;">Court ${p}</div>
+      <div id="pit-qr-${p}" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Scan to keep score</div>`;
+    el.appendChild(div);
+    setTimeout(()=>{
+      new QRCode(document.getElementById(`pit-qr-${p}`),{text:url,width:100,height:100,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+    },100);
+  }
+}
 
 function renderRoster(){
   const area=document.getElementById('s-roster');
