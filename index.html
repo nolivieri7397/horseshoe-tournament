@@ -479,6 +479,23 @@ let LBrounds = []; // array of arrays of match ids
 let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
 
+// ─── MATCH FACTORY ───────────────────────────────────────────────────────────
+let _mid = 0;
+function mkMatch(t1, t2){
+  const id = 'm' + (_mid++);
+  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:'W', bye:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
+  return id;
+}
+function gm(id){ return id ? matches[id] : null; }
+function allM(){
+  const a = [...WBrounds.flat(), ...LBrounds.flat()];
+  if(gfId && gm(gfId)) a.push(gm(gfId));
+  if(gf2Id && gm(gf2Id)) a.push(gm(gf2Id));
+  return a;
+}
+function getM(id){ return gm(id); }
+
+
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
 const pitParam = new URLSearchParams(location.search).get('pit');
 const isPitPage = !!pitParam;
@@ -1067,7 +1084,7 @@ function buildRoundsEl(rounds, type, spec){
           row.style.cssText=`display:flex;align-items:center;height:${ROW_H}px;border-bottom:${ti===0?'1px solid rgba(255,255,255,0.06)':'none'};background:${isWinner?'rgba(46,204,113,0.12)':'transparent'};${canClick?'cursor:pointer;':''}transition:background 0.15s;`;
 
           if(canClick){
-            const fn=type==='lb'?'clickLBWinner':'clickWBWinner';
+            const fn=type==='lb'?'clickLB':'clickWB';
             row.setAttribute('onclick',`${fn}('${m.id}','${tk}')`);
             row.addEventListener('mouseenter',()=>row.style.background='rgba(255,255,255,0.06)');
             row.addEventListener('mouseleave',()=>row.style.background=isWinner?'rgba(46,204,113,0.12)':'transparent');
@@ -1104,7 +1121,7 @@ function buildRoundsEl(rounds, type, spec){
               const u=document.createElement('div');
               u.style.cssText='width:20px;text-align:center;font-size:9px;color:var(--muted);cursor:pointer;';
               u.textContent='↩';
-              const fn=type==='lb'?'clickLBWinner':'clickWBWinner';
+              const fn=type==='lb'?'clickLB':'clickWB';
               u.setAttribute('onclick',`event.stopPropagation();${fn}('${m.id}','${tk}')`);
               row.appendChild(u);
             }
