@@ -488,6 +488,7 @@ let buyIn=20, pct1=70, pct2=30;
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
 const pitParam = new URLSearchParams(location.search).get('pit');
 const isPitPage = !!pitParam;
+let _currentPitMatchId=null, _scoringActive=false;
 if(isPitPage){
   // Hide everything except pit page
   document.getElementById('admin-view').style.display='none';
@@ -501,12 +502,28 @@ if(isPitPage){
   // Listen for Firebase updates — fires immediately with current data then on every change
   stateRef.on('value', snapshot => {
     const data=snapshot.val();
-    if(data){
-      applyState(data);
-      renderPitPage(parseInt(pitParam));
-    } else {
+    if(!data){
       if(pitBody) pitBody.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#444;font-family:'Barlow Condensed',sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:2px;">No tournament data yet</div>`;
+      return;
     }
+    applyState(data);
+    const pitNum=parseInt(pitParam);
+    const m=getMatchOnPit(pitNum);
+    const matchId=m?m.id:null;
+
+    // If scoring is active and same match — just update scores silently
+    if(_scoringActive && matchId===_currentPitMatchId && m && !m.winner){
+      const s1el=document.getElementById('pp-s1');
+      const s2el=document.getElementById('pp-s2');
+      if(s1el) s1el.textContent=m.s1||0;
+      if(s2el) s2el.textContent=m.s2||0;
+      return;
+    }
+
+    // Match changed, winner set, or first load — full re-render
+    _currentPitMatchId=matchId;
+    _scoringActive=false;
+    renderPitPage(pitNum);
   });
 } else if(isSpec){
   document.getElementById('admin-view').style.display='none';
@@ -1360,6 +1377,7 @@ function pickColor(matchId, slot, colorIdx){
 function startScoring(matchId){
   const m=gm(matchId);
   if(m.color1==null||m.color2==null){ alert('Both teams need to pick a color first!'); return; }
+  _scoringActive=true;
   renderScoreboard(m);
 }
 
@@ -1382,11 +1400,18 @@ function renderScoreboard(m){
       <div style="background:${c1.bar};padding:10px 12px;text-align:center;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c1.barText};">${m.t1}</div>
       </div>
-      <!-- Score -->
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;">
-        <div id="pp-s1" style="font-family:'Barlow Condensed',sans-serif;font-size:min(28vw,28vh);font-weight:800;line-height:1;color:${c1.text};">${m.s1||0}</div>
+      <!-- Score tap zone: top half = +1, bottom half = -1 -->
+      <div style="flex:1;display:flex;flex-direction:column;cursor:pointer;position:relative;" onclick="tapScore(event,'${m.id}','s1',this)">
+        <!-- Top half: + -->
+        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c1.text};">＋</div>
+        <!-- Score -->
+        <div style="display:flex;align-items:center;justify-content:center;">
+          <div id="pp-s1" style="font-family:'Barlow Condensed',sans-serif;font-size:min(22vw,22vh);font-weight:800;line-height:1;color:${c1.text};">${m.s1||0}</div>
+        </div>
+        <!-- Bottom half: - -->
+        <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c1.text};">－</div>
       </div>
-      <!-- Big +/- -->
+      <!-- Big +/- buttons still at bottom -->
       <div style="display:flex;gap:0;border-top:3px solid rgba(0,0,0,0.15);">
         <button class="pp-btn" onclick="pitPageScore('${m.id}','s1',-1)"
           style="flex:1;height:72px;background:rgba(0,0,0,0.15);color:${c1.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border-right:2px solid rgba(0,0,0,0.1);">−</button>
@@ -1414,11 +1439,15 @@ function renderScoreboard(m){
       <div style="background:${c2.bar};padding:10px 12px;text-align:center;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c2.barText};">${m.t2}</div>
       </div>
-      <!-- Score -->
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;">
-        <div id="pp-s2" style="font-family:'Barlow Condensed',sans-serif;font-size:min(28vw,28vh);font-weight:800;line-height:1;color:${c2.text};">${m.s2||0}</div>
+      <!-- Score tap zone: top half = +1, bottom half = -1 -->
+      <div style="flex:1;display:flex;flex-direction:column;cursor:pointer;position:relative;" onclick="tapScore(event,'${m.id}','s2',this)">
+        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c2.text};">＋</div>
+        <div style="display:flex;align-items:center;justify-content:center;">
+          <div id="pp-s2" style="font-family:'Barlow Condensed',sans-serif;font-size:min(22vw,22vh);font-weight:800;line-height:1;color:${c2.text};">${m.s2||0}</div>
+        </div>
+        <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c2.text};">－</div>
       </div>
-      <!-- Big +/- -->
+      <!-- Big +/- buttons still at bottom -->
       <div style="display:flex;gap:0;border-top:3px solid rgba(0,0,0,0.15);">
         <button class="pp-btn" onclick="pitPageScore('${m.id}','s2',-1)"
           style="flex:1;height:72px;background:rgba(0,0,0,0.15);color:${c2.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border-right:2px solid rgba(0,0,0,0.1);">−</button>
@@ -1442,17 +1471,29 @@ function pitPageWinner(matchId, slot){
   if(!confirm('Confirm winner?')) return;
   const m=gm(matchId); if(!m||!m[slot]) return;
   m.winner=m[slot];
+  _scoringActive=false;
   if(m.type==='L') advanceLB(matchId);
   else advanceWB(matchId);
   autoUpdatePitOnMatchEnd(matchId);
   save();
-  // Re-render pit page to show winner screen
   if(isPitPage) renderPitPage(parseInt(pitParam));
 }
 
 function resetPitScores(matchId){
   const m=gm(matchId); if(!m) return;
-  m.s1=0; m.s2=0; save();
+  m.s1=0; m.s2=0;
+  const s1el=document.getElementById('pp-s1');
+  const s2el=document.getElementById('pp-s2');
+  if(s1el) s1el.textContent=0;
+  if(s2el) s2el.textContent=0;
+  save();
+}
+
+function tapScore(e, matchId, slot, el){
+  const rect=el.getBoundingClientRect();
+  const mid=rect.top+rect.height/2;
+  const delta=e.clientY<mid?1:-1;
+  pitPageScore(matchId,slot,delta);
 }
 
 // ─── PIT QR CODES IN ADMIN ───────────────────────────────────────────────────
