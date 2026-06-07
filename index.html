@@ -886,16 +886,16 @@ function advanceWB(matchId){
 }
 
 function sendToLB(wbMatchId, loser){
-  // Find LB match that has this wbMatchId in its lbDropFrom
   const allLB=LBrounds.flat();
   for(const lbId of allLB){
     const lm=gm(lbId);
     if(lm.lbDropFrom && lm.lbDropFrom.includes(wbMatchId)){
       if(!lm.t1) lm.t1=loser;
       else if(!lm.t2) lm.t2=loser;
-      // If lbBye (only 1 team), auto advance
-      if(lm.lbBye && lm.t1 && !lm.winner){
-        lm.winner=lm.t1;
+      // If opponent is BYE or match only has 1 real team, auto advance
+      const hasBye=(lm.t1==='BYE')||(lm.t2==='BYE');
+      if(hasBye && lm.t1 && lm.t2 && !lm.winner){
+        lm.winner=lm.t1==='BYE'?lm.t2:lm.t1;
         advanceLB(lbId);
       }
       return;
@@ -1769,7 +1769,7 @@ function renderBiggestLoser(spec){
 
 // ─── PIT BOARD RENDER ────────────────────────────────────────────────────────
 function getPendingMatches(){
-  const regular=Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2&&m.type!=='GF'&&m.type!=='GF2'&&m.id!==gfId&&m.id!==gf2Id);
+  const regular=Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2&&m.t2!=='BYE'&&m.t1!=='BYE'&&m.type!=='GF'&&m.type!=='GF2'&&m.id!==gfId&&m.id!==gf2Id);
   // Add GF if active
   const gfM=gfId?gm(gfId):null;
   if(gfM&&!gfM.winner&&gfM.t1&&gfM.t2) regular.push({...gfM,_label:'⚡ Grand Final'});
