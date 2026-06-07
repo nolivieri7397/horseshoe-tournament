@@ -690,7 +690,7 @@ function buildLB(){
   // LB-R4 (drop): LB-R3 winners vs losers from WB-R3
   // ... repeat until 1 team remains
 
-  const wbR1=WBrounds[0].filter(id=>!gm(id).bye);
+  const wbR1=WBrounds[0].filter(id=>{ const m=gm(id); return m&&!m.bye&&m.t2!=='BYE'; });
   if(wbR1.length===0) return;
 
   // LB Round 1: WB-R1 losers vs each other
@@ -1134,9 +1134,13 @@ function renderBracket(containerId, spec){
   // LB
   const lbSec=document.createElement('div'); lbSec.className='bracket-section';
   lbSec.appendChild(makeSecHeader('💀 Losers Bracket','lb'));
-  if(LBrounds.length){
+  // Filter out LB rounds that are entirely empty/BYE
+  const activeLBRounds=LBrounds.filter(round=>
+    round.some(id=>{ const m=gm(id); return m&&(m.t1||m.t2)&&(m.t1!=='BYE'||m.t2!=='BYE'||m.winner); })
+  );
+  if(activeLBRounds.length){
     const lbScroll=document.createElement('div'); lbScroll.className='bracket-scroll';
-    lbScroll.appendChild(buildRoundsEl(LBrounds,'lb',spec));
+    lbScroll.appendChild(buildRoundsEl(activeLBRounds,'lb',spec));
     lbSec.appendChild(lbScroll);
   } else {
     const msg=document.createElement('p');
@@ -1200,7 +1204,13 @@ function buildRoundsEl(rounds, type, spec){
       const cardCY=cardTop+MATCH_H/2;
       if(m) cY[matchId]=cardCY;
 
-      if(m&&!m.bye&&!m.lbBye){
+      // Skip LB matches where both teams are empty (came from BYE slots)
+      const bothEmpty=!m||(!m.t1&&!m.t2)||((m.t1==='BYE'||!m.t1)&&(m.t2==='BYE'||!m.t2));
+      if(type==='lb'&&bothEmpty&&!m?.winner) {
+        // Still track center Y for connector math but don't render
+        if(m) cY[matchId]=cardCY;
+      }
+      if(m&&!m.bye&&!m.lbBye&&!(type==='lb'&&bothEmpty&&!m.winner)){
         // Outer wrapper: pit button on left + card
         const outerWrap=document.createElement('div');
         outerWrap.style.cssText=`position:absolute;left:${colX-28}px;top:${cardTop}px;display:flex;align-items:stretch;`;
