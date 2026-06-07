@@ -379,6 +379,9 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
   <!-- CHAMPION -->
   <div id="s-champion-area"></div>
 
+  <!-- LIVE CHAMPIONSHIP -->
+  <div id="s-championship-live" style="display:none;margin-bottom:1rem;"></div>
+
   <!-- BIGGEST LOSER -->
   <div id="s-biggest-loser-area"></div>
 
@@ -1063,7 +1066,7 @@ function renderSpectator(){
   renderBracket('s-bracket-container',true);
   const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye), done=all.filter(m=>m.winner).length;
   document.getElementById('s-status-bar').innerHTML=`<div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div><div class="stat-pill"><div class="dot dot-amber"></div>${done}/${all.length} Done</div>`;
-  renderSpectatorPrize(); checkChamp(true); renderBiggestLoser(true); renderSpectatorPits(); renderRoster();
+  renderSpectatorPrize(); checkChamp(true); renderChampionshipLive(); renderBiggestLoser(true); renderSpectatorPits(); renderRoster();
 }
 
 function renderBracket(containerId, spec){
@@ -1473,11 +1476,70 @@ function pitPageWinner(matchId, slot){
   const m=gm(matchId); if(!m||!m[slot]) return;
   m.winner=m[slot];
   _scoringActive=false;
-  if(m.type==='L') advanceLB(matchId);
-  else advanceWB(matchId);
-  autoUpdatePitOnMatchEnd(matchId);
+
+  if(m.type==='GF'||m.id===gfId){
+    // Grand Final — check if losers side won (bracket reset needed)
+    if(m.winner===m.t2){
+      // Losers bracket winner won — create GF2
+      gf2Id=mkMatch(m.t1,m.t2);
+      gm(gf2Id).isGF2=true;
+      gm(gf2Id).type='GF2';
+      save();
+      // Show bracket reset screen on pit page
+      if(isPitPage) showBracketReset(m);
+      return;
+    }
+    // Winners bracket winner won — tournament over
+    autoUpdatePitOnMatchEnd(matchId);
+    save();
+    if(isPitPage) renderPitPage(parseInt(pitParam));
+    checkChamp(false);
+  } else if(m.type==='GF2'||m.id===gf2Id){
+    // Reset match — tournament over
+    autoUpdatePitOnMatchEnd(matchId);
+    save();
+    if(isPitPage) renderPitPage(parseInt(pitParam));
+    checkChamp(false);
+  } else if(m.type==='L'){
+    advanceLB(matchId);
+    autoUpdatePitOnMatchEnd(matchId);
+    save();
+    if(isPitPage) renderPitPage(parseInt(pitParam));
+  } else {
+    advanceWB(matchId);
+    autoUpdatePitOnMatchEnd(matchId);
+    save();
+    if(isPitPage) renderPitPage(parseInt(pitParam));
+  }
+}
+
+function showBracketReset(gfMatch){
+  const body=document.getElementById('pit-page-body');
+  if(!body) return;
+  body.innerHTML=`
+  <div style="width:100%;height:100%;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;">
+    <div style="font-size:52px;">🔄</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#d4af37;text-transform:uppercase;letter-spacing:2px;">Bracket Reset!</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#aaa;max-width:280px;line-height:1.5;">
+      <strong style="color:#fff;">${gfMatch.t2}</strong> won — both teams now have 1 loss.<br>One final match decides the champion!
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#555;margin-top:4px;">Scores reset to 0 — 0</div>
+    <button onclick="startResetMatch()" style="margin-top:8px;padding:16px 40px;border-radius:12px;border:none;background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;">
+      Start Reset Match →
+    </button>
+  </div>`;
+}
+
+function startResetMatch(){
+  _scoringActive=true;
+  _currentPitMatchId=gf2Id;
+  const m=gm(gf2Id);
+  if(!m) return;
+  // Carry over colors from GF
+  const gfM=gm(gfId);
+  if(gfM){m.color1=gfM.color1;m.color2=gfM.color2;}
   save();
-  if(isPitPage) renderPitPage(parseInt(pitParam));
+  renderScoreboard(m);
 }
 
 function resetPitScores(matchId){
@@ -1514,6 +1576,51 @@ function renderPitQRCodes(){
       new QRCode(document.getElementById(`pit-qr-${p}`),{text:url,width:100,height:100,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
     },100);
   }
+}
+
+function renderChampionshipLive(){
+  const area=document.getElementById('s-championship-live');
+  if(!area) return;
+
+  // Get active GF or GF2
+  let gfM=null;
+  if(gf2Id&&gm(gf2Id)&&!gm(gf2Id).winner) gfM=gm(gf2Id);
+  else if(gfId&&gm(gfId)&&gm(gfId).t1&&gm(gfId).t2&&!gm(gf2Id)) gfM=gm(gfId);
+
+  // Check if champion already crowned
+  let champ=null;
+  if(gf2Id&&gm(gf2Id)&&gm(gf2Id).winner) champ=gm(gf2Id).winner;
+  else if(gfId&&gm(gfId)&&gm(gfId).winner===gm(gfId).t1) champ=gm(gfId).winner;
+
+  if(champ){
+    // Show podium — champion area already handles this, hide live score
+    area.style.display='none';
+    return;
+  }
+
+  if(!gfM||!gfM.t1||!gfM.t2){area.style.display='none';return;}
+
+  const isReset=gfM.id===gf2Id;
+  area.style.display='';
+  area.innerHTML=`
+  <div style="background:radial-gradient(ellipse at top,rgba(212,175,55,0.15),transparent 70%);border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:1rem 1.25rem;text-align:center;margin:0 0 1rem;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:#d4af37;margin-bottom:4px;">
+      ${isReset?'🔄 Bracket Reset — Final Match':'⚡ Championship Match — Live'}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:10px;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:#f5ecd7;margin-bottom:6px;">${gfM.t1}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:#d4af37;line-height:1;">${gfM.s1||0}</div>
+        <div style="font-size:10px;color:#7a8099;margin-top:4px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px;">Winners Side</div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#333;">VS</div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:#f5ecd7;margin-bottom:6px;">${gfM.t2}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:#d4af37;line-height:1;">${gfM.s2||0}</div>
+        <div style="font-size:10px;color:#7a8099;margin-top:4px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px;">Losers Side</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderRoster(){
@@ -1615,6 +1722,11 @@ function getPendingMatches(){
   return Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2);
 }
 function getMatchOnPit(p){
+  // Check GF2 first (active reset match takes priority)
+  if(gf2Id&&gm(gf2Id)&&String(gm(gf2Id).pit)===String(p)&&!gm(gf2Id).winner) return gm(gf2Id);
+  // Then GF
+  if(gfId&&gm(gfId)&&String(gm(gfId).pit)===String(p)) return gm(gfId);
+  // Regular matches
   const id=Object.keys(matches).find(id=>matches[id]&&String(matches[id].pit)===String(p));
   return id?matches[id]:null;
 }
