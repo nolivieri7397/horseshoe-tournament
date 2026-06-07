@@ -881,6 +881,7 @@ function advanceWB(matchId){
   const wbFinalId=WBrounds[WBrounds.length-1][0];
   if(matchId===wbFinalId && gfId){
     gm(gfId).t1=m.winner;
+    autoAssignChampionship();
   }
 }
 
@@ -1318,10 +1319,16 @@ function renderPitPage(pitNum){
     return;
   }
 
+  // If scoring already started, skip color picker
+  if(m.scoringStarted){
+    _scoringActive=true;
+    renderScoreboard(m);
+    return;
+  }
   // Check if colors already assigned, if not show color picker
-  const c1=m.color1||null;
-  const c2=m.color2||null;
-  if(!c1||!c2){
+  const c1=m.color1!=null?m.color1:null;
+  const c2=m.color2!=null?m.color2:null;
+  if(c1===null||c2===null){
     renderColorPicker(m);
     return;
   }
@@ -1393,7 +1400,9 @@ function pickColor(matchId, slot, colorIdx){
 function startScoring(matchId){
   const m=gm(matchId);
   if(m.color1==null||m.color2==null){ alert('Both teams need to pick a color first!'); return; }
+  m.scoringStarted=true;
   _scoringActive=true;
+  save();
   renderScoreboard(m);
 }
 
@@ -1482,8 +1491,16 @@ function pitPageWinner(matchId, slot){
     if(m.winner===m.t2){
       // Losers bracket winner won — create GF2
       gf2Id=mkMatch(m.t1,m.t2);
-      gm(gf2Id).isGF2=true;
-      gm(gf2Id).type='GF2';
+      const gf2M=gm(gf2Id);
+      gf2M.isGF2=true;
+      gf2M.type='GF2';
+      // Carry over colors and auto-assign to pit 1
+      gf2M.color1=m.color1;
+      gf2M.color2=m.color2;
+      gf2M.scoringStarted=true;
+      gf2M.pit=1;
+      // Clear pit 1 from GF
+      m.pit='';
       save();
       // Show bracket reset screen on pit page
       if(isPitPage) showBracketReset(m);
@@ -1535,10 +1552,6 @@ function startResetMatch(){
   _currentPitMatchId=gf2Id;
   const m=gm(gf2Id);
   if(!m) return;
-  // Carry over colors from GF
-  const gfM=gm(gfId);
-  if(gfM){m.color1=gfM.color1;m.color2=gfM.color2;}
-  save();
   renderScoreboard(m);
 }
 
