@@ -1494,12 +1494,12 @@ function pitPageWinner(matchId, slot){
       const gf2M=gm(gf2Id);
       gf2M.isGF2=true;
       gf2M.type='GF2';
-      // Carry over colors and auto-assign to pit 1
+      // Carry over colors from GF
       gf2M.color1=m.color1;
       gf2M.color2=m.color2;
       gf2M.scoringStarted=true;
-      gf2M.pit=1;
-      // Clear pit 1 from GF
+      // Carry over same pit assignment
+      gf2M.pit=m.pit;
       m.pit='';
       save();
       // Show bracket reset screen on pit page
@@ -1741,15 +1741,23 @@ function renderBiggestLoser(spec){
 
 // ─── PIT BOARD RENDER ────────────────────────────────────────────────────────
 function getPendingMatches(){
-  return Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2);
+  const regular=Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2&&m.type!=='GF'&&m.type!=='GF2'&&m.id!==gfId&&m.id!==gf2Id);
+  // Add GF if active
+  const gfM=gfId?gm(gfId):null;
+  if(gfM&&!gfM.winner&&gfM.t1&&gfM.t2) regular.push({...gfM,_label:'⚡ Grand Final'});
+  // Add GF2 if active
+  const gf2M=gf2Id?gm(gf2Id):null;
+  if(gf2M&&!gf2M.winner&&gf2M.t1&&gf2M.t2) regular.push({...gf2M,_label:'🔄 Reset Match'});
+  return regular;
 }
 function getMatchOnPit(p){
-  // Check GF2 first (active reset match takes priority)
-  if(gf2Id&&gm(gf2Id)&&String(gm(gf2Id).pit)===String(p)&&!gm(gf2Id).winner) return gm(gf2Id);
+  const ps=String(p);
+  // GF2 takes priority if active
+  if(gf2Id&&gm(gf2Id)&&String(gm(gf2Id).pit)===ps&&!gm(gf2Id).winner) return gm(gf2Id);
   // Then GF
-  if(gfId&&gm(gfId)&&String(gm(gfId).pit)===String(p)) return gm(gfId);
+  if(gfId&&gm(gfId)&&String(gm(gfId).pit)===ps&&!gm(gfId).winner) return gm(gfId);
   // Regular matches
-  const id=Object.keys(matches).find(id=>matches[id]&&String(matches[id].pit)===String(p));
+  const id=Object.keys(matches).find(id=>matches[id]&&String(matches[id].pit)===ps&&matches[id].id!==gfId&&matches[id].id!==gf2Id);
   return id?matches[id]:null;
 }
 
@@ -1766,10 +1774,12 @@ function renderAdminPitBoard(){
     let opts=`<option value="">— Assign match —</option>`;
     pending.forEach(pm=>{
       const sel=m&&m.id===pm.id;
-      opts+=`<option value="${pm.id}" ${sel?'selected':''}>${pm.t1} vs ${pm.t2}</option>`;
+      const label=pm._label?`${pm._label}: ${pm.t1} vs ${pm.t2}`:`${pm.t1} vs ${pm.t2}`;
+      opts+=`<option value="${pm.id}" ${sel?'selected':''}>${label}</option>`;
     });
     if(m&&!pending.find(pm=>pm.id===m.id)){
-      opts+=`<option value="${m.id}" selected>${m.t1} vs ${m.t2}${done?' ✓':''}</option>`;
+      const label=(m.id===gfId?'⚡ Grand Final: ':m.id===gf2Id?'🔄 Reset Match: ':'')+`${m.t1} vs ${m.t2}${done?' ✓':''}`;
+      opts+=`<option value="${m.id}" selected>${label}</option>`;
     }
 
     const btnStyle=`width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;`;
