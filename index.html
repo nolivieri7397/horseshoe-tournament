@@ -489,17 +489,24 @@ const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
 const pitParam = new URLSearchParams(location.search).get('pit');
 const isPitPage = !!pitParam;
 if(isPitPage){
-  // PIT SCORE PAGE
+  // Hide everything except pit page
   document.getElementById('admin-view').style.display='none';
   document.getElementById('spectator-view').style.display='none';
-  document.getElementById('pit-page').style.display='flex';
-  document.getElementById('nav-badge').textContent=`Court ${pitParam}`;
-  document.getElementById('nav-badge').className='nav-badge spectator';
-  document.getElementById('pit-page-num').textContent=pitParam;
-  // Listen for real-time updates
+  document.getElementById('pit-page').style.display='block';
+  document.querySelector('nav').style.display='none';
+  document.querySelector('footer') && (document.querySelector('footer').style.display='none');
+  // Show loading state immediately
+  const pitBody=document.getElementById('pit-page-body');
+  if(pitBody) pitBody.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#444;font-family:'Barlow Condensed',sans-serif;font-size:24px;text-transform:uppercase;letter-spacing:2px;">Loading Court ${pitParam}...</div>`;
+  // Listen for Firebase updates — fires immediately with current data then on every change
   stateRef.on('value', snapshot => {
-    applyState(snapshot.val());
-    renderPitPage(parseInt(pitParam));
+    const data=snapshot.val();
+    if(data){
+      applyState(data);
+      renderPitPage(parseInt(pitParam));
+    } else {
+      if(pitBody) pitBody.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#444;font-family:'Barlow Condensed',sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:2px;">No tournament data yet</div>`;
+    }
   });
 } else if(isSpec){
   document.getElementById('admin-view').style.display='none';
