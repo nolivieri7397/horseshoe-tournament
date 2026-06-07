@@ -235,11 +235,9 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     </div>
   </div>
   <div class="steps">
-    <div class="step active" id="step1"><div class="step-num">1</div> Players</div>
+    <div class="step active" id="step1"><div class="step-num">1</div> Add Teams</div>
     <div class="step-divider"></div>
-    <div class="step" id="step2"><div class="step-num">2</div> Teams</div>
-    <div class="step-divider"></div>
-    <div class="step" id="step3"><div class="step-num">3</div> Bracket</div>
+    <div class="step" id="step2"><div class="step-num">2</div> Bracket</div>
   </div>
 
   <div id="panel-players">
@@ -545,9 +543,8 @@ if(isPitPage){
       applyState(data);
       if(WBrounds.length){
         document.getElementById('panel-players').style.display='none';
-        document.getElementById('panel-teams').style.display='none';
         document.getElementById('panel-bracket').style.display='';
-        setStep(3);
+        setStep(2);
         document.getElementById('buyin').value=buyIn;
         document.getElementById('pct1').value=pct1;
         document.getElementById('pct2').value=pct2;
@@ -775,8 +772,8 @@ function generateBracket(){
   r1ids.filter(id=>gm(id).bye).forEach(id=>advanceWB(id));
 
   save();
-  document.getElementById('panel-teams').style.display='none';
-  document.getElementById('panel-bracket').style.display=''; setStep(3);
+  document.getElementById('panel-players').style.display='none';
+  document.getElementById('panel-bracket').style.display=''; setStep(2);
   document.getElementById('buyin').value=buyIn;
   document.getElementById('pct1').value=pct1;
   document.getElementById('pct2').value=pct2;
@@ -1937,7 +1934,7 @@ function renderSpectatorPits(){
   area.style.display='';
 }
 function setStep(n){
-  for(let i=1;i<=3;i++){
+  for(let i=1;i<=2;i++){
     const el=document.getElementById(`step${i}`); if(!el) continue;
     if(i<n){el.className='step done';el.querySelector('.step-num').textContent='✓';}
     else if(i===n){el.className='step active';el.querySelector('.step-num').textContent=i;}
@@ -1949,10 +1946,9 @@ function resetAll(){
   players=[];teams=[];matches={};WBrounds=[];LBrounds=[];gfId=null;gf2Id=null;_mid=0;
   stateRef.remove();
   document.getElementById('panel-bracket').style.display='none';
-  document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-players').style.display='';
   document.getElementById('champion-area').innerHTML='';
-  refreshChips(); setStep(1);
+  teams=[]; players=[]; refreshChips(); setStep(1);
 }
 
 </script>
