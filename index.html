@@ -1158,16 +1158,9 @@ function makeSecHeader(label,cls){
 }
 
 function buildRoundsEl(rounds, type, spec){
-  // Dimensions
-  const CARD_W=240, ROW_H=38, MATCH_H=ROW_H*2, SEED_W=30;
-  const GAP=6;       // gap between matches in same round
-  const CONN=36;     // connector strip width
-  const SLOT0=MATCH_H+GAP; // base slot height (round 0)
-  const WB_COL='rgba(46,204,113,0.6)';
-  const LB_COL='rgba(231,76,60,0.6)';
-  const accentCol=type==='wb'?WB_COL:LB_COL;
-  const LINE='rgba(255,255,255,0.1)';
-
+  const CARD_W=220, ROW_H=34, MATCH_H=ROW_H*2, SEED_W=28, CONN=32;
+  const SLOT0=MATCH_H+10;
+  const LINE='rgba(255,255,255,0.08)';
   const nRounds=rounds.length;
   const baseN=rounds[0]?rounds[0].length:0;
   if(!baseN) return document.createElement('div');
@@ -1176,7 +1169,7 @@ function buildRoundsEl(rounds, type, spec){
   const totalW=nRounds*(CARD_W+CONN)+CONN;
 
   const outer=document.createElement('div');
-  outer.style.cssText='overflow-x:auto;padding-bottom:1rem;padding-top:30px;';
+  outer.style.cssText='overflow-x:auto;padding-bottom:0.5rem;padding-top:26px;';
 
   const wrap=document.createElement('div');
   wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
@@ -1195,7 +1188,7 @@ function buildRoundsEl(rounds, type, spec){
     const lbls=['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
     const lbl=ri>=nRounds-lbls.length?lbls[nRounds-1-ri]:`Round ${ri+1}`;
     const lbEl=document.createElement('div');
-    lbEl.style.cssText=`position:absolute;left:${colX}px;top:-22px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);`;
+    lbEl.style.cssText=`position:absolute;left:${colX}px;top:-20px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);`;
     lbEl.textContent=lbl;
     wrap.appendChild(lbEl);
 
@@ -1206,119 +1199,122 @@ function buildRoundsEl(rounds, type, spec){
       if(m) cY[matchId]=cardCY;
 
       if(m&&!m.bye&&!m.lbBye){
+        // Outer wrapper: pit button on left + card
+        const outerWrap=document.createElement('div');
+        outerWrap.style.cssText=`position:absolute;left:${colX-28}px;top:${cardTop}px;display:flex;align-items:stretch;`;
+
+        // PIT BUTTON on left (admin only)
+        if(!spec){
+          const cur=m.pit||'';
+          const pitBtn=document.createElement('div');
+          pitBtn.style.cssText=`width:26px;background:${cur?'rgba(212,175,55,0.2)':'rgba(255,255,255,0.04)'};border:1px solid ${cur?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.06)'};border-right:none;border-radius:6px 0 0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;position:relative;`;
+          pitBtn.title=cur?`Court ${cur} — click to change`:'Assign court';
+          pitBtn.innerHTML=`<span style="font-size:9px;color:${cur?'var(--gold)':'var(--muted)'};">🏟</span>${cur?`<span style="font-size:8px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:''}`;
+
+          // Dropdown on click
+          let opts=`<option value="">No Court</option>`;
+          for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
+          const sel=document.createElement('select');
+          sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;';
+          sel.innerHTML=opts;
+          sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
+          pitBtn.appendChild(sel);
+          outerWrap.appendChild(pitBtn);
+        }
+
         // Match card
         const card=document.createElement('div');
-        card.style.cssText=`position:absolute;left:${colX}px;top:${cardTop}px;width:${CARD_W}px;background:rgba(255,255,255,0.05);border-radius:6px;overflow:hidden;`;
+        const lw=spec?0:28;
+        card.style.cssText=`width:${CARD_W}px;background:rgba(255,255,255,0.05);border-radius:${spec?'6px':'0 6px 6px 0'};overflow:hidden;border:1px solid rgba(255,255,255,0.07);`;
 
         // Team rows
         ['t1','t2'].forEach((tk,ti)=>{
           const sk=ti===0?'s1':'s2';
-          const seed=ti+1;
-          const name=m[tk];
+          const name=m[tk], score=m[sk];
           const isBye=name==='BYE';
-          const isWinner=m.winner===name&&!!name&&!isBye;
+          const isWin=m.winner===name&&!!name&&!isBye;
           const isEmpty=!name;
           const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
+          const fn=type==='lb'?'clickLB':'clickWB';
 
           const row=document.createElement('div');
-          row.style.cssText=`display:flex;align-items:center;height:${ROW_H}px;border-bottom:${ti===0?'1px solid rgba(255,255,255,0.06)':'none'};background:${isWinner?'rgba(46,204,113,0.12)':'transparent'};${canClick?'cursor:pointer;':''}transition:background 0.15s;`;
+          row.style.cssText=`display:flex;align-items:center;height:${ROW_H}px;${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}background:${isWin?'rgba(46,204,113,0.1)':'transparent'};${canClick?'cursor:pointer;':''};transition:background 0.12s;`;
 
           if(canClick){
-            const fn=type==='lb'?'clickLB':'clickWB';
-            row.setAttribute('onclick',`${fn}('${m.id}','${tk}')`);
-            row.addEventListener('mouseenter',()=>row.style.background='rgba(255,255,255,0.06)');
-            row.addEventListener('mouseleave',()=>row.style.background=isWinner?'rgba(46,204,113,0.12)':'transparent');
+            row.onclick=()=>{ const fn2=type==='lb'?clickLB:clickWB; fn2(m.id,tk); };
+            row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.06)'; };
+            row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
           }
 
-          // Seed box
+          // Seed
           const seedEl=document.createElement('div');
-          seedEl.style.cssText=`width:${SEED_W}px;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${isWinner?'var(--success)':isBye?'var(--muted)':'var(--muted)'};flex-shrink:0;`;
-          seedEl.textContent=isBye?'':seed;
+          seedEl.style.cssText=`width:${SEED_W}px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${isWin?'var(--success)':isBye||isEmpty?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.3)'};flex-shrink:0;height:100%;background:rgba(0,0,0,0.15);`;
+          seedEl.textContent=isBye||isEmpty?'':String(ti+1);
           row.appendChild(seedEl);
 
           // Name
           const nameEl=document.createElement('div');
-          nameEl.style.cssText=`flex:1;padding:0 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${isWinner?'var(--success)':isEmpty||isBye?'var(--muted)':'var(--text)'};text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${isBye?'font-style:italic;font-size:12px;':''}`;
+          nameEl.style.cssText=`flex:1;padding:0 8px;font-family:'Barlow Condensed',sans-serif;font-size:${isBye?'11px':'14px'};font-weight:${isWin?'700':'600'};color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.2)':'var(--text)'};text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.3px;${isBye?'font-style:italic;':''}`;
           nameEl.textContent=isEmpty?'—':name;
           row.appendChild(nameEl);
 
-          // Score or undo hint
+          // Score / undo
           if(!isEmpty&&!isBye){
             if(!spec&&!m.winner){
               const inp=document.createElement('input');
-              inp.type='number'; inp.min='0'; inp.value=m[sk]||''; inp.placeholder='-';
-              inp.style.cssText='width:36px;background:rgba(0,0,0,0.3);border:none;border-left:1px solid rgba(255,255,255,0.06);color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;text-align:center;height:100%;outline:none;padding:0;';
+              inp.type='number'; inp.min='0'; inp.value=score||''; inp.placeholder='–';
+              inp.style.cssText='width:32px;background:rgba(0,0,0,0.25);border:none;border-left:1px solid rgba(255,255,255,0.05);color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;text-align:center;height:100%;outline:none;padding:0;';
               inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
               inp.addEventListener('click',e=>e.stopPropagation());
               row.appendChild(inp);
-            } else if(m[sk]){
+            } else if(score){
               const sc=document.createElement('div');
-              sc.style.cssText='width:36px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.06);height:100%;display:flex;align-items:center;justify-content:center;';
-              sc.textContent=m[sk];
+              sc.style.cssText='width:32px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.05);height:100%;display:flex;align-items:center;justify-content:center;';
+              sc.textContent=score;
               row.appendChild(sc);
             }
-            if(isWinner&&!spec){
+            if(isWin&&!spec){
               const u=document.createElement('div');
-              u.style.cssText='width:20px;text-align:center;font-size:9px;color:var(--muted);cursor:pointer;';
+              u.style.cssText='width:18px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;';
               u.textContent='↩';
-              const fn=type==='lb'?'clickLB':'clickWB';
-              u.setAttribute('onclick',`event.stopPropagation();${fn}('${m.id}','${tk}')`);
+              u.onclick=e=>{e.stopPropagation();type==='lb'?clickLB(m.id,tk):clickWB(m.id,tk);};
               row.appendChild(u);
             }
           }
-
           card.appendChild(row);
         });
 
-        // Court badge/dropdown at bottom of card
-        if(!spec){
-          const cur=m.pit||'';
-          let opts=`<option value="">Court —</option>`;
-          for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
-          const pitDiv=document.createElement('div');
-          pitDiv.style.cssText='background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.04);padding:2px 8px;display:flex;align-items:center;gap:4px;';
-          pitDiv.innerHTML=`<span style="font-size:9px;color:var(--muted);">🏟</span><select onchange="setPit('${m.id}',this.value)" onclick="event.stopPropagation()" style="background:transparent;border:none;color:${cur?'var(--accent)':'var(--muted)'};font-size:10px;font-family:'Barlow Condensed',sans-serif;cursor:pointer;outline:none;">${opts}</select>`;
-          card.appendChild(pitDiv);
-        } else if(m.pit){
-          const pitDiv=document.createElement('div');
-          pitDiv.style.cssText='background:rgba(212,175,55,0.06);border-top:1px solid rgba(212,175,55,0.08);padding:2px 10px;font-size:9px;color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;';
-          pitDiv.textContent=`🏟 Court ${m.pit}`;
-          card.appendChild(pitDiv);
-        }
-
-        wrap.appendChild(card);
+        outerWrap.appendChild(card);
+        wrap.appendChild(outerWrap);
       }
 
       // SVG connectors
-      if(ri<nRounds-1&&m){
+      if(ri<nRounds-1&&m&&!m.bye&&!m.lbBye){
         const xR=colX+CARD_W;
         const xM=xR+CONN/2;
         const xN=xR+CONN;
         const y=cardCY;
 
-        // Short horizontal from card right to midpoint
         const h1=document.createElementNS(svgNS,'line');
         h1.setAttribute('x1',xR);h1.setAttribute('y1',y);
         h1.setAttribute('x2',xM);h1.setAttribute('y2',y);
-        h1.setAttribute('stroke',LINE);h1.setAttribute('stroke-width','1.5');
+        h1.setAttribute('stroke',LINE);h1.setAttribute('stroke-width','1');
         svg.appendChild(h1);
 
-        // If even index: draw vertical to pair + horizontal out at midpoint
         if(mi%2===0&&mi+1<roundIds.length){
-          const pairSlotTop=(mi+1)*slotH+(slotH-MATCH_H)/2;
-          const pairCY=pairSlotTop+MATCH_H/2;
+          const pairCY=(mi+1)*slotH+(slotH-MATCH_H)/2+MATCH_H/2;
           const midY=(y+pairCY)/2;
 
-          const vLine=document.createElementNS(svgNS,'line');
-          vLine.setAttribute('x1',xM);vLine.setAttribute('y1',y);
-          vLine.setAttribute('x2',xM);vLine.setAttribute('y2',pairCY);
-          vLine.setAttribute('stroke',LINE);vLine.setAttribute('stroke-width','1.5');
-          svg.appendChild(vLine);
+          const v=document.createElementNS(svgNS,'line');
+          v.setAttribute('x1',xM);v.setAttribute('y1',y);
+          v.setAttribute('x2',xM);v.setAttribute('y2',pairCY);
+          v.setAttribute('stroke',LINE);v.setAttribute('stroke-width','1');
+          svg.appendChild(v);
 
           const h2=document.createElementNS(svgNS,'line');
           h2.setAttribute('x1',xM);h2.setAttribute('y1',midY);
           h2.setAttribute('x2',xN);h2.setAttribute('y2',midY);
-          h2.setAttribute('stroke',LINE);h2.setAttribute('stroke-width','1.5');
+          h2.setAttribute('stroke',LINE);h2.setAttribute('stroke-width','1');
           svg.appendChild(h2);
         }
       }
