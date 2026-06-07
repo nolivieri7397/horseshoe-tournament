@@ -518,13 +518,12 @@ if(isPitPage){
     renderSpectator();
   });
 } else {
-  // Admin: load existing state from Firebase on page load
-  stateRef.once('value', snapshot => {
+  // Admin: listen for real-time Firebase updates (so pit scores show live)
+  stateRef.on('value', snapshot => {
     const data = snapshot.val();
     if(data){
       applyState(data);
       if(WBrounds.length){
-        // Bracket already exists — show it
         document.getElementById('panel-players').style.display='none';
         document.getElementById('panel-teams').style.display='none';
         document.getElementById('panel-bracket').style.display='';
@@ -534,7 +533,6 @@ if(isPitPage){
         document.getElementById('pct2').value=pct2;
         calcPrize(); renderTeamsGrid('live-teams-grid'); generateQR(); renderAll();
       } else if(players.length){
-        // Players added but no bracket yet — restore player list
         refreshChips();
       }
     }
@@ -1300,48 +1298,132 @@ function renderPitPage(pitNum){
     return;
   }
 
-  // Full landscape scoreboard
+  // Check if colors already assigned, if not show color picker
+  const c1=m.color1||null;
+  const c2=m.color2||null;
+  if(!c1||!c2){
+    renderColorPicker(m);
+    return;
+  }
+  renderScoreboard(m);
+}
+
+const COLORS=[
+  {name:'White',bg:'#ffffff',text:'#1a3a6b',bar:'#1a3a6b',barText:'#ffffff'},
+  {name:'Navy',bg:'#1a3a6b',text:'#ffffff',bar:'rgba(0,0,0,0.35)',barText:'#ffffff'},
+  {name:'Red',bg:'#c0392b',text:'#ffffff',bar:'rgba(0,0,0,0.3)',barText:'#ffffff'},
+  {name:'Green',bg:'#27ae60',text:'#ffffff',bar:'rgba(0,0,0,0.3)',barText:'#ffffff'},
+  {name:'Black',bg:'#111111',text:'#ffffff',bar:'#333',barText:'#ffffff'},
+  {name:'Gold',bg:'#d4af37',text:'#000',bar:'#b8960a',barText:'#000'},
+];
+
+function renderColorPicker(m){
+  const body=document.getElementById('pit-page-body');
+  const colorSwatches=(slot)=>COLORS.map((c,i)=>`
+    <button onclick="pickColor('${m.id}','${slot}',${i})"
+      style="width:52px;height:52px;border-radius:10px;background:${c.bg};border:3px solid rgba(255,255,255,0.2);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:${c.text};text-transform:uppercase;">
+      ${c.name}
+    </button>`).join('');
+
+  body.innerHTML=`
+  <div style="width:100%;height:100%;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:20px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:2px;">Choose Your Colors</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;width:100%;">
+      <!-- Team 1 -->
+      <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t1}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color1')}</div>
+        <div id="pick1-label" style="font-size:12px;color:#d4af37;margin-top:8px;font-family:'Barlow Condensed',sans-serif;">${m.color1!=null?COLORS[m.color1].name:'Not chosen'}</div>
+      </div>
+      <!-- Team 2 -->
+      <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t2}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color2')}</div>
+        <div id="pick2-label" style="font-size:12px;color:#d4af37;margin-top:8px;font-family:'Barlow Condensed',sans-serif;">${m.color2!=null?COLORS[m.color2].name:'Not chosen'}</div>
+      </div>
+    </div>
+    <button onclick="startScoring('${m.id}')"
+      style="padding:14px 40px;border-radius:10px;border:none;background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;opacity:${(m.color1!=null&&m.color2!=null)?1:0.4};">
+      Start Scoring →
+    </button>
+  </div>`;
+}
+
+function pickColor(matchId, slot, colorIdx){
+  const m=gm(matchId); if(!m) return;
+  m[slot]=colorIdx;
+  save();
+  // Re-render color picker with updated selection
+  renderColorPicker(m);
+}
+
+function startScoring(matchId){
+  const m=gm(matchId);
+  if(m.color1==null||m.color2==null){ alert('Both teams need to pick a color first!'); return; }
+  renderScoreboard(m);
+}
+
+function renderScoreboard(m){
+  const body=document.getElementById('pit-page-body');
+  const c1=COLORS[m.color1!=null?m.color1:0];
+  const c2=COLORS[m.color2!=null?m.color2:1];
+
   body.innerHTML=`
   <style>
-    #pit-page * { -webkit-tap-highlight-color: transparent; user-select: none; }
-    .pp-panel { display:flex; flex-direction:column; align-items:center; justify-content:space-between; flex:1; padding:0; cursor:pointer; position:relative; overflow:hidden; }
-    .pp-score { font-family:'Barlow Condensed',sans-serif; font-weight:800; line-height:1; text-align:center; }
-    .pp-name { font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:1px; text-align:center; width:100%; padding:0 8px; }
-    .pp-btn { border:none; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:1px; transition:opacity 0.1s; }
-    .pp-btn:active { opacity:0.7; }
-    .pp-divider { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; z-index:10; flex-shrink:0; }
+    #pit-page * { -webkit-tap-highlight-color:transparent; user-select:none; }
+    .pp-btn { border:none; cursor:pointer; transition:transform 0.1s; }
+    .pp-btn:active { transform:scale(0.92); }
   </style>
   <div style="width:100%;height:100%;display:flex;flex-direction:row;background:#000;">
 
-    <!-- TEAM 1 — WHITE -->
-    <div class="pp-panel" style="background:#fff;" onclick="">
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;">
-        <div class="pp-score" style="font-size:min(22vw,22vh);color:#1a3a6b;" id="pp-s1">${m.s1||0}</div>
+    <!-- TEAM 1 -->
+    <div style="flex:1;display:flex;flex-direction:column;background:${c1.bg};overflow:hidden;">
+      <!-- Name top -->
+      <div style="background:${c1.bar};padding:10px 12px;text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c1.barText};">${m.t1}</div>
       </div>
-      <div style="background:#1a3a6b;width:100%;padding:10px 8px;display:flex;align-items:center;justify-content:center;gap:12px;">
-        <button class="pp-btn" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;font-size:28px;" onclick="event.stopPropagation();pitPageScore('${m.id}','s1',-1)">−</button>
-        <div class="pp-name" style="font-size:clamp(14px,2.5vw,22px);color:#fff;flex:1;">${m.t1}</div>
-        <button class="pp-btn" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;font-size:28px;" onclick="event.stopPropagation();pitPageScore('${m.id}','s1',1)">+</button>
+      <!-- Score -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+        <div id="pp-s1" style="font-family:'Barlow Condensed',sans-serif;font-size:min(28vw,28vh);font-weight:800;line-height:1;color:${c1.text};">${m.s1||0}</div>
+      </div>
+      <!-- Big +/- -->
+      <div style="display:flex;gap:0;border-top:3px solid rgba(0,0,0,0.15);">
+        <button class="pp-btn" onclick="pitPageScore('${m.id}','s1',-1)"
+          style="flex:1;height:72px;background:rgba(0,0,0,0.15);color:${c1.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border-right:2px solid rgba(0,0,0,0.1);">−</button>
+        <button class="pp-btn" onclick="pitPageScore('${m.id}','s1',1)"
+          style="flex:1;height:72px;background:rgba(0,0,0,0.08);color:${c1.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;">+</button>
       </div>
     </div>
 
-    <!-- MIDDLE DIVIDER -->
-    <div class="pp-divider" style="width:80px;background:#000;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#444;letter-spacing:2px;">VS</div>
-      <button class="pp-btn" style="background:#222;color:#888;font-size:11px;padding:8px 10px;border-radius:8px;width:64px;" onclick="resetPitScores('${m.id}')">↺ Reset</button>
-      <button class="pp-btn" style="background:#d4af37;color:#000;font-size:11px;padding:8px 10px;border-radius:8px;width:64px;margin-top:4px;" onclick="pitPageWinner('${m.id}','t1')">✓ Win<br><span style="font-size:9px;">${m.t1.split(' ')[0]}</span></button>
-      <button class="pp-btn" style="background:#d4af37;color:#000;font-size:11px;padding:8px 10px;border-radius:8px;width:64px;" onclick="pitPageWinner('${m.id}','t2')">✓ Win<br><span style="font-size:9px;">${m.t2.split(' ')[0]}</span></button>
+    <!-- MIDDLE -->
+    <div style="width:70px;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex-shrink:0;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#444;letter-spacing:2px;">VS</div>
+      <button class="pp-btn" onclick="resetPitScores('${m.id}')"
+        style="background:#1a1a1a;color:#666;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">↺<br>Reset</button>
+      <button class="pp-btn" onclick="pitPageWinner('${m.id}','t1')"
+        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">✓ Win<br>${m.t1.split(/[\s&]/)[0]}</button>
+      <button class="pp-btn" onclick="pitPageWinner('${m.id}','t2')"
+        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">✓ Win<br>${m.t2.split(/[\s&]/)[0]}</button>
+      <button class="pp-btn" onclick="renderColorPicker(getM('${m.id}'))"
+        style="background:#1a1a1a;color:#666;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">🎨<br>Colors</button>
     </div>
 
-    <!-- TEAM 2 — NAVY BLUE -->
-    <div class="pp-panel" style="background:#1a3a6b;">
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;">
-        <div class="pp-score" style="font-size:min(22vw,22vh);color:#fff;" id="pp-s2">${m.s2||0}</div>
+    <!-- TEAM 2 -->
+    <div style="flex:1;display:flex;flex-direction:column;background:${c2.bg};overflow:hidden;">
+      <!-- Name top -->
+      <div style="background:${c2.bar};padding:10px 12px;text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c2.barText};">${m.t2}</div>
       </div>
-      <div style="background:rgba(0,0,0,0.3);width:100%;padding:10px 8px;display:flex;align-items:center;justify-content:center;gap:12px;">
-        <button class="pp-btn" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;font-size:28px;" onclick="pitPageScore('${m.id}','s2',-1)">−</button>
-        <div class="pp-name" style="font-size:clamp(14px,2.5vw,22px);color:#fff;flex:1;">${m.t2}</div>
-        <button class="pp-btn" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;font-size:28px;" onclick="pitPageScore('${m.id}','s2',1)">+</button>
+      <!-- Score -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+        <div id="pp-s2" style="font-family:'Barlow Condensed',sans-serif;font-size:min(28vw,28vh);font-weight:800;line-height:1;color:${c2.text};">${m.s2||0}</div>
+      </div>
+      <!-- Big +/- -->
+      <div style="display:flex;gap:0;border-top:3px solid rgba(0,0,0,0.15);">
+        <button class="pp-btn" onclick="pitPageScore('${m.id}','s2',-1)"
+          style="flex:1;height:72px;background:rgba(0,0,0,0.15);color:${c2.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border-right:2px solid rgba(0,0,0,0.1);">−</button>
+        <button class="pp-btn" onclick="pitPageScore('${m.id}','s2',1)"
+          style="flex:1;height:72px;background:rgba(0,0,0,0.08);color:${c2.text};font-size:42px;font-weight:700;font-family:'Barlow Condensed',sans-serif;">+</button>
       </div>
     </div>
 
@@ -1351,7 +1433,6 @@ function renderPitPage(pitNum){
 function pitPageScore(matchId, slot, delta){
   const m=gm(matchId); if(!m) return;
   m[slot]=Math.max(0,(parseInt(m[slot])||0)+delta);
-  // Update score display instantly without re-render
   const el=document.getElementById(slot==='s1'?'pp-s1':'pp-s2');
   if(el) el.textContent=m[slot];
   save();
@@ -1365,6 +1446,8 @@ function pitPageWinner(matchId, slot){
   else advanceWB(matchId);
   autoUpdatePitOnMatchEnd(matchId);
   save();
+  // Re-render pit page to show winner screen
+  if(isPitPage) renderPitPage(parseInt(pitParam));
 }
 
 function resetPitScores(matchId){
