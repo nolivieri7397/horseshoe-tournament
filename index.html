@@ -1336,11 +1336,20 @@ const COLORS=[
 
 function renderColorPicker(m){
   const body=document.getElementById('pit-page-body');
-  const colorSwatches=(slot)=>COLORS.map((c,i)=>`
-    <button onclick="pickColor('${m.id}','${slot}',${i})"
-      style="width:52px;height:52px;border-radius:10px;background:${c.bg};border:3px solid rgba(255,255,255,0.2);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:${c.text};text-transform:uppercase;">
-      ${c.name}
-    </button>`).join('');
+  const colorSwatches=(slot)=>COLORS.map((c,i)=>{
+    const isSelected=m[slot]===i;
+    return `<button onclick="pickColor('${m.id}','${slot}',${i})"
+      style="width:64px;height:64px;border-radius:12px;background:${c.bg};
+        border:${isSelected?'4px solid #fff':'3px solid rgba(255,255,255,0.15)'};
+        cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+        color:${c.text};text-transform:uppercase;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:2px;
+        box-shadow:${isSelected?'0 0 0 3px #d4af37, 0 0 20px rgba(212,175,55,0.4)':'none'};
+        transform:${isSelected?'scale(1.1)':'scale(1)'};transition:all 0.15s;">
+      ${isSelected?`<span style="font-size:20px;">✓</span>`:''}
+      <span>${c.name}</span>
+    </button>`;
+  }).join('');
 
   body.innerHTML=`
   <div style="width:100%;height:100%;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:20px;">
@@ -1350,13 +1359,17 @@ function renderColorPicker(m){
       <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t1}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color1')}</div>
-        <div id="pick1-label" style="font-size:12px;color:#d4af37;margin-top:8px;font-family:'Barlow Condensed',sans-serif;">${m.color1!=null?COLORS[m.color1].name:'Not chosen'}</div>
+        <div style="font-size:13px;color:${m.color1!=null?'#d4af37':'#555'};margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+          ${m.color1!=null?'✓ '+COLORS[m.color1].name+' selected':'Pick a color above'}
+        </div>
       </div>
       <!-- Team 2 -->
       <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t2}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color2')}</div>
-        <div id="pick2-label" style="font-size:12px;color:#d4af37;margin-top:8px;font-family:'Barlow Condensed',sans-serif;">${m.color2!=null?COLORS[m.color2].name:'Not chosen'}</div>
+        <div style="font-size:13px;color:${m.color2!=null?'#d4af37':'#555'};margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+          ${m.color2!=null?'✓ '+COLORS[m.color2].name+' selected':'Pick a color above'}
+        </div>
       </div>
     </div>
     <button onclick="startScoring('${m.id}')"
@@ -1415,16 +1428,16 @@ function renderScoreboard(m){
     </div>
 
     <!-- MIDDLE -->
-    <div style="width:70px;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex-shrink:0;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#444;letter-spacing:2px;">VS</div>
-      <button class="pp-btn" onclick="resetPitScores('${m.id}')"
-        style="background:#1a1a1a;color:#666;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">↺<br>Reset</button>
+    <div style="width:100px;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex-shrink:0;padding:10px 6px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#333;letter-spacing:3px;">VS</div>
       <button class="pp-btn" onclick="pitPageWinner('${m.id}','t1')"
-        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">✓ Win<br>${m.t1.split(/[\s&]/)[0]}</button>
+        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;padding:10px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;line-height:1.4;">✓ WIN<br><span style="font-size:11px;opacity:0.8;">${m.t1.split(' ')[0]}</span></button>
       <button class="pp-btn" onclick="pitPageWinner('${m.id}','t2')"
-        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">✓ Win<br>${m.t2.split(/[\s&]/)[0]}</button>
+        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;padding:10px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;line-height:1.4;">✓ WIN<br><span style="font-size:11px;opacity:0.8;">${m.t2.split(' ')[0]}</span></button>
+      <button class="pp-btn" onclick="resetPitScores('${m.id}')"
+        style="background:#222;color:#888;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;">↺ Reset</button>
       <button class="pp-btn" onclick="renderColorPicker(getM('${m.id}'))"
-        style="background:#1a1a1a;color:#666;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;padding:7px 8px;border-radius:8px;width:58px;letter-spacing:0.5px;">🎨<br>Colors</button>
+        style="background:#222;color:#888;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;">🎨 Colors</button>
     </div>
 
     <!-- TEAM 2 -->
