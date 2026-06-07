@@ -878,8 +878,7 @@ function advanceWB(matchId){
   }
 
   // Check if this was WB final → send winner to GF t1
-  const wbFinalId=WBrounds[WBrounds.length-1][0];
-  if(matchId===wbFinalId && gfId){
+  if(WBrounds.length&&WBrounds[WBrounds.length-1][0]===matchId&&gfId){
     gm(gfId).t1=m.winner;
     autoAssignChampionship();
   }
@@ -937,9 +936,11 @@ function undoWBWin(matchId){
 
   // Clear from next WB match
   Object.values(matches).forEach(nm=>{
-    if(!nm.wbFrom) return;
-    if(nm.wbFrom.includes(matchId) && nm.t1===prevWinner){ nm.t1=null; if(nm.winner) undoWBWin(nm.id); }
-    else if(nm.wbFrom.includes(matchId) && nm.t2===prevWinner){ nm.t2=null; if(nm.winner) undoWBWin(nm.id); }
+    if(!nm.fromWin) return;
+    if(nm.fromWin.includes(matchId)){
+      if(nm.t1===prevWinner){nm.t1=null;if(nm.winner)undoWBWin(nm.id);}
+      else if(nm.t2===prevWinner){nm.t2=null;if(nm.winner)undoWBWin(nm.id);}
+    }
   });
 
   // Clear loser from LB
