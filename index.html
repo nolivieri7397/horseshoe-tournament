@@ -970,6 +970,146 @@ function setPit(matchId,val){
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
+// ─── TEAM MANAGEMENT ─────────────────────────────────────────────────────────
+function renderTeamsGrid(id){
+  const el=document.getElementById(id); if(!el) return;
+  if(id==='live-teams-grid'){
+    el.innerHTML=teams.map((t,i)=>`
+      <div class="team-card">
+        <div class="team-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;">Team ${i+1}</span>
+          <button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Team Name</div>
+            <input type="text" value="${t.name}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-weight:600;"
+              onchange="editTeamName(${i},this.value)" placeholder="Team name"/>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="flex:1;">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Player 1</div>
+              <input type="text" value="${t.p1||''}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);"
+                onchange="editPlayerName(${i},'p1',this.value)" placeholder="Player 1"/>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Player 2</div>
+              <input type="text" value="${t.p2||''}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);"
+                onchange="editPlayerName(${i},'p2',this.value)" placeholder="Player 2"/>
+            </div>
+          </div>
+        </div>
+      </div>`).join('');
+  } else {
+    el.innerHTML=teams.map((t,i)=>`
+      <div class="team-card"><div class="team-label">Team ${i+1}</div>
+      <div class="team-players"><span>${t.p1||t.name}</span><span class="amp">&amp;</span><span>${t.p2||''}</span></div></div>`).join('');
+  }
+}
+
+function editTeamName(teamIdx, newName){
+  if(!newName.trim()) return;
+  const t=teams[teamIdx], old=t.name;
+  t.name=newName.trim();
+  Object.values(matches).forEach(m=>{
+    if(!m) return;
+    if(m.t1===old) m.t1=t.name;
+    if(m.t2===old) m.t2=t.name;
+    if(m.winner===old) m.winner=t.name;
+  });
+  if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===old)g.t1=t.name;if(g.t2===old)g.t2=t.name;if(g.winner===old)g.winner=t.name;}
+  if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===old)g.t1=t.name;if(g.t2===old)g.t2=t.name;if(g.winner===old)g.winner=t.name;}
+  save(); renderAll(); renderTeamsGrid('live-teams-grid');
+}
+
+function editPlayerName(teamIdx, slot, newName){
+  if(!newName.trim()) return;
+  teams[teamIdx][slot]=newName.trim();
+  save(); renderTeamsGrid('live-teams-grid');
+}
+
+function confirmRemove(i){
+  document.getElementById('modal-title').textContent='Remove Team?';
+  document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;color:var(--muted);">Remove <strong style="color:var(--text);">${teams[i].name}</strong>? They will receive a <strong style="color:var(--danger);">forfeit loss</strong> in any active matches.</p>`;
+  const ok=document.getElementById('modal-ok'); ok.style.display=''; ok.onclick=()=>{removeTeamMid(i);closeModal();};
+  document.getElementById('modal').style.display='flex';
+}
+
+function removeTeamMid(i){
+  const t=teams[i];
+  const active=Object.values(matches).find(m=>m&&!m.winner&&!m.bye&&(m.t1===t.name||m.t2===t.name));
+  if(active){
+    const opp=active.t1===t.name?active.t2:active.t1;
+    if(opp){active.winner=opp;if(active.type==='L')advanceLB(active.id);else advanceWB(active.id);}
+  }
+  teams.splice(i,1);
+  players=players.filter(p=>p!==t.p1&&p!==t.p2&&p!==t.name);
+  calcPrize(); save(); renderAll(); renderTeamsGrid('live-teams-grid');
+}
+
+// ─── GRAND FINAL BUILDER ──────────────────────────────────────────────────────
+function buildGrandFinal(spec){
+  const wrap=document.createElement('div');
+  if(!gfId){wrap.innerHTML='<p style="color:var(--muted);font-size:13px;padding-bottom:1rem;">Appears when both brackets finish.</p>';return wrap;}
+  const gf=gm(gfId);
+  const t1=gf.t1,t2=gf.t2;
+  const gfDone=!!gf.winner;
+
+  const buildCourtPicker=(matchId)=>{
+    if(spec) return '';
+    const cur=gm(matchId)&&gm(matchId).pit?gm(matchId).pit:'';
+    let pitOpts=`<option value="">No Court</option>`;
+    for(let i=1;i<=numPits;i++) pitOpts+=`<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
+    return `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 12px;margin-bottom:1rem;">
+      <span style="font-size:12px;color:var(--muted);font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🏟 Court</span>
+      <select onchange="assignGFToCourt('${matchId}',this.value)" style="background:transparent;border:none;color:var(--gold);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;cursor:pointer;outline:none;">${pitOpts}</select>
+    </div>`;
+  };
+
+  let html=`<div class="gf-arena">
+    <div class="gf-title">⚡ Grand Final</div>
+    <div class="gf-subtitle">The championship match</div>
+    ${!spec?buildCourtPicker(gfId):''}
+    <div class="gf-note"><strong style="color:var(--wb);">Winners side</strong> needs 1 win &nbsp;·&nbsp; <strong style="color:var(--lb);">Losers side</strong> needs 2 wins</div>
+    <div class="gf-matchup">
+      <div class="gf-team wb-team${!t1?' is-tbd':''}${gf.winner===t1&&t1?' is-champ':''}${t1&&!spec?' can-click':''}" ${t1&&!spec?`onclick="clickGF(false,'t1')"`:''}>
+        <div class="gf-tag wb">🏆 Winners Side</div>
+        <div class="gf-name">${t1||'TBD'}</div>
+        ${!t1||spec||gfDone?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf.s1}" placeholder="-" onchange="setScore('${gfId}','s1',this.value)" onclick="event.stopPropagation()"/></div>`}
+        ${gf.winner===t1&&t1&&!spec?'<div class="gf-sub" style="font-size:9px;color:var(--muted);">↩ click to undo</div>':''}
+      </div>
+      <div class="gf-vs">VS</div>
+      <div class="gf-team lb-team${!t2?' is-tbd':''}${gf.winner===t2&&t2?' is-champ':''}${t2&&!spec?' can-click':''}" ${t2&&!spec?`onclick="clickGF(false,'t2')"`:''}>
+        <div class="gf-tag lb">💀 Losers Side</div>
+        <div class="gf-name">${t2||'TBD'}</div>
+        ${!t2||spec||gfDone?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf.s2}" placeholder="-" onchange="setScore('${gfId}','s2',this.value)" onclick="event.stopPropagation()"/></div>`}
+        ${gf.winner===t2&&t2&&!spec?'<div class="gf-sub" style="font-size:9px;color:var(--muted);">↩ click to undo</div>':''}
+      </div>
+    </div>`;
+
+  if(gf2Id&&gm(gf2Id)){
+    const gf2=gm(gf2Id);
+    html+=`<div class="reset-banner">🔄 Bracket Reset! One final match!</div>
+    ${!spec?buildCourtPicker(gf2Id):''}
+    <div class="gf-matchup" style="margin-top:1rem;">
+      <div class="gf-team wb-team${gf2.winner===gf2.t1&&gf2.t1?' is-champ':''}${gf2.t1&&!spec?' can-click':''}" ${gf2.t1&&!spec?`onclick="clickGF(true,'t1')"`:''}>
+        <div class="gf-tag wb">🏆 Winners Side</div>
+        <div class="gf-name">${gf2.t1||'TBD'}</div>
+        ${!gf2.t1||spec||gf2.winner?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf2.s1}" placeholder="-" onchange="setScore('${gf2Id}','s1',this.value)" onclick="event.stopPropagation()"/></div>`}
+      </div>
+      <div class="gf-vs">VS</div>
+      <div class="gf-team lb-team${gf2.winner===gf2.t2&&gf2.t2?' is-champ':''}${gf2.t2&&!spec?' can-click':''}" ${gf2.t2&&!spec?`onclick="clickGF(true,'t2')"`:''}>
+        <div class="gf-tag lb">💀 Losers Side</div>
+        <div class="gf-name">${gf2.t2||'TBD'}</div>
+        ${!gf2.t2||spec||gf2.winner?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf2.s2}" placeholder="-" onchange="setScore('${gf2Id}','s2',this.value)" onclick="event.stopPropagation()"/></div>`}
+      </div>
+    </div>`;
+  }
+  html+=`</div>`;
+  wrap.innerHTML=html; return wrap;
+}
+
+
 function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); renderAdminPitBoard(); renderPitQRCodes(); }
 function renderSpectator(){
   if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet — check back soon!</div>'; return; }
