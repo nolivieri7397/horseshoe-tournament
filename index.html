@@ -235,20 +235,38 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     </div>
   </div>
   <div class="steps">
-    <div class="step active" id="step1"><div class="step-num">1</div> Add Teams</div>
+    <div class="step active" id="step1"><div class="step-num">1</div> Players</div>
     <div class="step-divider"></div>
-    <div class="step" id="step2"><div class="step-num">2</div> Bracket</div>
+    <div class="step" id="step2"><div class="step-num">2</div> Teams</div>
+    <div class="step-divider"></div>
+    <div class="step" id="step3"><div class="step-num">3</div> Bracket</div>
   </div>
 
   <div id="panel-players">
     <div class="card">
-      <div class="card-title"><div class="dot"></div> Add Teams</div>
+      <div class="card-title"><div class="dot"></div> Add Players</div>
+      <div class="alert-box" id="odd-alert">⚠ Odd number of players — add one more to make even teams.</div>
       <div class="input-row">
-        <input type="text" id="team-input" placeholder="Enter team name…"/>
-        <button class="btn btn-accent" onclick="addTeam()">+ Add</button>
+        <input type="text" id="player-input" placeholder="Enter player name…"/>
+        <button class="btn btn-accent" onclick="addPlayer()">+ Add</button>
       </div>
-      <div class="chips" id="chips"><span style="font-size:13px;color:var(--muted);align-self:center;">No teams yet</span></div>
-      <div style="color:var(--muted);font-size:13px;margin-bottom:1.25rem;" id="team-count">0 teams</div>
+      <div class="chips" id="chips"><span style="font-size:13px;color:var(--muted);align-self:center;">No players yet</span></div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:1.25rem;" id="player-count">0 players</div>
+      <button class="btn btn-accent" id="pair-btn" disabled onclick="goToTeams()" style="width:100%;font-size:16px;padding:14px;">Randomly Pair into Teams →</button>
+    </div>
+  </div>
+
+  <div id="panel-teams" style="display:none;">
+    <div class="card">
+      <div class="card-title"><div class="dot"></div> Team Pairings</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Randomly paired. Re-roll or go back to edit players.</p>
+      <div class="teams-grid" id="teams-grid"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" onclick="pairTeams()">🔀 Re-roll</button>
+        <button class="btn" onclick="backToPlayers()">← Edit Players</button>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title"><div class="dot"></div> Format</div>
       <div class="format-grid">
         <div class="format-opt selected" onclick="selectFormat('single',this)">
@@ -258,7 +276,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
           <div class="fmt-icon">🔁</div><div class="fmt-name">Double Elimination</div><div class="fmt-desc">Two losses = out</div>
         </div>
       </div>
-      <button class="btn btn-accent" id="gen-btn" disabled onclick="generateBracket()" style="width:100%;font-size:16px;padding:14px;">Generate Bracket →</button>
+      <button class="btn btn-accent" onclick="generateBracket()" style="width:100%;font-size:16px;padding:14px;">Generate Bracket →</button>
     </div>
   </div>
 
@@ -518,8 +536,9 @@ if(isPitPage){
       applyState(data);
       if(WBrounds.length){
         document.getElementById('panel-players').style.display='none';
+        document.getElementById('panel-teams').style.display='none';
         document.getElementById('panel-bracket').style.display='';
-        setStep(2);
+        setStep(3);
         document.getElementById('buyin').value=buyIn;
         document.getElementById('pct1').value=pct1;
         document.getElementById('pct2').value=pct2;
@@ -558,30 +577,48 @@ function renderSpectatorPrize(){
 
 // ─── PLAYERS ─────────────────────────────────────────────────────────────────
 
-const ti=document.getElementById('team-input');
-if(ti) ti.addEventListener('keydown',e=>{if(e.key==='Enter')addTeam();});
-function addTeam(){
-  const v=ti.value.trim(); if(!v) return;
-  if(teams.map(t=>t.name.toLowerCase()).includes(v.toLowerCase())){ti.select();return;}
-  teams.push({name:v,p1:v,p2:''}); players.push(v);
-  ti.value=''; ti.focus(); refreshChips();
+
+const pi=document.getElementById('player-input');
+if(pi) pi.addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer();});
+
+function addPlayer(){
+  const v=pi.value.trim(); if(!v) return;
+  if(players.map(x=>x.toLowerCase()).includes(v.toLowerCase())){pi.select();return;}
+  players.push(v); pi.value=''; pi.focus(); refreshChips();
 }
-function removeTeamSetup(i){
-  players=players.filter(p=>p!==teams[i].name);
-  teams.splice(i,1); refreshChips();
-}
+function removePlayer(i){players.splice(i,1);refreshChips();}
 function refreshChips(){
-  const n=teams.length;
-  const gb=document.getElementById('gen-btn');
-  if(gb) gb.disabled=n<2;
+  const n=players.length, odd=n%2!==0;
+  const oa=document.getElementById('odd-alert');
+  if(oa) oa.style.display=(n>0&&odd)?'':'none';
+  const pb=document.getElementById('pair-btn');
+  if(pb) pb.disabled=n<2||odd;
   const w=document.getElementById('chips');
-  w.innerHTML=n ? teams.map((t,i)=>`<span class="chip">${t.name}<button class="chip-remove" onclick="removeTeamSetup(${i})">×</button></span>`).join('')
-    :`<span style="font-size:13px;color:var(--muted);align-self:center;">No teams yet</span>`;
-  const tc=document.getElementById('team-count');
-  if(tc) tc.textContent=`${n} team${n!==1?'s':''}`;
+  if(w) w.innerHTML=n ? players.map((p,i)=>`<span class="chip">${p}<button class="chip-remove" onclick="removePlayer(${i})">×</button></span>`).join('')
+    :`<span style="font-size:13px;color:var(--muted);align-self:center;">No players yet</span>`;
+  const pc=document.getElementById('player-count');
+  if(pc) pc.textContent=`${n} player${n!==1?'s':''} added${n>=2?` · ${Math.floor(n/2)} teams`:''}`;
 }
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 function selectFormat(f,el){format=f;document.querySelectorAll('.format-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
+
+function goToTeams(){ pairTeams(); }
+function backToPlayers(){
+  document.getElementById('panel-teams').style.display='none';
+  document.getElementById('panel-players').style.display='';
+  setStep(1);
+}
+function pairTeams(){
+  const s=shuffle(players); teams=[];
+  for(let i=0;i<s.length;i+=2) teams.push({name:`${s[i]} & ${s[i+1]}`,p1:s[i],p2:s[i+1]});
+  document.getElementById('teams-grid').innerHTML=teams.map((t,i)=>`
+    <div class="team-card"><div class="team-label">Team ${i+1}</div>
+    <div class="team-players"><span>${t.p1}</span><span class="amp">&amp;</span><span>${t.p2}</span></div></div>`).join('');
+  document.getElementById('panel-players').style.display='none';
+  document.getElementById('panel-teams').style.display='';
+  setStep(2);
+}
+
 
 function generateBracket(){
   if(teams.length<2) return;
@@ -628,8 +665,9 @@ function generateBracket(){
 
   save();
   document.getElementById('panel-players').style.display='none';
+  document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-bracket').style.display='';
-  setStep(2);
+  setStep(3);
 
   // Auto-advance BYE matches
   r1ids.forEach(id=>{const m=gm(id);if(m&&m.winner) advanceWB(id);});
@@ -1935,7 +1973,7 @@ function renderSpectatorPits(){
   area.style.display='';
 }
 function setStep(n){
-  for(let i=1;i<=2;i++){
+  for(let i=1;i<=3;i++){
     const el=document.getElementById(`step${i}`); if(!el) continue;
     if(i<n){el.className='step done';el.querySelector('.step-num').textContent='✓';}
     else if(i===n){el.className='step active';el.querySelector('.step-num').textContent=i;}
@@ -1947,9 +1985,10 @@ function resetAll(){
   players=[];teams=[];matches={};WBrounds=[];LBrounds=[];gfId=null;gf2Id=null;_mid=0;
   stateRef.remove();
   document.getElementById('panel-bracket').style.display='none';
+  document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-players').style.display='';
   document.getElementById('champion-area').innerHTML='';
-  teams=[]; players=[]; refreshChips(); setStep(1);
+  players=[]; teams=[]; refreshChips(); setStep(1);
 }
 
 </script>
