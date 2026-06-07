@@ -1174,9 +1174,22 @@ function buildGFEl(spec){
   const t1=gf.t1, t2=gf.t2;
   const gfDone=!!gf.winner;
 
+  // Build court assignment pill
+  const buildCourtPicker=(matchId)=>{
+    if(spec) return '';
+    const currentPit=gm(matchId)&&gm(matchId).pit?gm(matchId).pit:'';
+    let pitOpts=`<option value="">No Court</option>`;
+    for(let i=1;i<=numPits;i++) pitOpts+=`<option value="${i}" ${String(currentPit)===String(i)?'selected':''}>Court ${i}</option>`;
+    return `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 12px;margin-bottom:1rem;">
+      <span style="font-size:12px;color:var(--muted);font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🏟 Court</span>
+      <select onchange="assignGFToCourt('${matchId}',this.value)" style="background:transparent;border:none;color:var(--gold);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;cursor:pointer;outline:none;">${pitOpts}</select>
+    </div>`;
+  };
+
   let html=`<div class="gf-arena">
     <div class="gf-title">⚡ Grand Final</div>
     <div class="gf-subtitle">The championship match</div>
+    ${!spec?buildCourtPicker(gfId):''}
     <div class="gf-note"><strong style="color:var(--wb);">Winners side</strong> needs 1 win &nbsp;·&nbsp; <strong style="color:var(--lb);">Losers side</strong> needs 2 wins</div>
     <div class="gf-matchup">
       <div class="gf-team wb-team${!t1?' is-tbd':''}${gf.winner===t1&&t1?' is-champ':''}${t1&&!spec?' can-click':''}" ${t1&&!spec?`onclick="clickGF(false,'t1')"`:''}>
@@ -1198,8 +1211,12 @@ function buildGFEl(spec){
 
   if(gf2Id&&gm(gf2Id)){
     const gf2=gm(gf2Id);
-    html+=`<div class="reset-banner">🔄 Bracket Reset — both teams have 1 loss. One final match!</div>
-    <div class="gf-matchup" style="margin-top:1rem;">
+    if(gf2Id&&gm(gf2Id)){
+      const gf2M=gm(gf2Id);
+      html+=`<div class="reset-banner">🔄 Bracket Reset — both teams have 1 loss. One final match!</div>`;
+      if(!spec) html+=buildCourtPicker(gf2Id);
+    }
+    html+=`<div class="gf-matchup" style="margin-top:1rem;">
       <div class="gf-team wb-team${gf2.winner===gf2.t1&&gf2.t1?' is-champ':''}${gf2.t1&&!spec?' can-click':''}" ${gf2.t1&&!spec?`onclick="clickGF(true,'t1')"`:''}>
         <div class="gf-tag wb">🏆 Winners Side</div>
         <div class="gf-name">${gf2.t1||'TBD'}</div>
@@ -1293,6 +1310,17 @@ function generateQR(){
   new QRCode(el,{text:url,width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
 }
 function copyLink(){ navigator.clipboard.writeText(location.origin+location.pathname+'?view=spectator').then(()=>alert('Copied!')); }
+
+function assignGFToCourt(matchId, pitNum){
+  // Clear this pit from any other match
+  Object.values(matches).forEach(m=>{if(m&&String(m.pit)===String(pitNum)&&m.id!==matchId)m.pit='';});
+  // Also clear GF/GF2 from that pit
+  if(gfId&&gm(gfId)&&String(gm(gfId).pit)===String(pitNum)&&gfId!==matchId) gm(gfId).pit='';
+  if(gf2Id&&gm(gf2Id)&&String(gm(gf2Id).pit)===String(pitNum)&&gf2Id!==matchId) gm(gf2Id).pit='';
+  const m=gm(matchId);
+  if(m) m.pit=pitNum;
+  save(); renderAll();
+}
 
 // ─── PIT SCORE PAGE ───────────────────────────────────────────────────────────
 function renderPitPage(pitNum){
