@@ -96,161 +96,51 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
 /* ═══════════════════════════════════════
-   BRACKET — BracketHQ classic line style
+   BRACKET — BracketHQ line style (canvas layout)
    ═══════════════════════════════════════ */
-.bhq-outer{overflow-x:auto;overflow-y:hidden;width:100%;padding:8px 0 24px;}
-.bhq-preview{
-  --bhq-line:#fff;--bhq-text:#fff;--bhq-bg:transparent;
-  --bhq-win:#2ecc71;--bhq-gold:var(--gold);
-  padding:32px 24px 16px;min-width:max-content;position:relative;
-}
-.bhq-round-titles{display:flex;flex-direction:row;margin-bottom:8px;}
-.bhq-round-title{
-  width:245px;flex-shrink:0;
-  font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:1.5px;
-  color:rgba(255,255,255,0.35);text-align:center;
-}
-.bhq-round-title.bhq-conn{width:100px;}
-.bhq-round-title.bhq-grand{width:310px;}
-.bhq-winners,.bhq-losers{display:flex;flex-direction:row;align-items:flex-start;}
-.bhq-losers{margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);}
-.bhq-section-label{
-  font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;
-}
-.bhq-section-label.wb{color:rgba(46,204,113,0.7);}
-.bhq-section-label.lb{color:rgba(231,76,60,0.65);}
-.bhq-round,.bhq-connectors{flex-shrink:0;}
-.bhq-round{padding-right:45px;}
-.bhq-connectors{width:100px;position:relative;align-self:stretch;}
-.bhq-connectors .bhq-connector{
-  position:absolute;left:0;width:100px;height:2px;
-  background:var(--bhq-line);
-}
+.bhq-outer{overflow:auto;width:100%;padding:12px 0 24px;}
+.bhq-canvas{position:relative;}
 .bhq-game{
-  position:relative;width:200px;
-  border-right:2px solid var(--bhq-line);
-  box-sizing:border-box;
+  position:absolute;width:200px;
+  border-right:2px solid #fff;
+  box-sizing:border-box;z-index:2;
 }
-.bhq-game::before,.bhq-game::after{
-  content:' ';display:block;position:absolute;left:100%;
-  height:45px;z-index:1;pointer-events:none;
-}
-.bhq-game::before{
-  top:-2px;transform-origin:top left;
-  border-top:2px solid var(--bhq-line);
-}
-.bhq-game::after{
-  bottom:-2px;transform-origin:bottom left;
-  border-bottom:2px solid var(--bhq-line);
-}
-.bhq-game.bhq-no-lines::before,.bhq-game.bhq-no-lines::after{display:none;}
-.bhq-game.bhq-gf-game{border-color:rgba(212,175,55,0.55);}
-.bhq-game.bhq-gf-game::before,.bhq-game.bhq-gf-game::after{border-color:rgba(212,175,55,0.55);}
-.bhq-bracket-4 .bhq-round-4 .bhq-game::before,.bhq-bracket-4 .bhq-round-4 .bhq-game::after,
-.bhq-bracket-4 .bhq-round-2 .bhq-game::before,.bhq-bracket-4 .bhq-round-2 .bhq-game::after{width:110px;}
-.bhq-bracket-4 .bhq-round-4 .bhq-game::before,.bhq-bracket-4 .bhq-round-2 .bhq-game::before{rotate:65deg;}
-.bhq-bracket-4 .bhq-round-4 .bhq-game::after,.bhq-bracket-4 .bhq-round-2 .bhq-game::after{rotate:-65deg;}
-.bhq-bracket-8 .bhq-round-8 .bhq-game::before,.bhq-bracket-8 .bhq-round-8 .bhq-game::after{width:68px;}
-.bhq-bracket-8 .bhq-round-8 .bhq-game::before{rotate:47deg;}
-.bhq-bracket-8 .bhq-round-8 .bhq-game::after{rotate:-47deg;}
-.bhq-bracket-8 .bhq-round-4 .bhq-game::before,.bhq-bracket-8 .bhq-round-4 .bhq-game::after{width:110px;}
-.bhq-bracket-8 .bhq-round-4 .bhq-game::before{rotate:65deg;}
-.bhq-bracket-8 .bhq-round-4 .bhq-game::after{rotate:-65deg;}
-.bhq-bracket-8 .bhq-round-2 .bhq-game::before,.bhq-bracket-8 .bhq-round-2 .bhq-game::after{width:206px;}
-.bhq-bracket-8 .bhq-round-2 .bhq-game::before{rotate:77deg;}
-.bhq-bracket-8 .bhq-round-2 .bhq-game::after{rotate:-77deg;}
-.bhq-bracket-16 .bhq-round-16 .bhq-game::before,.bhq-bracket-16 .bhq-round-16 .bhq-game::after{width:40px;}
-.bhq-bracket-16 .bhq-round-16 .bhq-game::before{rotate:37.5deg;}
-.bhq-bracket-16 .bhq-round-16 .bhq-game::after{rotate:-37.5deg;}
-.bhq-bracket-16 .bhq-round-8 .bhq-game::before,.bhq-bracket-16 .bhq-round-8 .bhq-game::after{width:68px;}
-.bhq-bracket-16 .bhq-round-8 .bhq-game::before{rotate:47deg;}
-.bhq-bracket-16 .bhq-round-8 .bhq-game::after{rotate:-47deg;}
-.bhq-bracket-16 .bhq-round-4 .bhq-game::before,.bhq-bracket-16 .bhq-round-4 .bhq-game::after{width:110px;}
-.bhq-bracket-16 .bhq-round-4 .bhq-game::before{rotate:65deg;}
-.bhq-bracket-16 .bhq-round-4 .bhq-game::after{rotate:-65deg;}
-.bhq-bracket-16 .bhq-round-2 .bhq-game::before,.bhq-bracket-16 .bhq-round-2 .bhq-game::after{width:206px;}
-.bhq-bracket-16 .bhq-round-2 .bhq-game::before{rotate:77deg;}
-.bhq-bracket-16 .bhq-round-2 .bhq-game::after{rotate:-77deg;}
-.bhq-bracket-32 .bhq-round-32 .bhq-game::before,.bhq-bracket-32 .bhq-round-32 .bhq-game::after{width:40px;}
-.bhq-bracket-32 .bhq-round-32 .bhq-game::before{rotate:37.5deg;}
-.bhq-bracket-32 .bhq-round-32 .bhq-game::after{rotate:-37.5deg;}
-.bhq-bracket-32 .bhq-round-16 .bhq-game::before,.bhq-bracket-32 .bhq-round-16 .bhq-game::after{width:68px;}
-.bhq-bracket-32 .bhq-round-16 .bhq-game::before{rotate:47deg;}
-.bhq-bracket-32 .bhq-round-16 .bhq-game::after{rotate:-47deg;}
-.bhq-bracket-32 .bhq-round-8 .bhq-game::before,.bhq-bracket-32 .bhq-round-8 .bhq-game::after{width:110px;}
-.bhq-bracket-32 .bhq-round-8 .bhq-game::before{rotate:65deg;}
-.bhq-bracket-32 .bhq-round-8 .bhq-game::after{rotate:-65deg;}
-.bhq-bracket-32 .bhq-round-4 .bhq-game::before,.bhq-bracket-32 .bhq-round-4 .bhq-game::after{width:206px;}
-.bhq-bracket-32 .bhq-round-4 .bhq-game::before{rotate:77deg;}
-.bhq-bracket-32 .bhq-round-4 .bhq-game::after{rotate:-77deg;}
-.bhq-bracket-32 .bhq-round-2 .bhq-game::before,.bhq-bracket-32 .bhq-round-2 .bhq-game::after{width:403px;}
-.bhq-bracket-32 .bhq-round-2 .bhq-game::before{rotate:83.3deg;}
-.bhq-bracket-32 .bhq-round-2 .bhq-game::after{rotate:-83.3deg;}
-.bhq-bracket-32 .bhq-round-32{margin-top:0;}
-.bhq-bracket-32 .bhq-round-16{margin-top:12px;}
-.bhq-bracket-32 .bhq-round-8{margin-top:32px;}
-.bhq-bracket-32 .bhq-round-4{margin-top:72px;}
-.bhq-bracket-32 .bhq-round-2{margin-top:152px;}
-.bhq-game::before{width:68px;rotate:47deg;}
-.bhq-game::after{width:68px;rotate:-47deg;}
+.bhq-game.bhq-gf{border-right-color:rgba(212,175,55,0.6);}
 .bhq-slot{
-  position:absolute;left:0;height:28px;line-height:28px;width:100%;
-  display:flex;align-items:center;color:var(--bhq-text);
+  position:absolute;left:0;right:0;height:28px;line-height:28px;
+  display:flex;align-items:center;color:#fff;
   font-family:'Barlow',sans-serif;font-size:14px;
-  padding:0 2px;transition:background .12s;
+  padding:0 2px;transition:background .12s;z-index:3;
 }
 .bhq-slot-top{top:-30px;}
-.bhq-slot-bot{bottom:2px;}
+.bhq-slot-bot{bottom:0;}
 .bhq-slot.clickable{cursor:pointer;}
-.bhq-slot.clickable:hover{background:rgba(52,152,219,0.12);outline:2px solid #3498db;outline-offset:-2px;z-index:2;}
-.bhq-slot.winner .bhq-slot-name{color:var(--bhq-win);font-weight:700;}
-.bhq-slot.winner .bhq-slot-seed{color:var(--bhq-win);}
-.bhq-slot.empty .bhq-slot-name{color:rgba(255,255,255,0.28);font-style:italic;}
-.bhq-slot-seed{
-  width:22px;flex-shrink:0;font-weight:700;
-  font-family:'Barlow Condensed',sans-serif;font-size:13px;
-  color:rgba(255,255,255,0.55);text-align:center;
-}
-.bhq-slot-name{
-  flex:1;min-width:0;padding-left:3px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  font-weight:500;
-}
-.bhq-slot-score{
-  width:36px;flex-shrink:0;text-align:right;
-  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
-  color:var(--bhq-gold);padding-right:4px;
-}
-.bhq-slot-score input{
-  width:32px;padding:0;border:none;outline:none;background:transparent;
-  color:var(--bhq-gold);font-family:'Barlow Condensed',sans-serif;
-  font-size:13px;font-weight:700;text-align:right;cursor:pointer;
-}
-.bhq-slot-check{
-  width:18px;flex-shrink:0;text-align:center;
-  color:var(--bhq-win);font-size:12px;opacity:0;
-}
+.bhq-slot.clickable:hover{background:rgba(52,152,219,0.15);outline:2px solid #3498db;outline-offset:-2px;}
+.bhq-slot.winner .bhq-slot-name,.bhq-slot.winner .bhq-slot-seed{color:#2ecc71;font-weight:700;}
+.bhq-slot.empty .bhq-slot-name{color:rgba(255,255,255,0.3);font-style:italic;}
+.bhq-slot-seed{width:24px;flex-shrink:0;font-weight:700;font-size:13px;color:rgba(255,255,255,0.5);text-align:center;}
+.bhq-slot-name{flex:1;min-width:0;padding-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bhq-slot-score{width:34px;flex-shrink:0;text-align:right;font-size:13px;font-weight:700;color:var(--gold);}
+.bhq-slot-score input{width:30px;padding:0;border:none;outline:none;background:transparent;color:var(--gold);font-size:13px;font-weight:700;text-align:right;cursor:pointer;}
+.bhq-slot-check{width:16px;flex-shrink:0;text-align:center;color:#2ecc71;font-size:11px;opacity:0;}
 .bhq-slot.winner .bhq-slot-check{opacity:1;}
-.bhq-pit-badge{
-  position:absolute;right:-2px;top:50%;transform:translateY(-50%);
-  z-index:3;font-size:8px;font-weight:800;color:var(--gold);
-  background:rgba(10,22,40,0.9);border:1px solid rgba(212,175,55,0.35);
-  border-radius:3px;padding:1px 4px;cursor:pointer;
+.bhq-pit{
+  position:absolute;left:-18px;top:50%;transform:translateY(-50%);
+  font-size:7px;font-weight:800;color:var(--gold);
+  background:rgba(10,22,40,0.95);border:1px solid rgba(212,175,55,0.3);
+  border-radius:3px;padding:1px 3px;cursor:pointer;z-index:4;
 }
-.bhq-pit-badge select{
-  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;
+.bhq-pit select{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.bhq-lbl{
+  position:absolute;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.32);text-align:center;
 }
-.bhq-round-finals{margin-top:80px;}
-.bhq-type-d .bhq-round-finals{margin-top:60px;}
-.bhq-finals-game{margin-top:40px;margin-left:40px;}
-.bhq-bracket-4 .bhq-round-2{margin-top:40px;}
-.bhq-bracket-8 .bhq-round-4{margin-top:40px;}
-.bhq-bracket-8 .bhq-round-2{margin-top:120px;}
-.bhq-bracket-16 .bhq-round-8{margin-top:20px;}
-.bhq-bracket-16 .bhq-round-4{margin-top:60px;}
-.bhq-bracket-16 .bhq-round-2{margin-top:140px;}
+.bhq-sec{
+  position:absolute;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;
+}
+.bhq-sec.wb{color:rgba(46,204,113,0.65);}
+.bhq-sec.lb{color:rgba(231,76,60,0.6);}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1249,86 +1139,126 @@ function renderSpectator(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — BracketHQ classic line style
+// BRACKET RENDERER — canvas layout + SVG connectors (BracketHQ lines)
 // ═══════════════════════════════════════════════════════════════════════
+function backfillBracketMeta(){
+  if(!WBrounds.length) return;
+  let n=1;
+  WBrounds[0].forEach(id=>{
+    const m=gm(id); if(!m) return;
+    if(m.t1==='BYE'||m.t2==='BYE'){ m.bye=true; return; }
+    if(!m.gameNum) m.gameNum=n++;
+    if(!m.seed1&&m.t1){ const i=teams.findIndex(t=>t.name===m.t1); if(i>=0) m.seed1=i+1; }
+    if(!m.seed2&&m.t2){ const i=teams.findIndex(t=>t.name===m.t2); if(i>=0) m.seed2=i+1; }
+  });
+}
+
 function renderBracket(containerId, spec){
   const el=document.getElementById(containerId);
   if(!el) return;
   el.innerHTML='';
   if(!WBrounds.length) return;
+  backfillBracketMeta();
 
-  const bracketSize=Math.pow(2, WBrounds.length);
-  const teamCount=teams.length;
+  const GW=200, GAP=100, UNIT=50, PAD=16, LBL=22, SEC=18, SGAP=36;
+  const nWB=WBrounds.length, nLB=LBrounds.length;
   const hasDbl=format==='double';
-  const BASE=80;
+  const colX=ri=>PAD+ri*(GW+GAP);
+
+  const wbVis0=WBrounds[0].map(id=>gm(id)).filter(bhqIsVisible);
+  const wbH=wbVis0.length*UNIT*2;
+  const lbVis0=LBrounds[0]?LBrounds[0].map(id=>gm(id)).filter(bhqIsVisible):[];
+  const lbH=lbVis0.length?lbVis0.length*UNIT*2:0;
+
+  const wbY0=SEC+LBL+8;
+  const lbY0=hasDbl&&lbH?wbY0+wbH+SGAP+SEC+LBL+8:0;
+  const gfX=colX(nWB);
+  const totalW=gfX+(hasDbl&&gfId?GW+GAP+GW:GW)+24;
+  const totalH=(hasDbl&&lbH)?lbY0+lbH+40:wbY0+wbH+40;
 
   const outer=document.createElement('div');
   outer.className='bhq-outer';
+  const canvas=document.createElement('div');
+  canvas.className='bhq-canvas';
+  canvas.style.width=totalW+'px';
+  canvas.style.height=totalH+'px';
 
-  const preview=document.createElement('div');
-  preview.className=`bhq-preview bhq-bracket-${bracketSize} bhq-count-${teamCount} ${hasDbl?'bhq-type-d':'bhq-type-s'}`;
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH}px;pointer-events:none;overflow:visible;`);
+  canvas.appendChild(svg);
 
-  preview.appendChild(bhqRoundTitles(WBrounds.length, hasDbl));
-
-  const wbWrap=document.createElement('div');
-  const wbLabel=document.createElement('div');
-  wbLabel.className='bhq-section-label wb';
-  wbLabel.textContent='Winners Bracket';
-  wbWrap.appendChild(wbLabel);
-
-  const winners=document.createElement('div');
-  winners.className='bhq-winners';
-  bhqRenderRounds(winners, WBrounds, 'wb', spec, BASE, hasDbl);
-  if(hasDbl && gfId){
-    winners.appendChild(bhqConnectorCol(0, BASE*Math.pow(2, WBrounds.length-1), true));
-    winners.appendChild(bhqFinalsCol(gfId, gf2Id, spec, BASE));
-  }
-  wbWrap.appendChild(winners);
-  preview.appendChild(wbWrap);
-
-  if(hasDbl && LBrounds.length){
-    const lbWrap=document.createElement('div');
-    const lbLabel=document.createElement('div');
-    lbLabel.className='bhq-section-label lb';
-    lbLabel.textContent='Losers Bracket';
-    lbWrap.appendChild(lbLabel);
-    const losers=document.createElement('div');
-    losers.className='bhq-losers';
-    bhqRenderRounds(losers, LBrounds, 'lb', spec, BASE, false);
-    if(gfId) losers.appendChild(bhqConnectorCol(0, BASE*Math.pow(2, Math.min(LBrounds.length, WBrounds.length)-1), true));
-    lbWrap.appendChild(losers);
-    preview.appendChild(lbWrap);
-  }
-
-  outer.appendChild(preview);
-  el.appendChild(outer);
-}
-
-function bhqRoundTitles(nWB, hasDbl){
-  const row=document.createElement('div');
-  row.className='bhq-round-titles';
+  const cY={};
   const wbNames=['Round of 64','Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
-  for(let ri=0;ri<nWB;ri++){
-    const d=document.createElement('div');
-    d.className='bhq-round-title';
-    d.textContent=wbNames[Math.max(0, wbNames.length-nWB+ri)]||`Round ${ri+1}`;
-    row.appendChild(d);
-    if(ri<nWB-1){
-      const c=document.createElement('div');
-      c.className='bhq-round-title bhq-conn';
-      row.appendChild(c);
-    }
+
+  bhqSecLbl(canvas, PAD, 4, 'Winners Bracket', 'wb');
+  WBrounds.forEach((roundIds,ri)=>{
+    const vis=roundIds.map(id=>gm(id)).filter(bhqIsVisible);
+    const slotH=Math.pow(2,ri)*UNIT*2;
+    const x=colX(ri);
+    bhqRlbl(canvas, x, wbY0-LBL, GW, wbNames[Math.max(0,wbNames.length-nWB+ri)]||`Rd ${ri+1}`);
+    vis.forEach((m,mi)=>{
+      const top=wbY0+mi*slotH+(slotH-UNIT)/2;
+      cY[m.id]=top+UNIT/2;
+      bhqPlaceGame(canvas, m, 'wb', spec, x, top, GW, UNIT);
+      if(ri<nWB-1){
+        const xR=x+GW, xM=xR+GAP/2, nx=colX(ri+1);
+        bhqLine(svg,svgNS,xR,cY[m.id],xM,cY[m.id],'#fff');
+        if(mi%2===0&&mi+1<vis.length){
+          const s2=wbY0+(mi+1)*slotH+(slotH-UNIT)/2+UNIT/2;
+          const mid=(cY[m.id]+s2)/2;
+          bhqLine(svg,svgNS,xR,s2,xM,s2,'#fff');
+          bhqLine(svg,svgNS,xM,cY[m.id],xM,s2,'#fff');
+          bhqLine(svg,svgNS,xM,mid,nx,mid,'#fff');
+        }
+      }
+    });
+  });
+
+  if(hasDbl&&lbH){
+    bhqSecLbl(canvas, PAD, lbY0-SEC-LBL-4, 'Losers Bracket', 'lb');
+    LBrounds.forEach((roundIds,lri)=>{
+      const vis=roundIds.map(id=>gm(id)).filter(bhqIsVisible);
+      if(!vis.length) return;
+      const slotH=Math.pow(2,lri)*UNIT*2;
+      const x=colX(lri);
+      bhqRlbl(canvas, x, lbY0-LBL, GW, bhqLbName(lri,nLB));
+      vis.forEach((m,mi)=>{
+        const top=lbY0+mi*slotH+(slotH-UNIT)/2;
+        cY[m.id]=top+UNIT/2;
+        bhqPlaceGame(canvas, m, 'lb', spec, x, top, GW, UNIT);
+        if(lri<nLB-1){
+          const xR=x+GW, xM=xR+GAP/2, nx=colX(lri+1);
+          bhqLine(svg,svgNS,xR,cY[m.id],xM,cY[m.id],'rgba(231,76,60,0.85)');
+          if(mi%2===0&&mi+1<vis.length){
+            const s2=lbY0+(mi+1)*slotH+(slotH-UNIT)/2+UNIT/2;
+            const mid=(cY[m.id]+s2)/2;
+            bhqLine(svg,svgNS,xR,s2,xM,s2,'rgba(231,76,60,0.85)');
+            bhqLine(svg,svgNS,xM,cY[m.id],xM,s2,'rgba(231,76,60,0.85)');
+            bhqLine(svg,svgNS,xM,mid,nx,mid,'rgba(231,76,60,0.85)');
+          }
+        }
+      });
+    });
   }
-  if(hasDbl){
-    const c=document.createElement('div');
-    c.className='bhq-round-title bhq-conn';
-    row.appendChild(c);
-    const g=document.createElement('div');
-    g.className='bhq-round-title bhq-grand';
-    g.textContent='Grand Finals';
-    row.appendChild(g);
+
+  if(gfId&&gm(gfId)){
+    const gf=gm(gfId);
+    const wbFin=WBrounds[nWB-1].map(id=>gm(id)).filter(bhqIsVisible)[0];
+    const lbFin=nLB?LBrounds[nLB-1].map(id=>gm(id)).filter(bhqIsVisible)[0]:null;
+    const wbCY=wbFin?cY[wbFin.id]:wbY0+wbH/2;
+    const lbCY=lbFin?cY[lbFin.id]:wbCY;
+    const gfCY=hasDbl&&lbH?(wbCY+lbCY)/2:wbCY;
+    const gfTop=gfCY-UNIT/2;
+    bhqLine(svg,svgNS,colX(nWB-1)+GW,wbCY,gfX,gfCY,'rgba(212,175,55,0.7)');
+    if(lbFin) bhqLine(svg,svgNS,colX(nLB-1)+GW,lbCY,gfX,gfCY,'rgba(212,175,55,0.7)');
+    bhqRlbl(canvas, gfX, gfTop-28, GW, 'Grand Final');
+    bhqPlaceGF(canvas, gf, gfId, false, spec, gfX, gfTop, GW, UNIT);
+    if(gf2Id&&gm(gf2Id)) bhqPlaceGF(canvas, gm(gf2Id), gf2Id, true, spec, gfX, gfTop+UNIT+24, GW, UNIT);
   }
-  return row;
+
+  outer.appendChild(canvas);
+  el.appendChild(outer);
 }
 
 function bhqIsVisible(m){
@@ -1337,193 +1267,128 @@ function bhqIsVisible(m){
   return true;
 }
 
-function bhqRoundLabel(type, ri, nR){
-  const wb=['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'];
-  const lb=['LB Final','LB Semis','LB Rd 8','LB Rd 7','LB Rd 6','LB Rd 5','LB Rd 4','LB Rd 3','LB Rd 2','LB Rd 1'];
-  const arr=type==='wb'?wb:lb;
-  const idx=nR-1-ri;
-  return idx<arr.length?arr[idx]:`Rd ${ri+1}`;
+function bhqLbName(lri,nLB){
+  const n=['LB Final','LB Semis','LB QF','LB R8','LB R16','LB R32'];
+  return n[Math.min(lri,n.length-1)]||`LB ${lri+1}`;
 }
 
-function bhqRenderRounds(container, rounds, type, spec, base, isWB){
-  const nR=rounds.length;
-  rounds.forEach((roundIds, ri)=>{
-    const visible=roundIds.map(id=>gm(id)).filter(m=>bhqIsVisible(m));
-    if(!visible.length && type==='lb') return;
-
-    const roundSize=Math.pow(2, nR-ri);
-    const gameH=base*Math.pow(2, ri);
-    const round=document.createElement('div');
-    round.className=`bhq-round bhq-round-${roundSize}`;
-
-    visible.forEach((m, mi)=>{
-      const isLast=mi===visible.length-1;
-      const noLines=isWB && ri===nR-1 && format==='double';
-      round.appendChild(bhqGame(m, type, spec, gameH, isLast, noLines));
-    });
-
-    container.appendChild(round);
-    if(ri<nR-1) container.appendChild(bhqConnectorCol(roundSize/2, gameH, false));
-  });
+function bhqLine(svg,ns,x1,y1,x2,y2,c){
+  const l=document.createElementNS(ns,'line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('stroke',c);l.setAttribute('stroke-width','2');
+  svg.appendChild(l);
 }
 
-function bhqConnectorCol(size, gameH, isAdvance){
-  const col=document.createElement('div');
-  col.className=`bhq-connectors bhq-connectors-${size}${isAdvance?' bhq-connectors-advance':''}`;
-  if(isAdvance){
-    const line=document.createElement('div');
-    line.className='bhq-connector';
-    line.style.top=(gameH/2)+'px';
-    col.style.minHeight=gameH+'px';
-    col.appendChild(line);
-  }
-  return col;
+function bhqSecLbl(canvas,x,y,t,cls){
+  const d=document.createElement('div');
+  d.className='bhq-sec '+cls;
+  d.style.left=x+'px'; d.style.top=y+'px';
+  d.textContent=t;
+  canvas.appendChild(d);
 }
 
-function bhqFinalsCol(gfId, gf2Id, spec, base){
-  const col=document.createElement('div');
-  col.className='bhq-round bhq-round-finals';
-  const gf=gm(gfId);
-  if(gf) col.appendChild(bhqGFGame(gf, gfId, false, spec, base, false));
-  if(gf2Id && gm(gf2Id)) col.appendChild(bhqGFGame(gm(gf2Id), gf2Id, true, spec, base, true));
-  return col;
+function bhqRlbl(canvas,x,y,w,t){
+  const d=document.createElement('div');
+  d.className='bhq-lbl';
+  d.style.cssText=`left:${x}px;top:${y}px;width:${w}px;`;
+  d.textContent=t;
+  canvas.appendChild(d);
 }
 
-function bhqSlotInfo(m, tk, type){
-  const sk=tk==='t1'?'seed1':'seed2';
+function bhqSlotInfo(m,tk,type){
   const name=m[tk];
-  if(name && name!=='BYE') return {text:name, seed:m[sk], empty:false, clickable:true};
-  if(name==='BYE') return {text:'', seed:null, empty:true, clickable:false};
-
-  if(type==='lb' && m.lbDropFrom){
-    const idx=tk==='t1'?0:(m.lbDropFrom.length>1?1:0);
-    const wbId=m.lbDropFrom[idx]??m.lbDropFrom[0];
-    if(wbId){
-      const wb=gm(wbId);
-      if(wb?.gameNum) return {text:`Loser of ${wb.gameNum}`, seed:null, empty:true, clickable:false};
-    }
+  if(name&&name!=='BYE') return {text:name,seed:m[tk==='t1'?'seed1':'seed2'],click:true};
+  if(type==='lb'&&m.lbDropFrom){
+    const wbId=m.lbDropFrom[tk==='t1'?0:(m.lbDropFrom.length>1?1:0)];
+    if(wbId){ const w=gm(wbId); if(w?.gameNum) return {text:`Loser of ${w.gameNum}`,seed:null,click:false}; }
   }
-
-  if(m.lbWinFrom && tk==='t1' && !name){
-    const src=gm(m.lbWinFrom);
-    if(src?.gameNum) return {text:`Winner of ${src.gameNum}`, seed:null, empty:true, clickable:false};
+  if(m.fromWin&&!name){
+    const pid=m.fromWin[tk==='t1'?0:1];
+    const s=gm(pid); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
   }
-
-  if(m.fromWin && !name){
-    const ids=m.fromWin;
-    const src=gm(ids[tk==='t1'?0:1]);
-    if(src?.gameNum) return {text:`Winner of ${src.gameNum}`, seed:null, empty:true, clickable:false};
+  if(m.lbWinFrom&&tk==='t1'&&!name){
+    const s=gm(m.lbWinFrom); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
   }
-
-  return {text:'', seed:null, empty:true, clickable:false};
+  return {text:'',seed:null,click:false};
 }
 
-function bhqGame(m, type, spec, gameH, isLast, noLines){
-  const game=document.createElement('div');
-  game.className='bhq-game'+(noLines?' bhq-no-lines':'');
-  game.style.height=gameH+'px';
-  if(!isLast) game.style.marginBottom=gameH+'px';
-
-  game.appendChild(bhqSlot(m, 't1', 's1', 'top', type, spec));
-  game.appendChild(bhqSlot(m, 't2', 's2', 'bot', type, spec));
-
-  if(!spec){
-    const cur=m.pit||'';
-    const pit=document.createElement('div');
-    pit.className='bhq-pit-badge';
-    pit.title=cur?`Court ${cur}`:'Assign court';
-    pit.textContent=cur?`Ct${cur}`:'+';
-    let opts='<option value="">—</option>';
-    for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>${p}</option>`;
-    const sel=document.createElement('select');
-    sel.innerHTML=opts;
-    sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
-    pit.appendChild(sel);
-    game.appendChild(pit);
-  }
-  return game;
+function bhqPlaceGame(canvas,m,type,spec,x,y,w,h){
+  const g=document.createElement('div');
+  g.className='bhq-game';
+  g.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+  g.appendChild(bhqMkSlot(m,'t1','s1','top',type,spec));
+  g.appendChild(bhqMkSlot(m,'t2','s2','bot',type,spec));
+  if(!spec) bhqMkPit(g,m.id,m.pit);
+  canvas.appendChild(g);
 }
 
-function bhqGFGame(m, mid, isReset, spec, base, stacked){
-  const game=document.createElement('div');
-  game.className='bhq-game bhq-gf-game bhq-no-lines'+(stacked?' bhq-finals-game':'');
-  game.style.height=base+'px';
-  if(stacked) game.style.marginTop='40px';
-
-  const t1Label=m.t1||'WB Winner';
-  const t2Label=m.t2||'LB Winner';
-  const fake1={...m, t1:m.t1, seed1:null};
-  const fake2={...m, t2:m.t2, seed2:null};
-
-  game.appendChild(bhqSlot(fake1, 't1', 's1', 'top', 'gf', spec, ()=>clickGF(isReset,'t1'), t1Label));
-  game.appendChild(bhqSlot(fake2, 't2', 's2', 'bot', 'gf', spec, ()=>clickGF(isReset,'t2'), t2Label));
-
-  if(!spec){
-    const cur=m.pit||'';
-    const pit=document.createElement('div');
-    pit.className='bhq-pit-badge';
-    pit.textContent=cur?`Ct${cur}`:'+';
-    let opts='<option value="">—</option>';
-    for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>${p}</option>`;
-    const sel=document.createElement('select');
-    sel.innerHTML=opts;
-    sel.addEventListener('change',e=>{e.stopPropagation();setPit(mid,e.target.value);});
-    pit.appendChild(sel);
-    game.appendChild(pit);
-  }
-  return game;
+function bhqPlaceGF(canvas,m,mid,isReset,spec,x,y,w,h){
+  const g=document.createElement('div');
+  g.className='bhq-game bhq-gf';
+  g.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+  const f1={...m}, f2={...m};
+  g.appendChild(bhqMkSlot(f1,'t1','s1','top','gf',spec,()=>clickGF(isReset,'t1'),m.t1||'WB Winner'));
+  g.appendChild(bhqMkSlot(f2,'t2','s2','bot','gf',spec,()=>clickGF(isReset,'t2'),m.t2||'LB Winner'));
+  if(!spec) bhqMkPit(g,mid,m.pit);
+  canvas.appendChild(g);
 }
 
-function bhqSlot(m, tk, sk, pos, type, spec, gfClick, gfLabel){
-  const info=gfLabel!=null
-    ? {text:gfLabel, seed:null, empty:!m[tk], clickable:!!m[tk]}
-    : bhqSlotInfo(m, tk, type);
-  const name=m[tk];
-  const score=m[sk];
-  const isWin=m.winner===name&&!!name&&name!=='BYE';
-  const canClick=info.clickable && !spec && !m.winner && name && name!=='BYE';
+function bhqMkPit(game,mid,pit){
+  const d=document.createElement('div');
+  d.className='bhq-pit';
+  d.title=pit?`Court ${pit}`:'Assign court';
+  d.textContent=pit||'+';
+  let o='<option value="">—</option>';
+  for(let p=1;p<=numPits;p++) o+=`<option value="${p}" ${String(pit)===String(p)?'selected':''}>${p}</option>`;
+  const s=document.createElement('select');
+  s.innerHTML=o;
+  s.onchange=e=>{e.stopPropagation();setPit(mid,e.target.value);};
+  d.appendChild(s);
+  game.appendChild(d);
+}
 
-  const slot=document.createElement('div');
-  slot.className=`bhq-slot bhq-slot-${pos}`
-    +(canClick||gfClick?' clickable':'')
-    +(isWin?' winner':'')
-    +(info.empty&&!name?' empty':'');
+function bhqMkSlot(m,tk,sk,pos,type,spec,gfFn,label){
+  const info=label!=null?{text:label,seed:null,click:!!m[tk]}:bhqSlotInfo(m,tk,type);
+  const name=m[tk], score=m[sk];
+  const win=m.winner===name&&!!name&&name!=='BYE';
+  const can=info.click&&!spec&&!m.winner&&name&&name!=='BYE';
 
+  const s=document.createElement('div');
+  s.className=`bhq-slot bhq-slot-${pos}`+(can||gfFn?' clickable':'')+(win?' winner':'')+(!name&&!info.text?' empty':'');
   if(!spec){
-    if(type==='gf' && gfClick && m[tk]) slot.onclick=gfClick;
-    else if((canClick || (isWin && name)) && type!=='gf')
-      slot.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id, tk);
+    if(gfFn&&m[tk]) s.onclick=gfFn;
+    else if((can||(win&&name))&&type!=='gf') s.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id,tk);
   }
 
-  const seedEl=document.createElement('div');
-  seedEl.className='bhq-slot-seed';
-  seedEl.textContent=info.seed||'';
-  slot.appendChild(seedEl);
+  const seed=document.createElement('div');
+  seed.className='bhq-slot-seed';
+  seed.textContent=info.seed||'';
+  s.appendChild(seed);
 
-  const nameEl=document.createElement('div');
-  nameEl.className='bhq-slot-name';
-  nameEl.textContent=info.text||(name||'');
-  slot.appendChild(nameEl);
+  const nm=document.createElement('div');
+  nm.className='bhq-slot-name';
+  nm.textContent=info.text||(name||'');
+  s.appendChild(nm);
 
-  const scoreEl=document.createElement('div');
-  scoreEl.className='bhq-slot-score';
-  if(name && name!=='BYE' && (info.clickable||isWin)){
-    if(!spec && !m.winner){
+  const sc=document.createElement('div');
+  sc.className='bhq-slot-score';
+  if(name&&name!=='BYE'&&(info.click||win)){
+    if(!spec&&!m.winner){
       const inp=document.createElement('input');
-      inp.type='number'; inp.min='0'; inp.value=score||''; inp.placeholder='–';
-      inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
-      inp.addEventListener('click',e=>e.stopPropagation());
-      scoreEl.appendChild(inp);
-    } else if(score||score===0) scoreEl.textContent=score;
+      inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
+      inp.onchange=e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);};
+      inp.onclick=e=>e.stopPropagation();
+      sc.appendChild(inp);
+    } else if(score||score===0) sc.textContent=score;
   }
-  slot.appendChild(scoreEl);
+  s.appendChild(sc);
 
-  const check=document.createElement('div');
-  check.className='bhq-slot-check';
-  check.textContent='✓';
-  slot.appendChild(check);
-
-  return slot;
+  const ck=document.createElement('div');
+  ck.className='bhq-slot-check';
+  ck.textContent='✓';
+  s.appendChild(ck);
+  return s;
 }
 
 // compat stubs
