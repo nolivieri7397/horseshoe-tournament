@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Godfathers Horseshoe Tournament</title>
-<link rel="icon" type="image/png" href="horseshoe.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -329,7 +328,12 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 
     <div class="card">
       <div class="card-title"><div class="dot"></div> Manage Teams</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Edit team names or remove a team. Removing a team counts as a loss for them in the bracket.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Add or remove teams at any time.</p>
+      <div class="input-row">
+        <input type="text" id="new-p1" placeholder="Player 1"/>
+        <input type="text" id="new-p2" placeholder="Player 2"/>
+        <button class="btn btn-accent" onclick="addTeamMid()">+ Add Team</button>
+      </div>
       <div class="teams-grid" id="live-teams-grid"></div>
     </div>
 
@@ -346,9 +350,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
       <div class="card-title"><div class="dot"></div> Pit Assignments</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Assign matches to pits here. Spectators see this live on their phones.</p>
       <div id="admin-pit-cards" style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem;"></div>
-      <button class="btn btn-accent" onclick="openPitBoard()" style="width:100%;font-size:15px;padding:10px;margin-bottom:1rem;">🖥 Open Fullscreen Board</button>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Print or show these QR codes at each pit so players can keep score from their phones:</div>
-      <div id="pit-qr-section" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:1rem;"></div>
+      <button class="btn btn-accent" onclick="openPitBoard()" style="width:100%;font-size:15px;padding:10px;">🖥 Open Fullscreen Board</button>
     </div>
 
     <div class="qr-card">
@@ -378,9 +380,6 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 
   <!-- CHAMPION -->
   <div id="s-champion-area"></div>
-
-  <!-- LIVE CHAMPIONSHIP -->
-  <div id="s-championship-live" style="display:none;margin-bottom:1rem;"></div>
 
   <!-- BIGGEST LOSER -->
   <div id="s-biggest-loser-area"></div>
@@ -413,12 +412,6 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
     <div class="card-title"><div class="dot"></div> Live Bracket</div>
     <div id="s-bracket-container"></div>
   </div>
-
-  <!-- TEAM ROSTER -->
-  <div class="card" id="s-roster" style="display:none;">
-    <div class="card-title"><div class="dot"></div> Team Roster</div>
-    <div id="s-roster-list"></div>
-  </div>
 </div>
 </div>
 
@@ -431,11 +424,6 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
       <button class="btn btn-sm btn-danger" id="modal-ok" style="display:none;">Confirm</button>
     </div>
   </div>
-</div>
-
-<!-- PIT SCORE PAGE -->
-<div id="pit-page" style="display:none;position:fixed;inset:0;background:#000;z-index:999;">
-  <div id="pit-page-body" style="width:100%;height:100%;"></div>
 </div>
 
 <footer>4th Annual Godfathers Horseshoe Tournament · June 20th · 10609 Del Rio Rd</footer>
@@ -489,61 +477,24 @@ let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
 
 const isSpec = new URLSearchParams(location.search).get('view')==='spectator';
-const pitParam = new URLSearchParams(location.search).get('pit');
-const isPitPage = !!pitParam;
-let _currentPitMatchId=null, _scoringActive=false;
-if(isPitPage){
-  // Hide everything except pit page
-  document.getElementById('admin-view').style.display='none';
-  document.getElementById('spectator-view').style.display='none';
-  document.getElementById('pit-page').style.display='block';
-  document.querySelector('nav').style.display='none';
-  document.querySelector('footer') && (document.querySelector('footer').style.display='none');
-  // Show loading state immediately
-  const pitBody=document.getElementById('pit-page-body');
-  if(pitBody) pitBody.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#444;font-family:'Barlow Condensed',sans-serif;font-size:24px;text-transform:uppercase;letter-spacing:2px;">Loading Court ${pitParam}...</div>`;
-  // Listen for Firebase updates — fires immediately with current data then on every change
-  stateRef.on('value', snapshot => {
-    const data=snapshot.val();
-    if(!data){
-      if(pitBody) pitBody.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#444;font-family:'Barlow Condensed',sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:2px;">No tournament data yet</div>`;
-      return;
-    }
-    applyState(data);
-    const pitNum=parseInt(pitParam);
-    const m=getMatchOnPit(pitNum);
-    const matchId=m?m.id:null;
-
-    // If scoring is active and same match — just update scores silently
-    if(_scoringActive && matchId===_currentPitMatchId && m && !m.winner){
-      const s1el=document.getElementById('pp-s1');
-      const s2el=document.getElementById('pp-s2');
-      if(s1el) s1el.textContent=m.s1||0;
-      if(s2el) s2el.textContent=m.s2||0;
-      return;
-    }
-
-    // Match changed, winner set, or first load — full re-render
-    _currentPitMatchId=matchId;
-    _scoringActive=false;
-    renderPitPage(pitNum);
-  });
-} else if(isSpec){
+if(isSpec){
   document.getElementById('admin-view').style.display='none';
   document.getElementById('spectator-view').style.display='';
   document.getElementById('nav-badge').textContent='Spectator';
   document.getElementById('nav-badge').className='nav-badge spectator';
+  // Listen for real-time updates from Firebase
   stateRef.on('value', snapshot => {
     applyState(snapshot.val());
     renderSpectator();
   });
 } else {
-  // Admin: listen for real-time Firebase updates (so pit scores show live)
-  stateRef.on('value', snapshot => {
+  // Admin: load existing state from Firebase on page load
+  stateRef.once('value', snapshot => {
     const data = snapshot.val();
     if(data){
       applyState(data);
       if(WBrounds.length){
+        // Bracket already exists — show it
         document.getElementById('panel-players').style.display='none';
         document.getElementById('panel-teams').style.display='none';
         document.getElementById('panel-bracket').style.display='';
@@ -553,6 +504,7 @@ if(isPitPage){
         document.getElementById('pct2').value=pct2;
         calcPrize(); renderTeamsGrid('live-teams-grid'); generateQR(); renderAll();
       } else if(players.length){
+        // Players added but no bracket yet — restore player list
         refreshChips();
       }
     }
@@ -621,85 +573,15 @@ function pairTeams(){
 }
 function renderTeamsGrid(id){
   const el=document.getElementById(id); if(!el)return;
-  if(id==='live-teams-grid'){
-    el.innerHTML=teams.map((t,i)=>`
-      <div class="team-card">
-        <div class="team-label" style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;">Team ${i+1}</span>
-          <button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Team Name</div>
-            <input type="text" value="${t.name}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-weight:600;"
-              onchange="editTeamName(${i},this.value)" placeholder="Team name"/>
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Player 1</div>
-            <input type="text" value="${t.p1}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);"
-              onchange="editPlayerName(${i},'p1',this.value)" placeholder="Player 1 name"/>
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Player 2</div>
-            <input type="text" value="${t.p2}" style="width:100%;font-size:13px;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);"
-              onchange="editPlayerName(${i},'p2',this.value)" placeholder="Player 2 name"/>
-          </div>
-        </div>
-      </div>`).join('');
-  } else {
-    el.innerHTML=teams.map((t,i)=>`
-      <div class="team-card">
-        <div class="team-label">Team ${i+1}</div>
-        <div class="team-players"><span>${t.p1}</span><span class="amp">&amp;</span><span>${t.p2}</span></div>
-      </div>`).join('');
-  }
+  el.innerHTML=teams.map((t,i)=>`
+    <div class="team-card">
+      <div class="team-label" style="display:flex;justify-content:space-between;">Team ${i+1}
+        ${id==='live-teams-grid'?`<button class="btn btn-sm btn-danger" style="padding:2px 8px;font-size:10px;" onclick="confirmRemove(${i})">Remove</button>`:''}
+      </div>
+      <div class="team-players"><span>${t.p1}</span><span class="amp">&amp;</span><span>${t.p2}</span></div>
+    </div>`).join('');
 }
 function selectFormat(f,el){format=f;document.querySelectorAll('.format-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
-
-function editTeamName(teamIdx, newName){
-  if(!newName.trim()) return;
-  const t=teams[teamIdx];
-  const oldName=t.name;
-  t.name=newName.trim();
-  // Update in all matches
-  Object.values(matches).forEach(m=>{
-    if(!m) return;
-    if(m.t1===oldName) m.t1=t.name;
-    if(m.t2===oldName) m.t2=t.name;
-    if(m.winner===oldName) m.winner=t.name;
-  });
-  if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldName)g.t1=t.name;if(g.t2===oldName)g.t2=t.name;if(g.winner===oldName)g.winner=t.name;}
-  if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldName)g.t1=t.name;if(g.t2===oldName)g.t2=t.name;if(g.winner===oldName)g.winner=t.name;}
-  save(); renderAll();
-}
-
-function editPlayerName(teamIdx, slot, newName){
-  if(!newName.trim()) return;
-  const t=teams[teamIdx];
-  const oldName=t[slot];
-  const oldTeamName=t.name;
-  // Update player name
-  t[slot]=newName.trim();
-  // Only auto-update team name if it still matches the default "p1 & p2" format
-  if(t.name===oldTeamName || t.name===`${t.p1} & ${t.p2}`){
-    t.name=`${t.p1} & ${t.p2}`;
-  }
-  // Update in players array
-  const pi=players.indexOf(oldName);
-  if(pi>-1) players[pi]=newName.trim();
-  // Update team name in all matches only if it changed
-  if(t.name!==oldTeamName){
-    Object.values(matches).forEach(m=>{
-      if(!m) return;
-      if(m.t1===oldTeamName) m.t1=t.name;
-      if(m.t2===oldTeamName) m.t2=t.name;
-      if(m.winner===oldTeamName) m.winner=t.name;
-    });
-    if(gfId&&gm(gfId)){const g=gm(gfId);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
-    if(gf2Id&&gm(gf2Id)){const g=gm(gf2Id);if(g.t1===oldTeamName)g.t1=t.name;if(g.t2===oldTeamName)g.t2=t.name;if(g.winner===oldTeamName)g.winner=t.name;}
-  }
-  save(); renderAll(); renderTeamsGrid('live-teams-grid');
-}
 function addTeamMid(){
   const p1=document.getElementById('new-p1').value.trim(), p2=document.getElementById('new-p2').value.trim();
   if(!p1||!p2){alert('Enter both names.');return;}
@@ -709,7 +591,7 @@ function addTeamMid(){
 }
 function confirmRemove(i){
   document.getElementById('modal-title').textContent='Remove Team?';
-  document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;color:var(--muted);">Remove <strong style="color:var(--text);">${teams[i].name}</strong>? They will receive a <strong style="color:var(--danger);">forfeit loss</strong> in any active bracket matches.</p>`;
+  document.getElementById('modal-body').innerHTML=`<p style="font-size:14px;color:var(--muted);">Remove <strong style="color:var(--text);">${teams[i].name}</strong>? Their bracket matches will be cleared.</p>`;
   const ok=document.getElementById('modal-ok'); ok.style.display=''; ok.onclick=()=>{removeTeamMid(i);closeModal();};
   document.getElementById('modal').style.display='flex';
 }
@@ -881,7 +763,6 @@ function advanceWB(matchId){
   const wbFinalId=WBrounds[WBrounds.length-1][0];
   if(matchId===wbFinalId && gfId){
     gm(gfId).t1=m.winner;
-    autoAssignChampionship();
   }
 }
 
@@ -1061,13 +942,13 @@ function setPit(matchId,val){
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
-function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); renderAdminPitBoard(); renderPitQRCodes(); }
+function renderAll(){ renderBracket('bracket-container',false); updateStatus(); renderBiggestLoser(false); renderAdminPitBoard(); }
 function renderSpectator(){
   if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet — check back soon!</div>'; return; }
   renderBracket('s-bracket-container',true);
   const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye), done=all.filter(m=>m.winner).length;
   document.getElementById('s-status-bar').innerHTML=`<div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div><div class="stat-pill"><div class="dot dot-amber"></div>${done}/${all.length} Done</div>`;
-  renderSpectatorPrize(); checkChamp(true); renderChampionshipLive(); renderBiggestLoser(true); renderSpectatorPits(); renderRoster();
+  renderSpectatorPrize(); checkChamp(true); renderBiggestLoser(true); renderSpectatorPits();
 }
 
 function renderBracket(containerId, spec){
@@ -1294,369 +1175,6 @@ function generateQR(){
 }
 function copyLink(){ navigator.clipboard.writeText(location.origin+location.pathname+'?view=spectator').then(()=>alert('Copied!')); }
 
-// ─── PIT SCORE PAGE ───────────────────────────────────────────────────────────
-function renderPitPage(pitNum){
-  const body=document.getElementById('pit-page-body');
-  if(!body) return;
-  const m=getMatchOnPit(pitNum);
-  const active=m&&!m.winner&&m.t1&&m.t2;
-  const done=m&&m.winner;
-
-  if(!active&&!done){
-    body.innerHTML=`<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;color:#555;font-family:'Oswald',sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:2px;gap:12px;">
-      <div style="font-size:48px;">🏟</div>
-      Court ${pitNum} — No match assigned yet
-    </div>`;
-    return;
-  }
-
-  if(done){
-    body.innerHTML=`<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;gap:16px;text-align:center;">
-      <div style="font-size:64px;">🏆</div>
-      <div style="font-family:'Oswald',sans-serif;font-size:32px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:2px;">${m.winner} Wins!</div>
-      <div style="font-size:16px;color:#555;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1px;">Match Complete</div>
-    </div>`;
-    return;
-  }
-
-  // If scoring already started, skip color picker
-  if(m.scoringStarted){
-    _scoringActive=true;
-    renderScoreboard(m);
-    return;
-  }
-  // Check if colors already assigned, if not show color picker
-  const c1=m.color1!=null?m.color1:null;
-  const c2=m.color2!=null?m.color2:null;
-  if(c1===null||c2===null){
-    renderColorPicker(m);
-    return;
-  }
-  renderScoreboard(m);
-}
-
-const COLORS=[
-  {name:'White',bg:'#ffffff',text:'#1a3a6b',bar:'#1a3a6b',barText:'#ffffff'},
-  {name:'Navy',bg:'#1a3a6b',text:'#ffffff',bar:'rgba(0,0,0,0.35)',barText:'#ffffff'},
-  {name:'Red',bg:'#c0392b',text:'#ffffff',bar:'rgba(0,0,0,0.3)',barText:'#ffffff'},
-  {name:'Green',bg:'#27ae60',text:'#ffffff',bar:'rgba(0,0,0,0.3)',barText:'#ffffff'},
-  {name:'Black',bg:'#111111',text:'#ffffff',bar:'#333',barText:'#ffffff'},
-  {name:'Gold',bg:'#d4af37',text:'#000',bar:'#b8960a',barText:'#000'},
-];
-
-function renderColorPicker(m){
-  const body=document.getElementById('pit-page-body');
-  const colorSwatches=(slot)=>COLORS.map((c,i)=>{
-    const isSelected=m[slot]===i;
-    return `<button onclick="pickColor('${m.id}','${slot}',${i})"
-      style="width:64px;height:64px;border-radius:12px;background:${c.bg};
-        border:${isSelected?'4px solid #fff':'3px solid rgba(255,255,255,0.15)'};
-        cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
-        color:${c.text};text-transform:uppercase;display:flex;flex-direction:column;
-        align-items:center;justify-content:center;gap:2px;
-        box-shadow:${isSelected?'0 0 0 3px #d4af37, 0 0 20px rgba(212,175,55,0.4)':'none'};
-        transform:${isSelected?'scale(1.1)':'scale(1)'};transition:all 0.15s;">
-      ${isSelected?`<span style="font-size:20px;">✓</span>`:''}
-      <span>${c.name}</span>
-    </button>`;
-  }).join('');
-
-  body.innerHTML=`
-  <div style="width:100%;height:100%;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:20px;">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:2px;">Choose Your Colors</div>
-    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;width:100%;">
-      <!-- Team 1 -->
-      <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t1}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color1')}</div>
-        <div style="font-size:13px;color:${m.color1!=null?'#d4af37':'#555'};margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
-          ${m.color1!=null?'✓ '+COLORS[m.color1].name+' selected':'Pick a color above'}
-        </div>
-      </div>
-      <!-- Team 2 -->
-      <div style="flex:1;min-width:200px;background:rgba(255,255,255,0.05);border-radius:14px;padding:16px;text-align:center;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;text-transform:uppercase;margin-bottom:12px;">${m.t2}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${colorSwatches('color2')}</div>
-        <div style="font-size:13px;color:${m.color2!=null?'#d4af37':'#555'};margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
-          ${m.color2!=null?'✓ '+COLORS[m.color2].name+' selected':'Pick a color above'}
-        </div>
-      </div>
-    </div>
-    <button onclick="startScoring('${m.id}')"
-      style="padding:14px 40px;border-radius:10px;border:none;background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;opacity:${(m.color1!=null&&m.color2!=null)?1:0.4};">
-      Start Scoring →
-    </button>
-  </div>`;
-}
-
-function pickColor(matchId, slot, colorIdx){
-  const m=gm(matchId); if(!m) return;
-  m[slot]=colorIdx;
-  save();
-  // Re-render color picker with updated selection
-  renderColorPicker(m);
-}
-
-function startScoring(matchId){
-  const m=gm(matchId);
-  if(m.color1==null||m.color2==null){ alert('Both teams need to pick a color first!'); return; }
-  m.scoringStarted=true;
-  _scoringActive=true;
-  save();
-  renderScoreboard(m);
-}
-
-function renderScoreboard(m){
-  const body=document.getElementById('pit-page-body');
-  const c1=COLORS[m.color1!=null?m.color1:0];
-  const c2=COLORS[m.color2!=null?m.color2:1];
-
-  body.innerHTML=`
-  <style>
-    #pit-page * { -webkit-tap-highlight-color:transparent; user-select:none; }
-    .pp-btn { border:none; cursor:pointer; transition:transform 0.1s; }
-    .pp-btn:active { transform:scale(0.92); }
-  </style>
-  <div style="width:100%;height:100%;display:flex;flex-direction:row;background:#000;">
-
-    <!-- TEAM 1 -->
-    <div style="flex:1;display:flex;flex-direction:column;background:${c1.bg};overflow:hidden;">
-      <!-- Name top -->
-      <div style="background:${c1.bar};padding:10px 12px;text-align:center;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c1.barText};">${m.t1}</div>
-      </div>
-      <!-- Score tap zone: top half = +1, bottom half = -1 -->
-      <div style="flex:1;display:flex;flex-direction:column;cursor:pointer;position:relative;" onclick="tapScore(event,'${m.id}','s1',this)">
-        <!-- Top half: + -->
-        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c1.text};">＋</div>
-        <!-- Score -->
-        <div style="display:flex;align-items:center;justify-content:center;">
-          <div id="pp-s1" style="font-family:'Barlow Condensed',sans-serif;font-size:min(22vw,22vh);font-weight:800;line-height:1;color:${c1.text};">${m.s1||0}</div>
-        </div>
-        <!-- Bottom half: - -->
-        <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c1.text};">－</div>
-      </div>
-
-    </div>
-
-    <!-- MIDDLE -->
-    <div style="width:100px;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex-shrink:0;padding:10px 6px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#333;letter-spacing:3px;">VS</div>
-      <button class="pp-btn" onclick="pitPageWinner('${m.id}','t1')"
-        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;padding:10px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;line-height:1.4;">✓ WIN<br><span style="font-size:11px;opacity:0.8;">${m.t1.split(' ')[0]}</span></button>
-      <button class="pp-btn" onclick="pitPageWinner('${m.id}','t2')"
-        style="background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;padding:10px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;line-height:1.4;">✓ WIN<br><span style="font-size:11px;opacity:0.8;">${m.t2.split(' ')[0]}</span></button>
-      <button class="pp-btn" onclick="resetPitScores('${m.id}')"
-        style="background:#222;color:#888;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;">↺ Reset</button>
-      <button class="pp-btn" onclick="renderColorPicker(getM('${m.id}'))"
-        style="background:#222;color:#888;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-radius:10px;width:86px;letter-spacing:0.5px;">🎨 Colors</button>
-    </div>
-
-    <!-- TEAM 2 -->
-    <div style="flex:1;display:flex;flex-direction:column;background:${c2.bg};overflow:hidden;">
-      <!-- Name top -->
-      <div style="background:${c2.bar};padding:10px 12px;text-align:center;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${c2.barText};">${m.t2}</div>
-      </div>
-      <!-- Score tap zone: top half = +1, bottom half = -1 -->
-      <div style="flex:1;display:flex;flex-direction:column;cursor:pointer;position:relative;" onclick="tapScore(event,'${m.id}','s2',this)">
-        <div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c2.text};">＋</div>
-        <div style="display:flex;align-items:center;justify-content:center;">
-          <div id="pp-s2" style="font-family:'Barlow Condensed',sans-serif;font-size:min(22vw,22vh);font-weight:800;line-height:1;color:${c2.text};">${m.s2||0}</div>
-        </div>
-        <div style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;opacity:0.25;font-family:'Barlow Condensed',sans-serif;font-size:clamp(18px,4vw,32px);font-weight:700;color:${c2.text};">－</div>
-      </div>
-
-    </div>
-
-  </div>`;
-}
-
-function pitPageScore(matchId, slot, delta){
-  const m=gm(matchId); if(!m) return;
-  m[slot]=Math.max(0,(parseInt(m[slot])||0)+delta);
-  const el=document.getElementById(slot==='s1'?'pp-s1':'pp-s2');
-  if(el) el.textContent=m[slot];
-  save();
-}
-
-function pitPageWinner(matchId, slot){
-  if(!confirm('Confirm winner?')) return;
-  const m=gm(matchId); if(!m||!m[slot]) return;
-  m.winner=m[slot];
-  _scoringActive=false;
-
-  if(m.type==='GF'||m.id===gfId){
-    // Grand Final — check if losers side won (bracket reset needed)
-    if(m.winner===m.t2){
-      // Losers bracket winner won — create GF2
-      gf2Id=mkMatch(m.t1,m.t2);
-      const gf2M=gm(gf2Id);
-      gf2M.isGF2=true;
-      gf2M.type='GF2';
-      // Carry over colors from GF
-      gf2M.color1=m.color1;
-      gf2M.color2=m.color2;
-      gf2M.scoringStarted=true;
-      // Carry over same pit assignment
-      gf2M.pit=m.pit;
-      m.pit='';
-      save();
-      // Show bracket reset screen on pit page
-      if(isPitPage) showBracketReset(m);
-      return;
-    }
-    // Winners bracket winner won — tournament over
-    autoUpdatePitOnMatchEnd(matchId);
-    save();
-    if(isPitPage) renderPitPage(parseInt(pitParam));
-    checkChamp(false);
-  } else if(m.type==='GF2'||m.id===gf2Id){
-    // Reset match — tournament over
-    autoUpdatePitOnMatchEnd(matchId);
-    save();
-    if(isPitPage) renderPitPage(parseInt(pitParam));
-    checkChamp(false);
-  } else if(m.type==='L'){
-    advanceLB(matchId);
-    autoUpdatePitOnMatchEnd(matchId);
-    save();
-    if(isPitPage) renderPitPage(parseInt(pitParam));
-  } else {
-    advanceWB(matchId);
-    autoUpdatePitOnMatchEnd(matchId);
-    save();
-    if(isPitPage) renderPitPage(parseInt(pitParam));
-  }
-}
-
-function showBracketReset(gfMatch){
-  const body=document.getElementById('pit-page-body');
-  if(!body) return;
-  body.innerHTML=`
-  <div style="width:100%;height:100%;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;">
-    <div style="font-size:52px;">🔄</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#d4af37;text-transform:uppercase;letter-spacing:2px;">Bracket Reset!</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#aaa;max-width:280px;line-height:1.5;">
-      <strong style="color:#fff;">${gfMatch.t2}</strong> won — both teams now have 1 loss.<br>One final match decides the champion!
-    </div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#555;margin-top:4px;">Scores reset to 0 — 0</div>
-    <button onclick="startResetMatch()" style="margin-top:8px;padding:16px 40px;border-radius:12px;border:none;background:#d4af37;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;">
-      Start Reset Match →
-    </button>
-  </div>`;
-}
-
-function startResetMatch(){
-  _scoringActive=true;
-  _currentPitMatchId=gf2Id;
-  const m=gm(gf2Id);
-  if(!m) return;
-  renderScoreboard(m);
-}
-
-function resetPitScores(matchId){
-  const m=gm(matchId); if(!m) return;
-  m.s1=0; m.s2=0;
-  const s1el=document.getElementById('pp-s1');
-  const s2el=document.getElementById('pp-s2');
-  if(s1el) s1el.textContent=0;
-  if(s2el) s2el.textContent=0;
-  save();
-}
-
-function tapScore(e, matchId, slot, el){
-  const rect=el.getBoundingClientRect();
-  const mid=rect.top+rect.height/2;
-  const delta=e.clientY<mid?1:-1;
-  pitPageScore(matchId,slot,delta);
-}
-
-// ─── PIT QR CODES IN ADMIN ───────────────────────────────────────────────────
-function renderPitQRCodes(){
-  const el=document.getElementById('pit-qr-section');
-  if(!el) return;
-  el.innerHTML='';
-  for(let p=1;p<=numPits;p++){
-    const url=location.origin+location.pathname+`?pit=${p}`;
-    const div=document.createElement('div');
-    div.style.cssText='text-align:center;';
-    div.innerHTML=`
-      <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:6px;">Court ${p}</div>
-      <div id="pit-qr-${p}" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;margin-bottom:6px;"></div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Scan to keep score</div>
-      <a href="${url}" target="_blank"
-        style="display:block;font-size:11px;color:var(--gold);word-break:break-all;text-decoration:none;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:6px;padding:5px 8px;margin-bottom:4px;">
-        🔗 Open Court ${p}
-      </a>
-      <button onclick="navigator.clipboard.writeText('${url}').then(()=>alert('Court ${p} link copied!'))"
-        style="width:100%;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;cursor:pointer;letter-spacing:0.5px;">
-        Copy Link
-      </button>`;
-    el.appendChild(div);
-    setTimeout(()=>{
-      new QRCode(document.getElementById(`pit-qr-${p}`),{text:url,width:100,height:100,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
-    },100);
-  }
-}
-
-function renderChampionshipLive(){
-  const area=document.getElementById('s-championship-live');
-  if(!area) return;
-
-  // Get active GF or GF2
-  let gfM=null;
-  if(gf2Id&&gm(gf2Id)&&!gm(gf2Id).winner) gfM=gm(gf2Id);
-  else if(gfId&&gm(gfId)&&gm(gfId).t1&&gm(gfId).t2&&!gm(gf2Id)) gfM=gm(gfId);
-
-  // Check if champion already crowned
-  let champ=null;
-  if(gf2Id&&gm(gf2Id)&&gm(gf2Id).winner) champ=gm(gf2Id).winner;
-  else if(gfId&&gm(gfId)&&gm(gfId).winner===gm(gfId).t1) champ=gm(gfId).winner;
-
-  if(champ){
-    // Show podium — champion area already handles this, hide live score
-    area.style.display='none';
-    return;
-  }
-
-  if(!gfM||!gfM.t1||!gfM.t2){area.style.display='none';return;}
-
-  const isReset=gfM.id===gf2Id;
-  area.style.display='';
-  area.innerHTML=`
-  <div style="background:radial-gradient(ellipse at top,rgba(212,175,55,0.15),transparent 70%);border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:1rem 1.25rem;text-align:center;margin:0 0 1rem;">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:#d4af37;margin-bottom:4px;">
-      ${isReset?'🔄 Bracket Reset — Final Match':'⚡ Championship Match — Live'}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:10px;">
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:#f5ecd7;margin-bottom:6px;">${gfM.t1}</div>
-        <div style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:#d4af37;line-height:1;">${gfM.s1||0}</div>
-        <div style="font-size:10px;color:#7a8099;margin-top:4px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px;">Winners Side</div>
-      </div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#333;">VS</div>
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:#f5ecd7;margin-bottom:6px;">${gfM.t2}</div>
-        <div style="font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:#d4af37;line-height:1;">${gfM.s2||0}</div>
-        <div style="font-size:10px;color:#7a8099;margin-top:4px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px;">Losers Side</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function renderRoster(){
-  const area=document.getElementById('s-roster');
-  const list=document.getElementById('s-roster-list');
-  if(!area||!list||!teams.length){if(area)area.style.display='none';return;}
-  area.style.display='';
-  list.innerHTML=teams.map((t,i)=>`
-    <div style="padding:10px 0;border-bottom:1px solid var(--border);">
-      <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;">${t.name}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px;">${t.p1} &amp; ${t.p2}</div>
-    </div>`).join('');
-}
-
 // ─── FULLSCREEN PIT BOARD ─────────────────────────────────────────────────────
 function openPitBoard(){
   const overlay=document.createElement('div');
@@ -1741,23 +1259,10 @@ function renderBiggestLoser(spec){
 
 // ─── PIT BOARD RENDER ────────────────────────────────────────────────────────
 function getPendingMatches(){
-  const regular=Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2&&m.type!=='GF'&&m.type!=='GF2'&&m.id!==gfId&&m.id!==gf2Id);
-  // Add GF if active
-  const gfM=gfId?gm(gfId):null;
-  if(gfM&&!gfM.winner&&gfM.t1&&gfM.t2) regular.push({...gfM,_label:'⚡ Grand Final'});
-  // Add GF2 if active
-  const gf2M=gf2Id?gm(gf2Id):null;
-  if(gf2M&&!gf2M.winner&&gf2M.t1&&gf2M.t2) regular.push({...gf2M,_label:'🔄 Reset Match'});
-  return regular;
+  return Object.values(matches).filter(m=>m&&!m.winner&&!m.bye&&!m.lbBye&&m.t1&&m.t2);
 }
 function getMatchOnPit(p){
-  const ps=String(p);
-  // GF2 takes priority if active
-  if(gf2Id&&gm(gf2Id)&&String(gm(gf2Id).pit)===ps&&!gm(gf2Id).winner) return gm(gf2Id);
-  // Then GF
-  if(gfId&&gm(gfId)&&String(gm(gfId).pit)===ps&&!gm(gfId).winner) return gm(gfId);
-  // Regular matches
-  const id=Object.keys(matches).find(id=>matches[id]&&String(matches[id].pit)===ps&&matches[id].id!==gfId&&matches[id].id!==gf2Id);
+  const id=Object.keys(matches).find(id=>matches[id]&&String(matches[id].pit)===String(p));
   return id?matches[id]:null;
 }
 
@@ -1768,83 +1273,29 @@ function renderAdminPitBoard(){
   let html='';
   for(let p=1;p<=numPits;p++){
     const m=getMatchOnPit(p);
-    const active=m&&!m.winner&&m.t1&&m.t2;
-    const done=m&&m.winner;
-
-    let opts=`<option value="">— Assign match —</option>`;
+    const active=m&&!m.winner;
+    // Build match dropdown
+    let opts=`<option value="">— Unassigned —</option>`;
     pending.forEach(pm=>{
-      const sel=m&&m.id===pm.id;
-      const label=pm._label?`${pm._label}: ${pm.t1} vs ${pm.t2}`:`${pm.t1} vs ${pm.t2}`;
-      opts+=`<option value="${pm.id}" ${sel?'selected':''}>${label}</option>`;
+      const selected=m&&m.id===pm.id;
+      opts+=`<option value="${pm.id}" ${selected?'selected':''}>${pm.t1} vs ${pm.t2}</option>`;
     });
+    // If current match is done or not in pending, still show it
     if(m&&!pending.find(pm=>pm.id===m.id)){
-      const label=(m.id===gfId?'⚡ Grand Final: ':m.id===gf2Id?'🔄 Reset Match: ':'')+`${m.t1} vs ${m.t2}${done?' ✓':''}`;
-      opts+=`<option value="${m.id}" selected>${label}</option>`;
+      opts+=`<option value="${m.id}" selected>${m.t1} vs ${m.t2} ${m.winner?'(Done)':''}</option>`;
     }
-
-    const btnStyle=`width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;`;
-
-    html+=`<div style="background:var(--surface2);border:1.5px solid ${active?'var(--gold)':done?'rgba(46,204,113,0.25)':'var(--border)'};border-radius:12px;padding:12px 14px;margin-bottom:4px;">
-
-      <!-- HEADER ROW -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${active?'12px':'0'};">
-        <span style="font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;color:var(--gold);letter-spacing:1px;white-space:nowrap;">PIT ${p}</span>
-        <select style="flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;font-family:'Barlow',sans-serif;" onchange="assignPitFromBoard(${p},this.value)">${opts}</select>
+    html+=`<div style="background:var(--surface2);border:1px solid ${active?'var(--gold)':'var(--border)'};border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--gold);min-width:36px;text-align:center;">🏟 ${p}</div>
+      <div style="flex:1;min-width:150px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Pit ${p}</div>
+        <select style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;" onchange="assignPitFromBoard(${p},this.value)">${opts}</select>
       </div>
-
-      ${active?`
-      <!-- TEAM 1 ROW -->
-      <div style="margin-bottom:8px;">
-        <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--cream);margin-bottom:6px;">${m.t1}</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <button style="${btnStyle}" onclick="adjustScore('${m.id}','s1',-1)">−</button>
-          <div style="flex:1;font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--gold);text-align:center;min-width:0;">${m.s1||0}</div>
-          <button style="${btnStyle}" onclick="adjustScore('${m.id}','s1',1)">+</button>
-          <button style="padding:8px 14px;border-radius:8px;border:none;background:var(--gold);color:#0a1628;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onclick="pitWinner('${m.id}','t1')">✓ Win</button>
-        </div>
-      </div>
-
-      <!-- DIVIDER -->
-      <div style="text-align:center;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">VS</div>
-
-      <!-- TEAM 2 ROW -->
       <div>
-        <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--cream);margin-bottom:6px;">${m.t2}</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <button style="${btnStyle}" onclick="adjustScore('${m.id}','s2',-1)">−</button>
-          <div style="flex:1;font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--gold);text-align:center;min-width:0;">${m.s2||0}</div>
-          <button style="${btnStyle}" onclick="adjustScore('${m.id}','s2',1)">+</button>
-          <button style="padding:8px 14px;border-radius:8px;border:none;background:var(--gold);color:#0a1628;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onclick="pitWinner('${m.id}','t2')">✓ Win</button>
-        </div>
-      </div>`
-      :done?`<div style="font-size:12px;color:var(--success);">✓ ${m.winner} won</div>`
-      :''}
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:99px;${active?'background:rgba(46,204,113,0.15);color:var(--success);':'background:rgba(212,175,55,0.1);color:var(--gold);'}">${active?'⚡ Playing':'Open'}</span>
+      </div>
     </div>`;
   }
   cards.innerHTML=html;
-}
-
-function adjustScore(matchId, slot, delta){
-  const m=gm(matchId); if(!m) return;
-  const cur=parseInt(m[slot])||0;
-  m[slot]=Math.max(0, cur+delta);
-  save(); renderAdminPitBoard();
-}
-
-function liveScore(matchId, slot, val){
-  const m=gm(matchId); if(!m) return;
-  m[slot]=val; save();
-}
-
-function pitWinner(matchId, slot){
-  const m=gm(matchId); if(!m||!m[slot]) return;
-  if(m.winner){ alert('This match already has a winner. Click the bracket to undo.'); return; }
-  const clicked=m[slot];
-  m.winner=clicked;
-  if(m.type==='L') advanceLB(matchId);
-  else advanceWB(matchId);
-  autoUpdatePitOnMatchEnd(matchId);
-  save(); renderAll(); checkChamp(false);
 }
 
 function assignPitFromBoard(pitNum, matchId){
@@ -1856,11 +1307,6 @@ function assignPitFromBoard(pitNum, matchId){
 }
 
 // ─── SPECTATOR PIT CARDS ─────────────────────────────────────────────────────
-function getTeamPlayers(teamName){
-  const t=teams.find(t=>t.name===teamName);
-  return t?`${t.p1} & ${t.p2}`:'';
-}
-
 function renderSpectatorPits(){
   const area=document.getElementById('s-pit-status');
   const cards=document.getElementById('s-pit-cards');
@@ -1869,40 +1315,14 @@ function renderSpectatorPits(){
   for(let p=1;p<=numPits;p++){
     const m=getMatchOnPit(p);
     const active=m&&!m.winner&&m.t1&&m.t2;
-    const done=m&&m.winner;
-
-    if(active){
-      const p1=getTeamPlayers(m.t1);
-      const p2=getTeamPlayers(m.t2);
-      html+=`<div style="background:var(--surface2);border:1.5px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-        <!-- Court label -->
-        <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:10px;text-align:center;">Court ${p}</div>
-        <!-- Scoreboard -->
-        <div style="display:grid;grid-template-columns:1fr 32px 1fr;align-items:center;gap:6px;text-align:center;">
-          <div>
-            <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:var(--cream);line-height:1.1;">${m.t1}</div>
-            ${p1?`<div style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:8px;">${p1}</div>`:`<div style="margin-bottom:8px;"></div>`}
-            <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:900;color:var(--gold);line-height:1;">${m.s1||0}</div>
-          </div>
-          <div style="font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;color:var(--muted);">VS</div>
-          <div>
-            <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:var(--cream);line-height:1.1;">${m.t2}</div>
-            ${p2?`<div style="font-size:10px;color:var(--muted);margin-top:2px;margin-bottom:8px;">${p2}</div>`:`<div style="margin-bottom:8px;"></div>`}
-            <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:900;color:var(--gold);line-height:1;">${m.s2||0}</div>
-          </div>
-        </div>
-      </div>`;
-    } else if(done){
-      html+=`<div style="background:var(--surface2);border:1px solid rgba(46,204,113,0.2);border-radius:12px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-        <span style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);">Court ${p}</span>
-        <span style="font-size:12px;color:var(--success);">✓ ${m.winner} won</span>
-      </div>`;
-    } else {
-      html+=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-        <span style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);">Court ${p}</span>
-        <span style="font-size:12px;color:var(--muted);">Open</span>
-      </div>`;
-    }
+    html+=`<div class="s-pit-card${active?' active':''}">
+      <div class="s-pit-num">${p}</div>
+      <div class="s-pit-info">
+        ${active?`<div class="s-pit-teams">${m.t1}<br><span style="font-size:11px;color:var(--muted);font-weight:400;">vs</span><br>${m.t2}</div>`
+          :`<div class="s-pit-teams" style="color:var(--muted);">Open</div>`}
+        <span class="s-pit-badge ${active?'playing':'open'}">${active?'⚡ Playing':'Open'}</span>
+      </div>
+    </div>`;
   }
   cards.innerHTML=html;
   area.style.display='';
