@@ -99,7 +99,7 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
    BRACKET — BracketHQ classic (self-contained)
    ═══════════════════════════════════════ */
 .bhq-shell{
-  --bk-bg:#1e1f24;--bk-text:#fff;--bk-line:#fff;
+  --bk-bg:#111820;--bk-text:#fff;--bk-line:rgba(255,255,255,0.18);
   font-family:"Source Sans Pro",helvetica,arial,sans-serif;
 }
 .bhq-shell .bk-viewport{position:relative;background:var(--bk-bg);border-radius:8px;overflow:hidden;}
@@ -113,18 +113,9 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
   position:relative;width:198px;box-sizing:border-box;cursor:pointer;z-index:1;
   border-right:2px solid var(--bk-line);
 }
-.bhq-shell .bk-game::before,.bhq-shell .bk-game::after{
-  display:block;content:"";position:absolute;left:100%;height:var(--conn-h,45px);
-  border-top:2px solid var(--bk-line);z-index:1;
-}
-.bhq-shell .bk-game::before{top:-2px;width:var(--conn-w,68px);transform:rotate(var(--conn-a,47deg));transform-origin:top left;}
-.bhq-shell .bk-game::after{
-  bottom:-2px;width:var(--conn-w,68px);border-top:0;border-bottom:2px solid var(--bk-line);
-  transform:rotate(var(--conn-na,-47deg));transform-origin:bottom left;
-}
+.bhq-shell .bk-game::before,.bhq-shell .bk-game::after{display:none;}
 .bhq-shell .bk-game.bk-no-conn::before,.bhq-shell .bk-game.bk-no-conn::after{display:none;}
-.bhq-shell .bk-game:hover{box-shadow:-4px 4px 6px -2px rgba(52,152,219,.67);}
-.bhq-shell .bk-game:hover::before,.bhq-shell .bk-game:hover::after{border-color:#3498db;}
+.bhq-shell .bk-game:hover{background:rgba(255,255,255,0.03);}
 .bhq-shell .bk-game.bk-bye{visibility:hidden;pointer-events:none;}
 .bhq-shell .bk-slot{
   position:absolute;left:0;width:100%;height:28px;line-height:28px;font-size:18px;
@@ -134,19 +125,6 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .bhq-shell .bk-slot-bot{bottom:2px;}
 .bhq-shell .bk-game:hover .bk-slot-top{
   border:2px solid #3498db;border-bottom:0;left:-2px;top:-34px;height:30px;background:var(--bk-bg);
-}
-.bhq-shell .bk-game:hover .bk-slot-bot{
-  border:2px solid #3498db;border-top:0;left:-2px;bottom:0;height:30px;background:var(--bk-bg);
-}
-.bhq-shell .bk-round-header{
-  float:left;width:243px;font-family:"Source Sans Pro",helvetica,arial,sans-serif;
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
-  color:rgba(255,255,255,0.4);padding-left:4px;box-sizing:border-box;padding-bottom:6px;
-}
-.bhq-shell .bk-section-label{
-  clear:both;font-family:"Source Sans Pro",helvetica,arial,sans-serif;font-size:11px;
-  font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.25);
-  padding:14px 0 4px 4px;
 }
 .bhq-shell .bk-seed{width:24px;flex-shrink:0;font-weight:600;text-align:center;color:rgba(255,255,255,.55);}
 .bhq-shell .bk-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:3px;}
@@ -1187,321 +1165,513 @@ function renderSpectator(){
 // ═══════════════════════════════════════════════════════════════════════
 // BRACKET RENDERER — BracketHQ classic (self-contained layout engine)
 // ═══════════════════════════════════════════════════════════════════════
-const _bhqZoom={};
-const BHQ_CONN={
-  '4-4':{w:68,a:47},'4-2':{w:110,a:65},
-  '8-8':{w:68,a:47},'8-4':{w:110,a:65},'8-2':{w:206,a:77},
-  '16-16':{w:40,a:37.5},'16-8':{w:68,a:47},'16-4':{w:110,a:65},'16-2':{w:206,a:77},
-  '32-32':{w:40,a:37.5},'32-16':{w:40,a:37.5},'32-8':{w:68,a:47},'32-4':{w:206,a:77},'32-2':{w:403,a:83.3},
-  '64-64':{w:40,a:37.5},'64-32':{w:40,a:37.5},'64-16':{w:40,a:37.5},'64-8':{w:68,a:47},'64-4':{w:403,a:83.3},'64-2':{w:803,a:86.7}
+// ═══════════════════════════════════════════════════════════════════════
+// BRACKET RENDERER — BracketHQ exact layout
+// Uses flexbox columns with CSS right-angle connectors via SVG.
+// WB flows left→right. LB flows left→right below. GF at right end.
+// ═══════════════════════════════════════════════════════════════════════
+
+const _bhqZoom = {};
+
+// ── Layout constants ──────────────────────────────────────────────────
+const BQ = {
+  CW:  160,   // card width
+  RH:  26,    // row height (per team)
+  GAP: 40,    // horizontal space between rounds (connector zone)
+  SP:  4,     // vertical slot padding above+below card
+  LBL: 20,    // round label height
+  get MH(){ return this.RH * 2; },
+  get SLOT(){ return this.MH + this.SP * 2; },
 };
-const BHQ_WB_MT={
-  '16-8':25,'32-16':25,'64-32':25,'4-2':50,'8-4':50,'16-4':75,'32-8':75,'64-16':75,
-  '8-2':150,'16-2':175,'32-4':175,'64-8':175,'32-2':375,'64-4':375,'64-2':775
-};
-const BHQ_FINALS_MT={'4':150,'8':350,'16':375,'32':775,'64':1575};
-const BHQ_LB_MT={
-  '8-2':100,'16-4':-100,'16-2':0,'32-8':-100,'32-4':-125,'32-2':0,'64-16':-100,'64-8':-200,'64-4':-325,'64-2':0
-};
 
-function backfillBracketMeta(){
-  if(!WBrounds.length) return;
-  let n=1;
-  WBrounds[0].forEach(id=>{
-    const m=gm(id); if(!m) return;
-    if(m.t1==='BYE'||m.t2==='BYE'){ m.bye=true; return; }
-    if(!m.gameNum) m.gameNum=n++;
-    if(!m.seed1&&m.t1){ const i=teams.findIndex(t=>t.name===m.t1); if(i>=0) m.seed1=i+1; }
-    if(!m.seed2&&m.t2){ const i=teams.findIndex(t=>t.name===m.t2); if(i>=0) m.seed2=i+1; }
-  });
-}
-
-function bhqGetBracketSize(){ let s=1; while(s<teams.length) s*=2; return s; }
-function bhqWBRoundSize(ri){ return bhqGetBracketSize()>>ri; }
-
-function bhqLBColSpec(lbIdx,bSize){
-  if(lbIdx===0) return {roundSize:bSize,advance:false};
-  const n=lbIdx-1, level=Math.floor(n/2)+1;
-  return {roundSize:bSize/Math.pow(2,level), advance:n%2===1};
-}
-
-function bhqGameHeight(bSize,roundSize){
-  if(bSize>=16&&roundSize>=bSize/2) return 50*bSize/roundSize;
-  return 100*bSize/roundSize;
-}
-
-function bhqConnStyle(bSize,roundSize){
-  return BHQ_CONN[bSize+'-'+roundSize]||{w:68,a:47};
-}
-
-function bhqSlotInfo(m,tk,type){
-  const name=m[tk];
-  if(name&&name!=='BYE') return {text:name,seed:m[tk==='t1'?'seed1':'seed2'],click:true};
-  if(type==='lb'&&m.lbDropFrom){
-    const wbId=m.lbDropFrom[tk==='t1'?0:(m.lbDropFrom.length>1?1:0)];
-    if(wbId){ const w=gm(wbId); if(w?.gameNum) return {text:`Loser of ${w.gameNum}`,seed:null,click:false}; }
-  }
-  if(m.fromWin&&!name){
-    const pid=m.fromWin[tk==='t1'?0:1];
-    const s=gm(pid); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
-  }
-  if(m.lbWinFrom&&tk==='t1'&&!name){
-    const s=gm(m.lbWinFrom); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
-  }
-  if(m.lbWinFrom2&&!name){
-    const ids=m.lbWinFrom2;
-    const pid=tk==='t1'?ids[0]:ids[1];
-    const s=gm(pid); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
-  }
-  if(type==='gf'){
-    if(tk==='t1'&&!name) return {text:'WB Winner',seed:null,click:false};
-    if(tk==='t2'&&!name) return {text:'LB Winner',seed:null,click:false};
-  }
-  return {text:'',seed:null,click:false};
-}
-
-function bhqMkSlot(m,tk,sk,pos,type,spec,mid,isReset){
-  const info=bhqSlotInfo(m,tk,type);
-  const name=m[tk], score=m[sk];
-  const win=m.winner===name&&!!name&&name!=='BYE';
-  const can=info.click&&!spec&&!m.winner&&name&&name!=='BYE';
-
-  const s=document.createElement('div');
-  s.className='bk-slot bk-slot-'+pos+(win?' bk-win':'');
-  if(!spec){
-    if(type==='gf'&&name) s.onclick=e=>{e.stopPropagation();clickGF(isReset,tk);};
-    else if((can||(win&&name))&&type!=='gf') s.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(mid,tk);};
-  }
-
-  const seed=document.createElement('div');
-  seed.className='bk-seed';
-  seed.textContent=info.seed||'';
-  s.appendChild(seed);
-
-  const nm=document.createElement('div');
-  nm.className='bk-name';
-  nm.textContent=info.text||(name||'');
-  s.appendChild(nm);
-
-  const sc=document.createElement('div');
-  sc.className='bk-score-wrap';
-  if(name&&name!=='BYE'&&(info.click||win)){
-    if(!spec&&!m.winner){
-      const inp=document.createElement('input');
-      inp.type='number';inp.min='0';inp.value=score||'';
-      inp.onchange=e=>{e.stopPropagation();setScore(mid,sk,e.target.value);};
-      inp.onclick=e=>e.stopPropagation();
-      sc.appendChild(inp);
-    } else if(score||score===0){ const v=document.createElement('span'); v.textContent=score; sc.appendChild(v); }
-  }
-  const ck=document.createElement('div');
-  ck.className='bk-check';
-  ck.textContent='✓';
-  sc.appendChild(ck);
-  s.appendChild(sc);
-  return s;
-}
-
-function bhqStyleGame(game,bSize,roundSize,isLast,noConn,fixedH){
-  const h=fixedH||bhqGameHeight(bSize,roundSize);
-  game.style.height=h+'px';
-  if(!isLast) game.style.marginBottom=h+'px';
-  if(noConn){ game.classList.add('bk-no-conn'); game.style.borderRight='none'; return; }
-  const {w,a}=bhqConnStyle(bSize,roundSize);
-  const connH=roundSize>=bSize/2&&bSize>=16?18:45;
-  game.style.setProperty('--conn-w',w+'px');
-  game.style.setProperty('--conn-a',a+'deg');
-  game.style.setProperty('--conn-na',(-a)+'deg');
-  game.style.setProperty('--conn-h',connH+'px');
-}
-
-function bhqMkGame(m,type,spec,mid,opts){
-  const g=document.createElement('div');
-  g.className='bk-game';
-  if(m.bye||m.t1==='BYE'||m.t2==='BYE') g.classList.add('bk-bye');
-  if(opts&&opts.gf2) g.classList.add('bk-gf2');
-
-  g.appendChild(bhqMkSlot(m,'t1','s1','top',type,spec,mid,opts&&opts.isReset));
-  g.appendChild(bhqMkSlot(m,'t2','s2','bot',type,spec,mid,opts&&opts.isReset));
-
-  if(m.gameNum){
-    const num=document.createElement('div');
-    num.className='bk-gnum';
-    num.textContent=m.gameNum;
-    g.appendChild(num);
-  }
-  if(!spec){
-    const pit=document.createElement('div');
-    pit.className='bk-pit';
-    let o='<option value="">Court</option>';
-    for(let p=1;p<=numPits;p++) o+=`<option value="${p}" ${String(m.pit)===String(p)?'selected':''}>${p}</option>`;
-    const sel=document.createElement('select');
-    sel.innerHTML=o;
-    sel.onchange=e=>{e.stopPropagation();setPit(mid,e.target.value);};
-    pit.appendChild(sel);
-    g.appendChild(pit);
-  }
-  return g;
-}
-
-function bhqMkRound(matchIds,type,spec,bSize,roundSize,noConn,isFinals){
-  const round=document.createElement('div');
-  round.className='bk-round'+(isFinals?' bk-round-finals':'');
-  const ids=matchIds.filter(id=>gm(id));
-  ids.forEach((id,idx)=>{
-    const m=gm(id);
-    const game=bhqMkGame(m,type,spec,id);
-    bhqStyleGame(game,bSize,isFinals?4:roundSize,idx===ids.length-1,noConn||isFinals);
-    round.appendChild(game);
-  });
-  return round;
-}
-
-function bhqMkConnSpacer(){ const d=document.createElement('div'); d.className='bk-conn'; return d; }
-
-function bhqMkGFConn(bSize){
-  const d=document.createElement('div');
-  d.className='bk-conn-h';
-  const line=document.createElement('div');
-  line.className='bk-conn-line';
-  const tops={2:50,4:200,8:400,16:425,32:825,64:1625};
-  line.style.cssText=`width:200px;top:${tops[bSize]||400}px;`;
-  d.appendChild(line);
-  return d;
-}
-
-function bhqRoundLabel(ri, total){
-  const fromEnd=total-1-ri;
-  if(fromEnd===0) return 'Finals';
-  if(fromEnd===1) return 'Semifinals';
-  if(fromEnd===2) return 'Quarterfinals';
-  if(ri===0) return 'Round 1';
-  return 'Round '+(ri+1);
-}
-function bhqMkHeaders(rounds, prefix){
-  const row=document.createElement('div');
-  row.style.cssText='display:flow-root;';
-  rounds.forEach((_,ri)=>{
-    const h=document.createElement('div');
-    h.className='bk-round-header';
-    h.textContent=(prefix?prefix+' ':'')+bhqRoundLabel(ri,rounds.length);
-    row.appendChild(h);
-  });
-  return row;
-}
-
-function bhqApplyZoom(containerId){
-  const z=_bhqZoom[containerId]||1;
-  const preview=document.getElementById('bhq-preview-'+containerId);
-  const num=document.getElementById('bhq-zoom-num-'+containerId);
-  if(preview) preview.style.transform='scale('+z+')';
-  if(num) num.textContent=Math.round(z*100)+'%';
-}
-function bhqZoomIn(containerId){ _bhqZoom[containerId]=Math.min(2,(_bhqZoom[containerId]||1)+0.1); bhqApplyZoom(containerId); }
-function bhqZoomOut(containerId){ _bhqZoom[containerId]=Math.max(0.4,(_bhqZoom[containerId]||1)-0.1); bhqApplyZoom(containerId); }
-
-function renderBracket(containerId, spec){
-  const el=document.getElementById(containerId);
-  if(!el) return;
-  el.innerHTML='';
-  if(!WBrounds.length) return;
+function renderBracket(containerId, spec) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (!WBrounds.length) return;
   backfillBracketMeta();
 
-  const bSize=bhqGetBracketSize();
-  const hasGF=format==='double'&&!!gfId;
+  const shell = document.createElement('div');
+  shell.className = 'bhq-shell';
 
-  const shell=document.createElement('div');
-  shell.className='bhq-shell';
-  const viewport=document.createElement('div');
-  viewport.className='bk-viewport';
-  const scroll=document.createElement('div');
-  scroll.className='bk-scroll';
-  const preview=document.createElement('div');
-  preview.className='bk-preview';
-  preview.id='bhq-preview-'+containerId;
+  const viewport = document.createElement('div');
+  viewport.className = 'bk-viewport';
 
-  const winners=document.createElement('div');
-  winners.className='bk-section';
-  if(format==='double'){
-    const lbl=document.createElement('div');
-    lbl.className='bk-section-label';
-    lbl.textContent='Winners Bracket';
-    winners.appendChild(lbl);
-  }
-  winners.appendChild(bhqMkHeaders(WBrounds, ''));
-  WBrounds.forEach((roundIds,ri)=>{
-    const rs=bhqWBRoundSize(ri);
-    const round=bhqMkRound(roundIds,'wb',spec,bSize,rs,false,false);
-    if(ri>0){
-      const prevRs=bSize>>(ri-1);
-      const mt=BHQ_WB_MT[bSize+'-'+rs]??(bhqGameHeight(bSize,rs)-bhqGameHeight(bSize,prevRs))/2;
-      round.style.marginTop=mt+'px';
-    }
-    winners.appendChild(round);
-    if(ri<WBrounds.length-1) winners.appendChild(bhqMkConnSpacer());
-  });
-  if(hasGF){
-    winners.appendChild(bhqMkConnSpacer());
-    const finals=document.createElement('div');
-    finals.className='bk-round bk-round-finals';
-    const fmt=BHQ_FINALS_MT[bSize];
-    if(fmt!=null) finals.style.marginTop=fmt+'px';
-    const gf1=bhqMkGame(gm(gfId),'gf',spec,gfId);
-    bhqStyleGame(gf1,bSize,2,true,true,100);
-    finals.appendChild(gf1);
-    if(gf2Id&&gm(gf2Id)){
-      const gf2=bhqMkGame(gm(gf2Id),'gf',spec,gf2Id,{gf2:true,isReset:true});
-      bhqStyleGame(gf2,bSize,2,true,true,100);
-      finals.appendChild(gf2);
-    }
-    winners.appendChild(finals);
-    winners.appendChild(bhqMkGFConn(bSize));
-  }
-  preview.appendChild(winners);
+  const scroll = document.createElement('div');
+  scroll.className = 'bk-scroll';
+  scroll.style.cssText = 'overflow:auto;padding:16px 16px 60px;position:relative;';
 
-  if(format==='double'&&LBrounds.length){
-    const losers=document.createElement('div');
-    losers.className='bk-section bk-losers';
-    const lbLbl=document.createElement('div');
-    lbLbl.className='bk-section-label';
-    lbLbl.textContent='Losers Bracket';
-    losers.appendChild(lbLbl);
-    losers.appendChild(bhqMkHeaders(LBrounds,'LB'));
-    LBrounds.forEach((roundIds,li)=>{
-      const {roundSize,advance}=bhqLBColSpec(li,bSize);
-      const round=bhqMkRound(roundIds,'lb',spec,bSize,roundSize,false,false);
-      const mtKey=bSize+'-'+roundSize+(advance?'-A':'');
-      const mt=BHQ_LB_MT[bSize+'-'+roundSize];
-      if(mt!=null&&!advance) round.style.marginTop=mt+'px';
-      if(advance){
-        const advMt=BHQ_LB_MT[bSize+'-'+roundSize+'-A'];
-        if(advMt!=null) round.style.marginTop=advMt+'px';
-      }
-      losers.appendChild(round);
-      losers.appendChild(bhqMkConnSpacer());
-    });
-    preview.appendChild(losers);
+  const preview = document.createElement('div');
+  preview.id = 'bhq-preview-' + containerId;
+  preview.style.cssText = 'display:inline-block;transform-origin:0 0;position:relative;';
+
+  // ── Build bracket ────────────────────────────────────────────────────
+  const {wbEl, wbW, wbH} = buildWBSection(spec, containerId);
+  const lbData = (format === 'double' && LBrounds.length)
+    ? buildLBSection(spec, containerId)
+    : null;
+
+  const canvasW = wbW + 8;
+  const canvasH = wbH + (lbData ? 32 + lbData.lbH : 0) + 8;
+
+  preview.style.width  = canvasW + 'px';
+  preview.style.height = canvasH + 'px';
+
+  preview.appendChild(wbEl);
+
+  if (lbData) {
+    lbData.el.style.top = (wbH + 32) + 'px';
+    lbData.el.style.position = 'absolute';
+    lbData.el.style.left = '0';
+    preview.appendChild(lbData.el);
+
+    // LB section label
+    const lbLbl = mkSectionLabel('💀 Losers Bracket', 'rgba(231,76,60,0.75)');
+    lbLbl.style.cssText += `position:absolute;top:${wbH + 8}px;left:4px;`;
+    preview.appendChild(lbLbl);
   }
+
+  // WB section label
+  const wbLbl = mkSectionLabel('🏆 Winners Bracket', 'rgba(46,204,113,0.75)');
+  wbLbl.style.cssText += 'position:absolute;top:0;left:4px;';
+  preview.appendChild(wbLbl);
 
   scroll.appendChild(preview);
   viewport.appendChild(scroll);
-  const zoom=document.createElement('div');
-  zoom.className='bk-zoom';
-  zoom.innerHTML='<button type="button">−</button><span id="bhq-zoom-num-'+containerId+'">100%</span><button type="button">+</button>';
-  zoom.children[0].onclick=()=>bhqZoomOut(containerId);
-  zoom.children[2].onclick=()=>bhqZoomIn(containerId);
-  viewport.appendChild(zoom);
+
+  // Zoom controls
+  if (!spec) {
+    const zoom = document.createElement('div');
+    zoom.className = 'bk-zoom';
+    zoom.innerHTML = `<button type="button">−</button><span id="bhq-zoom-num-${containerId}">100%</span><button type="button">+</button>`;
+    zoom.children[0].onclick = () => bhqZoomOut(containerId);
+    zoom.children[2].onclick = () => bhqZoomIn(containerId);
+    viewport.appendChild(zoom);
+  }
+
   shell.appendChild(viewport);
   el.appendChild(shell);
-  _bhqZoom[containerId]=bSize>=32?0.5:bSize>=16?0.65:bSize>=8?0.8:1;
+
+  // Auto-zoom based on bracket size
+  const nT = teams.length;
+  const z = nT >= 32 ? 0.45 : nT >= 16 ? 0.6 : nT >= 8 ? 0.8 : 1;
+  _bhqZoom[containerId] = z;
   bhqApplyZoom(containerId);
 }
 
+// ── Winners Bracket section ───────────────────────────────────────────
+function buildWBSection(spec, containerId) {
+  const nR    = WBrounds.length;
+  const base  = WBrounds[0].length;  // matches in round 0
+  const SEC   = 18; // section label height
+
+  // Column X for WB round ri
+  const colX = ri => ri * (BQ.CW + BQ.GAP);
+
+  // Slot height for round ri (doubles each round)
+  const slotH = ri => Math.pow(2, ri) * BQ.SLOT;
+
+  const wbH = SEC + BQ.LBL + base * BQ.SLOT;
+  const hasGF = format === 'double' && !!gfId;
+  const gfColX = colX(nR);
+  const wbW = gfColX + (hasGF ? BQ.CW + 8 : 0);
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:absolute;top:${SEC}px;left:0;width:${wbW}px;height:${wbH - SEC}px;`;
+
+  // SVG for connector lines
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.style.cssText = `position:absolute;inset:0;width:${wbW}px;height:${wbH}px;overflow:visible;pointer-events:none;z-index:0;`;
+  wrap.appendChild(svg);
+
+  // Track card centre-Y for SVG lines
+  const cY = {};
+
+  WBrounds.forEach((roundIds, ri) => {
+    const sh   = slotH(ri);
+    const x    = colX(ri);
+    const cardsTop = BQ.LBL; // below round label
+
+    // Round label
+    const rLbl = document.createElement('div');
+    rLbl.style.cssText = `position:absolute;left:${x}px;top:0;width:${BQ.CW}px;height:${BQ.LBL}px;`
+      + `display:flex;align-items:center;justify-content:center;`
+      + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
+      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);`;
+    rLbl.textContent = bkRndLabel('wb', ri, nR);
+    wrap.appendChild(rLbl);
+
+    roundIds.forEach((matchId, mi) => {
+      const m = gm(matchId);
+      if (!m) return;
+
+      const slotTop  = cardsTop + mi * sh;
+      const cardTop  = slotTop + (sh - BQ.MH) / 2;
+      const cardCY   = cardTop + BQ.MH / 2;
+      cY[matchId]    = cardCY;
+
+      if (m.bye || m.t1 === 'BYE' || m.t2 === 'BYE') return;
+
+      placeMatchCard(wrap, m, 'wb', spec, x, cardTop);
+
+      // Right-side connectors to next round
+      if (ri < nR - 1) {
+        const xR   = x + BQ.CW;
+        const xMid = xR + BQ.GAP / 2;
+
+        svgL(svg, svgNS, xR, cardCY, xMid, cardCY, 'rgba(46,204,113,0.22)');
+
+        if (mi % 2 === 0 && mi + 1 < roundIds.length) {
+          const sibCY = cardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2 + BQ.MH / 2;
+          const midY  = (cardCY + sibCY) / 2;
+          const nextX = colX(ri + 1);
+          svgL(svg, svgNS, xR,   sibCY, xMid,  sibCY, 'rgba(46,204,113,0.22)');
+          svgL(svg, svgNS, xMid, cardCY, xMid, sibCY, 'rgba(46,204,113,0.22)');
+          svgL(svg, svgNS, xMid, midY,  nextX, midY,  'rgba(46,204,113,0.22)');
+        }
+      }
+    });
+  });
+
+  // ── Grand Final card ──────────────────────────────────────────────
+  if (hasGF) {
+    const gf = gm(gfId);
+
+    // Vertical center: between WB final card and LB final card (approx)
+    const wbFinId = WBrounds[nR - 1][0];
+    const wbFinCY = cY[wbFinId] || (BQ.LBL + (base / 2) * BQ.SLOT);
+    // GF aligns with WB final for now (LB connector drawn separately after LB is built)
+    const gfCY  = wbFinCY;
+    const gfTop = gfCY - BQ.MH / 2;
+    const gfX   = gfColX;
+
+    // Line from WB final → GF
+    svgL(svg, svgNS, colX(nR - 1) + BQ.CW, wbFinCY, gfX, gfCY, 'rgba(212,175,55,0.35)');
+
+    // GF label
+    const gl = document.createElement('div');
+    gl.style.cssText = `position:absolute;left:${gfX}px;top:${gfTop - 14}px;width:${BQ.CW}px;`
+      + `font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;`
+      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.55);text-align:center;`;
+    gl.textContent = '⚡ Grand Final';
+    wrap.appendChild(gl);
+
+    placeMatchCard(wrap, gf, 'gf', spec, gfX, gfTop);
+
+    // GF2 (bracket reset)
+    if (gf2Id && gm(gf2Id)) {
+      const gf2  = gm(gf2Id);
+      const g2Top = gfTop + BQ.MH + 12;
+      const rl = document.createElement('div');
+      rl.style.cssText = `position:absolute;left:${gfX}px;top:${g2Top - 11}px;width:${BQ.CW}px;`
+        + `font-family:'Oswald',sans-serif;font-size:7px;font-weight:700;`
+        + `text-transform:uppercase;letter-spacing:1px;color:rgba(212,175,55,0.45);text-align:center;`;
+      rl.textContent = '🔄 Reset Match';
+      wrap.appendChild(rl);
+      placeMatchCard(wrap, gf2, 'gf', spec, gfX, g2Top);
+    }
+  }
+
+  el.appendChild(wrap);
+  return { wbEl: wrap, wbW, wbH };
+}
+
+// ── Losers Bracket section ────────────────────────────────────────────
+function buildLBSection(spec, containerId) {
+  const nL   = LBrounds.length;
+  const base = LBrounds[0].length;
+  const SEC  = 18;
+
+  const colX = ri => ri * (BQ.CW + BQ.GAP);
+  const slotH = ri => Math.pow(2, ri) * BQ.SLOT;
+  const lbH  = SEC + BQ.LBL + base * BQ.SLOT;
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:relative;width:${nL * (BQ.CW + BQ.GAP)}px;height:${lbH - SEC}px;`;
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg   = document.createElementNS(svgNS, 'svg');
+  svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0;`;
+  wrap.appendChild(svg);
+
+  LBrounds.forEach((roundIds, lri) => {
+    const sh      = slotH(lri);
+    const x       = colX(lri);
+    const cardsTop = BQ.LBL;
+
+    // Round label
+    const rLbl = document.createElement('div');
+    rLbl.style.cssText = `position:absolute;left:${x}px;top:0;width:${BQ.CW}px;height:${BQ.LBL}px;`
+      + `display:flex;align-items:center;justify-content:center;`
+      + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
+      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.22);`;
+    rLbl.textContent = bkRndLabel('lb', lri, nL);
+    wrap.appendChild(rLbl);
+
+    roundIds.forEach((matchId, mi) => {
+      const m = gm(matchId);
+      if (!m) return;
+
+      const skip = m.bye || m.lbBye || (!m.t1 && !m.t2 && !m.winner);
+
+      const slotTop = cardsTop + mi * sh;
+      const cardTop = slotTop + (sh - BQ.MH) / 2;
+      const cardCY  = cardTop + BQ.MH / 2;
+
+      if (!skip) placeMatchCard(wrap, m, 'lb', spec, x, cardTop);
+
+      if (lri < nL - 1 && !skip) {
+        const xR   = x + BQ.CW;
+        const xMid = xR + BQ.GAP / 2;
+        svgL(svg, svgNS, xR, cardCY, xMid, cardCY, 'rgba(231,76,60,0.22)');
+
+        if (mi % 2 === 0 && mi + 1 < roundIds.length) {
+          const sibCY = cardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2 + BQ.MH / 2;
+          const midY  = (cardCY + sibCY) / 2;
+          const nextX = colX(lri + 1);
+          svgL(svg, svgNS, xR,   sibCY, xMid,  sibCY, 'rgba(231,76,60,0.22)');
+          svgL(svg, svgNS, xMid, cardCY, xMid, sibCY, 'rgba(231,76,60,0.22)');
+          svgL(svg, svgNS, xMid, midY,  nextX, midY,  'rgba(231,76,60,0.22)');
+        }
+      }
+    });
+  });
+
+  return { el: wrap, lbH };
+}
+
+// ── Place an absolute match card ──────────────────────────────────────
+function placeMatchCard(parent, m, type, spec, x, y) {
+  const isGF = type === 'gf';
+  const borderCol = isGF
+    ? 'rgba(212,175,55,0.6)'
+    : type === 'wb' ? 'rgba(46,204,113,0.45)' : 'rgba(231,76,60,0.4)';
+
+  const card = document.createElement('div');
+  card.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${BQ.CW}px;height:${BQ.MH}px;`
+    + `background:#0e1b2c;border:1px solid rgba(255,255,255,0.09);`
+    + `border-left:2px solid ${borderCol};border-radius:3px;overflow:hidden;`;
+
+  // Pit hover dropdown (admin only)
+  if (!spec) {
+    const cur = m.pit || '';
+    const pit = document.createElement('div');
+    pit.style.cssText = `position:absolute;bottom:-18px;left:0;right:0;`
+      + `font-size:10px;text-align:center;opacity:0;transition:opacity .15s;z-index:5;`;
+    let opts = `<option value="">🏟 Court</option>`;
+    for (let p = 1; p <= numPits; p++)
+      opts += `<option value="${p}" ${String(cur) === String(p) ? 'selected' : ''}>Court ${p}</option>`;
+    const sel = document.createElement('select');
+    sel.style.cssText = 'background:#0e1b2c;color:var(--gold);border:1px solid rgba(212,175,55,.35);'
+      + 'border-radius:4px;padding:1px 4px;cursor:pointer;font-size:10px;width:100%;';
+    sel.innerHTML = opts;
+    sel.addEventListener('change', e => { e.stopPropagation(); setPit(m.id, e.target.value); });
+    pit.appendChild(sel);
+    card.appendChild(pit);
+    if (cur) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:absolute;top:1px;right:3px;font-size:8px;color:var(--gold);opacity:0.7;pointer-events:none;';
+      badge.textContent = '🏟' + cur;
+      card.appendChild(badge);
+    }
+    card.onmouseenter = () => { pit.style.opacity = '1'; };
+    card.onmouseleave = () => { pit.style.opacity = '0'; };
+  }
+
+  // Game number
+  if (m.gameNum) {
+    const gnum = document.createElement('div');
+    gnum.style.cssText = 'position:absolute;right:3px;top:50%;transform:translateY(-50%);'
+      + 'font-size:9px;color:rgba(255,255,255,0.2);pointer-events:none;font-family:"Barlow Condensed",sans-serif;';
+    gnum.textContent = m.gameNum;
+    card.appendChild(gnum);
+  }
+
+  addTeamRow(card, m, 't1', 's1', type, spec, true);
+  addTeamRow(card, m, 't2', 's2', type, spec, false);
+
+  parent.appendChild(card);
+}
+
+// ── One team row ──────────────────────────────────────────────────────
+function addTeamRow(card, m, tk, sk, type, spec, isTop) {
+  const name  = m[tk];
+  const score = m[sk];
+  const isGF  = type === 'gf';
+
+  // Label logic: show "Loser of X", "Winner of X", etc. when slot is empty
+  const info = bkSlotInfo(m, tk, type);
+
+  const isBye    = name === 'BYE';
+  const isLBBye  = type === 'lb' && isBye;
+  const isWin    = m.winner === name && !!name && !isBye;
+  const isEmpty  = !name || isLBBye;
+  const hasReal  = !!name && !isBye && !isLBBye;
+  const canClick = hasReal && !spec && !m.winner;
+
+  const row = document.createElement('div');
+  row.style.cssText = `display:flex;align-items:center;height:${BQ.RH}px;`
+    + `${isTop ? 'border-bottom:1px solid rgba(255,255,255,0.05);' : ''}`
+    + `background:${isWin ? 'rgba(46,204,113,0.1)' : 'transparent'};`
+    + `${canClick ? 'cursor:pointer;' : ''}transition:background .1s;`;
+
+  if (canClick) {
+    row.onclick = () => {
+      if (isGF) clickGF(m.isGF2 || false, tk);
+      else (type === 'lb' ? clickLB : clickWB)(m.id, tk);
+    };
+    row.onmouseenter = () => { if (!m.winner) row.style.background = 'rgba(255,255,255,0.06)'; };
+    row.onmouseleave = () => { row.style.background = isWin ? 'rgba(46,204,113,0.1)' : 'transparent'; };
+  }
+  // Undo: click winner to undo
+  if (isWin && !spec) {
+    row.style.cursor = 'pointer';
+    row.onclick = () => {
+      if (isGF) clickGF(m.isGF2 || false, tk);
+      else (type === 'lb' ? clickLB : clickWB)(m.id, tk);
+    };
+  }
+
+  // Seed
+  const seed = document.createElement('div');
+  seed.style.cssText = `width:18px;flex-shrink:0;height:100%;display:flex;align-items:center;`
+    + `justify-content:center;background:rgba(0,0,0,0.2);`
+    + `font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
+    + `color:${isWin ? '#2ecc71' : 'rgba(255,255,255,0.2)'};`;
+  seed.textContent = info.seed || '';
+  row.appendChild(seed);
+
+  // Name / placeholder
+  const nameEl = document.createElement('div');
+  nameEl.style.cssText = `flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;`
+    + `font-size:${hasReal ? '11px' : '10px'};font-weight:${isWin ? 700 : 400};`
+    + `text-transform:uppercase;letter-spacing:0.1px;`
+    + `white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
+    + `color:${isWin ? '#2ecc71' : hasReal ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'};`
+    + `${!hasReal ? 'font-style:italic;' : ''}`;
+  nameEl.textContent = hasReal ? name : (info.text || '—');
+  row.appendChild(nameEl);
+
+  // Score
+  if (hasReal) {
+    const sb = document.createElement('div');
+    sb.style.cssText = `width:24px;flex-shrink:0;height:100%;display:flex;align-items:center;`
+      + `justify-content:center;border-left:1px solid rgba(255,255,255,0.05);`
+      + `font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--gold);`;
+    if (!spec && !m.winner) {
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.min = '0'; inp.value = score || ''; inp.placeholder = '–';
+      inp.style.cssText = 'width:24px;height:100%;padding:0;border:none;outline:none;'
+        + 'background:transparent;color:var(--gold);font-family:"Barlow Condensed",sans-serif;'
+        + 'font-size:12px;font-weight:700;text-align:center;cursor:pointer;';
+      inp.addEventListener('change', e => { e.stopPropagation(); setScore(m.id, sk, e.target.value); });
+      inp.addEventListener('click', e => e.stopPropagation());
+      sb.appendChild(inp);
+    } else {
+      sb.textContent = (score || score === 0) ? score : '';
+    }
+    row.appendChild(sb);
+
+    // Undo icon
+    if (isWin && !spec) {
+      const u = document.createElement('div');
+      u.style.cssText = 'width:11px;flex-shrink:0;height:100%;display:flex;align-items:center;'
+        + 'justify-content:center;font-size:7px;color:rgba(255,255,255,0.1);cursor:pointer;'
+        + 'border-left:1px solid rgba(255,255,255,0.03);';
+      u.title = 'Undo'; u.textContent = '↩';
+      u.onmouseenter = () => u.style.color = '#e74c3c';
+      u.onmouseleave = () => u.style.color = 'rgba(255,255,255,0.1)';
+      row.appendChild(u);
+    }
+  }
+
+  card.appendChild(row);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+
+function svgL(svg, ns, x1, y1, x2, y2, color) {
+  const l = document.createElementNS(ns, 'line');
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  l.setAttribute('stroke', color); l.setAttribute('stroke-width', '1');
+  svg.appendChild(l);
+}
+
+function mkSectionLabel(text, color) {
+  const d = document.createElement('div');
+  d.style.cssText = `font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;`
+    + `text-transform:uppercase;letter-spacing:2px;color:${color};line-height:18px;`;
+  d.textContent = text;
+  return d;
+}
+
+function bkRndLabel(type, ri, nR) {
+  const wb = ['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'];
+  const lb = ['LB Final','LB Semis','LB Rd 8','LB Rd 7','LB Rd 6','LB Rd 5','LB Rd 4','LB Rd 3','LB Rd 2','LB Rd 1'];
+  const arr = type === 'wb' ? wb : lb;
+  const idx = nR - 1 - ri;
+  return idx < arr.length ? arr[idx] : `Rd ${ri + 1}`;
+}
+
+function bkSlotInfo(m, tk, type) {
+  const name = m[tk];
+  if (name && name !== 'BYE') {
+    const seed = tk === 't1' ? m.seed1 : m.seed2;
+    return { text: name, seed, click: true };
+  }
+  if (type === 'lb' && m.lbDropFrom) {
+    const wbId = m.lbDropFrom[tk === 't1' ? 0 : (m.lbDropFrom.length > 1 ? 1 : 0)];
+    if (wbId) { const w = gm(wbId); if (w?.gameNum) return { text: `Loser of ${w.gameNum}`, seed: null, click: false }; }
+  }
+  if (m.fromWin && !name) {
+    const pid = m.fromWin[tk === 't1' ? 0 : 1];
+    const s = gm(pid); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+  }
+  if (m.lbWinFrom && tk === 't1' && !name) {
+    const s = gm(m.lbWinFrom); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+  }
+  if (m.lbWinFrom2 && !name) {
+    const ids = m.lbWinFrom2;
+    const pid = tk === 't1' ? ids[0] : ids[1];
+    const s = gm(pid); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+  }
+  if (type === 'gf') {
+    if (tk === 't1' && !name) return { text: 'WB Winner', seed: null, click: false };
+    if (tk === 't2' && !name) return { text: 'LB Winner', seed: null, click: false };
+  }
+  return { text: '', seed: null, click: false };
+}
+
+function bhqApplyZoom(containerId) {
+  const z = _bhqZoom[containerId] || 1;
+  const preview = document.getElementById('bhq-preview-' + containerId);
+  const num = document.getElementById('bhq-zoom-num-' + containerId);
+  if (preview) preview.style.transform = 'scale(' + z + ')';
+  if (num) num.textContent = Math.round(z * 100) + '%';
+}
+function bhqZoomIn(id)  { _bhqZoom[id] = Math.min(2, (_bhqZoom[id] || 1) + 0.1);  bhqApplyZoom(id); }
+function bhqZoomOut(id) { _bhqZoom[id] = Math.max(0.3, (_bhqZoom[id] || 1) - 0.1); bhqApplyZoom(id); }
+
+function backfillBracketMeta() {
+  if (!WBrounds.length) return;
+  let n = 1;
+  WBrounds[0].forEach(id => {
+    const m = gm(id); if (!m) return;
+    if (m.t1 === 'BYE' || m.t2 === 'BYE') { m.bye = true; return; }
+    if (!m.gameNum) m.gameNum = n++;
+    if (!m.seed1 && m.t1) { const i = teams.findIndex(t => t.name === m.t1); if (i >= 0) m.seed1 = i + 1; }
+    if (!m.seed2 && m.t2) { const i = teams.findIndex(t => t.name === m.t2); if (i >= 0) m.seed2 = i + 1; }
+  });
+}
+
 // compat stubs
-function makeSecHeader(l,c){return document.createElement('div');}
-function buildMatchRow(){return '';}
-function buildPitTag(){return '';}
-function buildGFEl(spec){return buildGrandFinal(spec);}
+function makeSecHeader(l, c) { return document.createElement('div'); }
+function buildMatchRow() { return ''; }
+function buildPitTag() { return ''; }
+function buildGFEl(spec) { return buildGrandFinal(spec); }
+
 
 
 // ─── CHAMPION + STATUS ────────────────────────────────────────────────────────
