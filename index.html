@@ -95,39 +95,35 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-tag{font-size:10px;font-weight:700;color:var(--accent);background:rgba(240,165,0,0.1);padding:2px 8px;text-align:center;border-bottom:1px solid rgba(240,165,0,0.15);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
-/* BRACKET */
-.bracket-section{margin-bottom:1.25rem;}
-.section-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.section-badge{font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:5px 14px;border-radius:6px;}
+/* BRACKET — brackethq style */
+.bracket-section{margin-bottom:2rem;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.section-badge{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:4px;}
 .section-badge.wb{background:rgba(46,204,113,0.12);color:var(--wb);border:1px solid rgba(46,204,113,0.25);}
 .section-badge.lb{background:rgba(231,76,60,0.12);color:var(--lb);border:1px solid rgba(231,76,60,0.25);}
 .section-badge.gf{background:rgba(240,165,0,0.12);color:var(--gf);border:1px solid rgba(240,165,0,0.3);}
 .section-divider{flex:1;height:1px;background:var(--border);}
-.bracket-scroll{overflow-x:auto;padding-bottom:0.5rem;}
-.bracket-row{display:flex;align-items:flex-start;width:max-content;}
-.round-col{display:flex;flex-direction:column;min-width:185px;}
-.round-header{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 0 8px 10px;}
-.matches-col{display:flex;flex-direction:column;}
-.match-wrap{display:flex;align-items:center;}
-.match{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;width:170px;flex-shrink:0;}
-.match.wb-match{border-left:3px solid rgba(46,204,113,0.6);}
-.match.lb-match{border-left:3px solid rgba(231,76,60,0.6);}
-.mrow{display:flex;align-items:center;padding:7px 9px;font-size:12px;font-weight:500;border-bottom:1px solid var(--border);gap:5px;min-height:38px;transition:background 0.15s;}
-.mrow:last-child{border-bottom:none;}
-.mrow.can-click{cursor:pointer;}
-.mrow.can-click:hover{background:rgba(255,255,255,0.05);}
-.mrow.is-winner{background:rgba(46,204,113,0.12);color:var(--success);}
-.mrow.is-winner .mname{font-weight:600;}
-.mrow.is-tbd{color:var(--muted);font-style:italic;}
-.mrow.is-selected{background:rgba(46,204,113,0.08);}
-.mname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.mseed{font-size:10px;color:var(--muted);min-width:14px;flex-shrink:0;}
-.undo-hint{font-size:9px;color:var(--muted);margin-left:2px;flex-shrink:0;}
-.connector{display:flex;flex-direction:column;justify-content:center;width:20px;flex-shrink:0;}
-.conn-top,.conn-bot{flex:1;border-right:1px solid var(--border);}
-.conn-top{border-bottom:1px solid var(--border);}
-.conn-bot{border-top:1px solid var(--border);}
-.conn-mid{height:1px;background:var(--border);width:100%;}
+.bracket-scroll{overflow-x:auto;padding-bottom:1rem;}
+/* Individual match card — brackethq tight style */
+.bq-match{display:flex;flex-direction:column;background:#0d1b2e;border:1px solid rgba(255,255,255,0.09);border-radius:5px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.4);}
+.bq-match.wb-match{border-left:2px solid rgba(46,204,113,0.55);}
+.bq-match.lb-match{border-left:2px solid rgba(231,76,60,0.5);}
+.bq-row{display:flex;align-items:center;height:28px;border-bottom:1px solid rgba(255,255,255,0.06);position:relative;transition:background 0.1s;}
+.bq-row:last-child{border-bottom:none;}
+.bq-row.can-click{cursor:pointer;}
+.bq-row.can-click:hover{background:rgba(255,255,255,0.06);}
+.bq-row.is-winner{background:rgba(46,204,113,0.1);}
+.bq-row.is-tbd{opacity:0.45;}
+.bq-seed{width:20px;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);font-family:'Barlow Condensed',sans-serif;flex-shrink:0;background:rgba(0,0,0,0.2);height:100%;display:flex;align-items:center;justify-content:center;}
+.bq-row.is-winner .bq-seed{color:var(--success);}
+.bq-name{flex:1;padding:0 7px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.bq-row.is-winner .bq-name{color:var(--success);font-weight:700;}
+.bq-row.is-tbd .bq-name{color:rgba(255,255,255,0.25);font-style:italic;}
+.bq-score{width:28px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.06);height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bq-score input{width:28px;background:transparent;border:none;outline:none;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-align:center;height:100%;padding:0;cursor:pointer;}
+.bq-undo{width:18px;text-align:center;font-size:9px;color:rgba(255,255,255,0.18);cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.04);}
+.bq-undo:hover{color:var(--danger);}
+.round-lbl{font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:6px;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1160,180 +1156,234 @@ function makeSecHeader(label,cls){
 }
 
 function buildRoundsEl(rounds, type, spec){
-  const CARD_W=205, ROW_H=28, MATCH_H=ROW_H*2, SEED_W=24, CONN=24;
-  const SLOT0=MATCH_H+4;
-  const LINE='rgba(255,255,255,0.08)';
-  const nRounds=rounds.length;
-  const baseN=rounds[0]?rounds[0].length:0;
+  // ── brackethq-style layout ──────────────────────────────────────────────────
+  // Dimensions
+  const CARD_W = 160;   // match card width
+  const ROW_H  = 26;    // height per team row
+  const MATCH_H= ROW_H * 2; // total card height (2 teams)
+  const PIT_W  = spec ? 0 : 22; // pit button on left
+  const GAP_X  = 36;   // horizontal gap between rounds (for connectors)
+  const LINE   = 'rgba(255,255,255,0.12)';
+  const LINE_W = '1.5';
+
+  const nRounds = rounds.length;
+  const baseN   = rounds[0] ? rounds[0].length : 0;
   if(!baseN) return document.createElement('div');
 
-  const totalH=baseN*SLOT0;
-  const totalW=nRounds*(CARD_W+CONN)+CONN;
+  // Each slot's vertical span doubles each round
+  const SLOT0 = MATCH_H + 16; // base slot height (r0)
 
-  const outer=document.createElement('div');
-  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:0.5rem;padding-top:26px;';
+  // Compute total canvas size
+  const totalH = baseN * SLOT0;
+  const totalW = nRounds * (PIT_W + CARD_W + GAP_X) + GAP_X;
 
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
+  // SVG namespace
+  const svgNS = 'http://www.w3.org/2000/svg';
 
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH}px;overflow:visible;pointer-events:none;`);
+  // Outer scroll wrapper
+  const outer = document.createElement('div');
+  outer.style.cssText = 'overflow-x:auto;overflow-y:visible;padding-bottom:0.5rem;';
 
-  const cY={};
+  // Canvas
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:relative;width:${totalW}px;height:${totalH + 30}px;margin-top:4px;`;
 
-  rounds.forEach((roundIds,ri)=>{
-    const slotH=Math.pow(2,ri)*SLOT0;
-    const colX=CONN+ri*(CARD_W+CONN);
+  // SVG for connector lines (sits behind cards)
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH+30}px;overflow:visible;pointer-events:none;`);
+  wrap.appendChild(svg);
 
-    // Round label
-    const lbls=['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
-    const lbl=ri>=nRounds-lbls.length?lbls[nRounds-1-ri]:`Round ${ri+1}`;
-    const lbEl=document.createElement('div');
-    lbEl.style.cssText=`position:absolute;left:${colX}px;top:-20px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);`;
-    lbEl.textContent=lbl;
+  // Track card centre-Y for connector drawing
+  const cY = {};
+
+  rounds.forEach((roundIds, ri) => {
+    const slotH  = Math.pow(2, ri) * SLOT0;   // slot height grows per round
+    const colX   = GAP_X + ri * (PIT_W + CARD_W + GAP_X); // left edge of pit+card block
+    const cardX  = colX + PIT_W;              // left edge of card itself
+
+    // ── Round label ──────────────────────────────────────────────────────────
+    const lbls = ['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
+    const lbl  = ri >= nRounds - lbls.length ? lbls[nRounds - 1 - ri] : `Round ${ri+1}`;
+    const lbEl = document.createElement('div');
+    lbEl.className = 'round-lbl';
+    lbEl.style.cssText = `position:absolute;left:${cardX}px;top:0;width:${CARD_W}px;`;
+    lbEl.textContent = lbl;
     wrap.appendChild(lbEl);
 
-    roundIds.forEach((matchId,mi)=>{
-      const m=gm(matchId);
-      const cardTop=mi*slotH+(slotH-MATCH_H)/2;
-      const cardCY=cardTop+MATCH_H/2;
-      if(m) cY[matchId]=cardCY;
+    roundIds.forEach((matchId, mi) => {
+      const m = gm(matchId);
+      if(!m) return;
 
-      if(m&&!m.bye&&!m.lbBye){
-        // Skip LB cards where both teams are empty (visual only — keep structure for connectors)
-        const lbBothEmpty = type==='lb' && !m.t1 && !m.t2 && !m.winner;
-        // Don't record cY for empty LB slots — skip them entirely
-        if(!lbBothEmpty){
-        // Outer wrapper: pit button on left + card
-        const outerWrap=document.createElement('div');
-        outerWrap.style.cssText=`position:absolute;left:${colX-28}px;top:${cardTop}px;display:flex;align-items:stretch;`;
+      // Vertical position: centre of slot, offset from label
+      const slotTop = 26 + mi * slotH;
+      const cardTop = slotTop + (slotH - MATCH_H) / 2;
+      const cardCY  = cardTop + MATCH_H / 2;
+      cY[matchId]   = cardCY;
 
-        // PIT BUTTON on left (admin only)
-        if(!spec){
-          const cur=m.pit||'';
-          const pitBtn=document.createElement('div');
-          pitBtn.style.cssText=`width:26px;background:${cur?'rgba(212,175,55,0.2)':'rgba(255,255,255,0.04)'};border:1px solid ${cur?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.06)'};border-right:none;border-radius:6px 0 0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;position:relative;`;
-          pitBtn.title=cur?`Court ${cur} — click to change`:'Assign court';
-          pitBtn.innerHTML=`<span style="font-size:9px;color:${cur?'var(--gold)':'var(--muted)'};">🏟</span>${cur?`<span style="font-size:8px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:''}`;
+      // Skip BYE / lbBye cards
+      if(m.bye || m.lbBye) return;
 
-          // Dropdown on click
-          let opts=`<option value="">No Court</option>`;
-          for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
-          const sel=document.createElement('select');
-          sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;';
-          sel.innerHTML=opts;
-          sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
-          pitBtn.appendChild(sel);
-          outerWrap.appendChild(pitBtn);
-        }
+      // Skip LB cards where both slots are still empty
+      const lbBothEmpty = type === 'lb' && !m.t1 && !m.t2 && !m.winner;
+      if(lbBothEmpty) return;
 
-        // Match card
-        const card=document.createElement('div');
-        const lw=spec?0:28;
-        card.style.cssText=`width:${CARD_W}px;background:rgba(255,255,255,0.05);border-radius:${spec?'6px':'0 6px 6px 0'};overflow:hidden;border:1px solid rgba(255,255,255,0.07);`;
+      // ── Pit button (admin only) ────────────────────────────────────────────
+      if(!spec){
+        const cur = m.pit || '';
+        const pitBtn = document.createElement('div');
+        pitBtn.style.cssText = `position:absolute;left:${colX}px;top:${cardTop}px;width:${PIT_W}px;height:${MATCH_H}px;`
+          + `background:${cur?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.03)'};`
+          + `border:1px solid ${cur?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.07)'};`
+          + `border-right:none;border-radius:4px 0 0 4px;`
+          + `display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;position:absolute;`;
+        pitBtn.title = cur ? `Court ${cur} — click to change` : 'Assign court';
+        pitBtn.innerHTML = `<span style="font-size:8px;line-height:1;color:${cur?'var(--gold)':'rgba(255,255,255,0.2)'};">🏟</span>`
+          + (cur ? `<span style="font-size:8px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;line-height:1;">${cur}</span>` : '');
 
-        // Team rows
-        ['t1','t2'].forEach((tk,ti)=>{
-          const sk=ti===0?'s1':'s2';
-          const name=m[tk], score=m[sk];
-          const isBye=name==='BYE';
-          // In LB, treat BYE as empty/invisible
-          const isLBBye=type==='lb'&&isBye;
-          const isWin=m.winner===name&&!!name&&!isBye;
-          const isEmpty=!name||isLBBye;
-          const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
-          const fn=type==='lb'?'clickLB':'clickWB';
-
-          const row=document.createElement('div');
-          row.style.cssText=`display:flex;align-items:center;height:${ROW_H}px;${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}background:${isWin?'rgba(46,204,113,0.1)':'transparent'};${canClick?'cursor:pointer;':''};transition:background 0.12s;`;
-
-          if(canClick){
-            row.onclick=()=>{ const fn2=type==='lb'?clickLB:clickWB; fn2(m.id,tk); };
-            row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.06)'; };
-            row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
-          }
-
-          // Seed
-          const seedEl=document.createElement('div');
-          seedEl.style.cssText=`width:${SEED_W}px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${isWin?'var(--success)':isBye||isEmpty?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.3)'};flex-shrink:0;height:100%;background:rgba(0,0,0,0.15);`;
-          seedEl.textContent=isBye||isEmpty||isLBBye?'':String(ti+1);
-          row.appendChild(seedEl);
-
-          // Name
-          const nameEl=document.createElement('div');
-          nameEl.style.cssText=`flex:1;padding:0 8px;font-family:'Barlow Condensed',sans-serif;font-size:${isBye&&!isLBBye?'10px':'13px'};font-weight:${isWin?'700':'600'};color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.2)':'var(--text)'};text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.3px;${isBye&&!isLBBye?'font-style:italic;':''}`;
-          nameEl.textContent=(isEmpty||isLBBye)?'—':name;
-          row.appendChild(nameEl);
-
-          // Score / undo
-          if(!isEmpty&&!isBye){
-            if(!spec&&!m.winner){
-              const inp=document.createElement('input');
-              inp.type='number'; inp.min='0'; inp.value=score||''; inp.placeholder='–';
-              inp.style.cssText='width:32px;background:rgba(0,0,0,0.25);border:none;border-left:1px solid rgba(255,255,255,0.05);color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;text-align:center;height:100%;outline:none;padding:0;';
-              inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
-              inp.addEventListener('click',e=>e.stopPropagation());
-              row.appendChild(inp);
-            } else if(score){
-              const sc=document.createElement('div');
-              sc.style.cssText='width:32px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.05);height:100%;display:flex;align-items:center;justify-content:center;';
-              sc.textContent=score;
-              row.appendChild(sc);
-            }
-            if(isWin&&!spec){
-              const u=document.createElement('div');
-              u.style.cssText='width:18px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;';
-              u.textContent='↩';
-              u.onclick=e=>{e.stopPropagation();type==='lb'?clickLB(m.id,tk):clickWB(m.id,tk);};
-              row.appendChild(u);
-            }
-          }
-          card.appendChild(row);
-        });
-
-        outerWrap.appendChild(card);
-        wrap.appendChild(outerWrap);
-        } // end !lbBothEmpty
+        let opts = `<option value="">—</option>`;
+        for(let i=1;i<=numPits;i++) opts += `<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
+        const sel = document.createElement('select');
+        sel.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
+        sel.innerHTML = opts;
+        sel.addEventListener('change', e => { e.stopPropagation(); setPit(m.id, e.target.value); });
+        pitBtn.appendChild(sel);
+        wrap.appendChild(pitBtn);
       }
 
-      // SVG connectors — skip for empty LB slots
-      const _skipConn = type==='lb' && !m?.t1 && !m?.t2 && !m?.winner;
-      if(ri<nRounds-1&&m&&!m.bye&&!m.lbBye&&!_skipConn){
-        const xR=colX+CARD_W;
-        const xM=xR+CONN/2;
-        const xN=xR+CONN;
-        const y=cardCY;
+      // ── Match card ─────────────────────────────────────────────────────────
+      const card = document.createElement('div');
+      card.className = `bq-match ${type}-match`;
+      card.style.cssText = `position:absolute;left:${cardX}px;top:${cardTop}px;width:${CARD_W}px;height:${MATCH_H}px;`
+        + (spec ? 'border-radius:5px;' : 'border-radius:0 5px 5px 0;');
 
-        const h1=document.createElementNS(svgNS,'line');
-        h1.setAttribute('x1',xR);h1.setAttribute('y1',y);
-        h1.setAttribute('x2',xM);h1.setAttribute('y2',y);
-        h1.setAttribute('stroke',LINE);h1.setAttribute('stroke-width','1');
-        svg.appendChild(h1);
+      // If assigned to a pit, show a tiny gold dot top-right
+      if(m.pit && spec){
+        const dot = document.createElement('div');
+        dot.style.cssText = 'position:absolute;top:3px;right:4px;font-size:8px;color:var(--gold);opacity:0.7;pointer-events:none;';
+        dot.textContent = `🏟${m.pit}`;
+        card.appendChild(dot);
+      }
 
-        if(mi%2===0&&mi+1<roundIds.length){
-          const pairCY=(mi+1)*slotH+(slotH-MATCH_H)/2+MATCH_H/2;
-          const midY=(y+pairCY)/2;
+      // Two team rows
+      ['t1','t2'].forEach((tk, ti) => {
+        const sk = ti === 0 ? 's1' : 's2';
+        const name  = m[tk];
+        const score = m[sk];
+        const isBye    = name === 'BYE';
+        const isLBBye  = type === 'lb' && isBye;
+        const isWin    = m.winner === name && !!name && !isBye;
+        const isEmpty  = !name || isLBBye;
+        const canClick = !isEmpty && !isBye && !spec && !m.winner;
 
-          const v=document.createElementNS(svgNS,'line');
-          v.setAttribute('x1',xM);v.setAttribute('y1',y);
-          v.setAttribute('x2',xM);v.setAttribute('y2',pairCY);
-          v.setAttribute('stroke',LINE);v.setAttribute('stroke-width','1');
-          svg.appendChild(v);
+        const row = document.createElement('div');
+        let rowCls = 'bq-row';
+        if(isWin)    rowCls += ' is-winner';
+        if(isEmpty || isBye) rowCls += ' is-tbd';
+        if(canClick) rowCls += ' can-click';
+        row.className = rowCls;
+        row.style.cssText = `height:${ROW_H}px;`;
 
-          const h2=document.createElementNS(svgNS,'line');
-          h2.setAttribute('x1',xM);h2.setAttribute('y1',midY);
-          h2.setAttribute('x2',xN);h2.setAttribute('y2',midY);
-          h2.setAttribute('stroke',LINE);h2.setAttribute('stroke-width','1');
-          svg.appendChild(h2);
+        if(canClick){
+          row.onclick = () => { (type==='lb'?clickLB:clickWB)(m.id, tk); };
+        }
+
+        // Seed bubble
+        const seed = document.createElement('div');
+        seed.className = 'bq-seed';
+        seed.textContent = isEmpty || isBye ? '' : String(ti+1);
+        row.appendChild(seed);
+
+        // Team name
+        const nameEl = document.createElement('div');
+        nameEl.className = 'bq-name';
+        nameEl.textContent = isEmpty ? '—' : name;
+        row.appendChild(nameEl);
+
+        // Score / input
+        if(!isEmpty && !isBye){
+          const scoreWrap = document.createElement('div');
+          scoreWrap.className = 'bq-score';
+          if(!spec && !m.winner){
+            const inp = document.createElement('input');
+            inp.type = 'number'; inp.min = '0';
+            inp.value = score || ''; inp.placeholder = '–';
+            inp.addEventListener('change', e => { e.stopPropagation(); setScore(m.id, sk, e.target.value); });
+            inp.addEventListener('click', e => e.stopPropagation());
+            scoreWrap.appendChild(inp);
+          } else if(score || score === 0){
+            scoreWrap.textContent = score;
+          }
+          row.appendChild(scoreWrap);
+
+          // Undo button (admin, winner set)
+          if(isWin && !spec){
+            const u = document.createElement('div');
+            u.className = 'bq-undo';
+            u.title = 'Undo result';
+            u.textContent = '↩';
+            u.onclick = e => { e.stopPropagation(); (type==='lb'?clickLB:clickWB)(m.id, tk); };
+            row.appendChild(u);
+          }
+        }
+
+        card.appendChild(row);
+      });
+
+      wrap.appendChild(card);
+
+      // ── SVG connectors ─────────────────────────────────────────────────────
+      // Draw the L-shaped line from this card's right edge to the next round's input
+      if(ri < nRounds - 1 && !_skipConnector(m, type)){
+        const xRight = cardX + CARD_W;        // right edge of card
+        const xMid   = xRight + GAP_X / 2;    // midpoint of gap
+        const y      = cardCY;
+
+        // Horizontal stub right from card
+        const hOut = document.createElementNS(svgNS,'line');
+        hOut.setAttribute('x1', xRight); hOut.setAttribute('y1', y);
+        hOut.setAttribute('x2', xMid);   hOut.setAttribute('y2', y);
+        hOut.setAttribute('stroke', LINE); hOut.setAttribute('stroke-width', LINE_W);
+        svg.appendChild(hOut);
+
+        // Pair with next sibling match in this round
+        if(mi % 2 === 0 && mi + 1 < roundIds.length){
+          const sibId = roundIds[mi+1];
+          const sibSlotTop = 26 + (mi+1) * slotH;
+          const sibCY = sibSlotTop + (slotH - MATCH_H) / 2 + MATCH_H / 2;
+
+          // Vertical bridge between the two horizontals
+          const vBridge = document.createElementNS(svgNS,'line');
+          vBridge.setAttribute('x1', xMid); vBridge.setAttribute('y1', y);
+          vBridge.setAttribute('x2', xMid); vBridge.setAttribute('y2', sibCY);
+          vBridge.setAttribute('stroke', LINE); vBridge.setAttribute('stroke-width', LINE_W);
+          svg.appendChild(vBridge);
+
+          // Horizontal stub right for sibling
+          const hSib = document.createElementNS(svgNS,'line');
+          hSib.setAttribute('x1', xRight); hSib.setAttribute('y1', sibCY);
+          hSib.setAttribute('x2', xMid);   hSib.setAttribute('y2', sibCY);
+          hSib.setAttribute('stroke', LINE); hSib.setAttribute('stroke-width', LINE_W);
+          svg.appendChild(hSib);
+
+          // Horizontal stub from midpoint to next-round card
+          const midY = (y + sibCY) / 2;
+          const nextCardX = GAP_X + (ri+1) * (PIT_W + CARD_W + GAP_X) + PIT_W;
+          const hIn = document.createElementNS(svgNS,'line');
+          hIn.setAttribute('x1', xMid);      hIn.setAttribute('y1', midY);
+          hIn.setAttribute('x2', nextCardX);  hIn.setAttribute('y2', midY);
+          hIn.setAttribute('stroke', LINE); hIn.setAttribute('stroke-width', LINE_W);
+          svg.appendChild(hIn);
         }
       }
     });
   });
 
-  wrap.appendChild(svg);
   outer.appendChild(wrap);
   return outer;
+}
+
+function _skipConnector(m, type){
+  return type === 'lb' && !m.t1 && !m.t2 && !m.winner;
 }
 
 
