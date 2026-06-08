@@ -96,119 +96,161 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
 /* ═══════════════════════════════════════
-   BRACKET  —  exact image match
-   Single scrollable canvas, WB top, LB bottom
+   BRACKET — BracketHQ classic line style
    ═══════════════════════════════════════ */
-.bk-outer{overflow-x:auto;overflow-y:auto;width:100%;}
-.bk-canvas{position:relative;} /* sized by JS */
-
-/* Match card */
-.bk-match{
-  position:absolute;
-  background:#111c2d;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:3px;
-  overflow:hidden;
-  cursor:default;
+.bhq-outer{overflow-x:auto;overflow-y:hidden;width:100%;padding:8px 0 24px;}
+.bhq-preview{
+  --bhq-line:#fff;--bhq-text:#fff;--bhq-bg:transparent;
+  --bhq-win:#2ecc71;--bhq-gold:var(--gold);
+  padding:32px 24px 16px;min-width:max-content;position:relative;
 }
-/* Team row inside card */
-.bk-row{
-  display:flex;align-items:center;
-  height:20px;
-  border-bottom:1px solid rgba(255,255,255,0.06);
-  transition:background .1s;
-  position:relative;
-}
-.bk-row:last-child{border-bottom:none;}
-.bk-row.clickable{cursor:pointer;}
-.bk-row.clickable:hover{background:rgba(255,255,255,0.07);}
-.bk-row.winner{background:rgba(46,204,113,0.12);}
-.bk-row.winner .bk-name{color:#2ecc71;font-weight:700;}
-.bk-row.dimmed{opacity:0.35;}
-
-/* Seed number */
-.bk-seed{
-  width:18px;flex-shrink:0;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;
-  color:rgba(255,255,255,0.2);background:rgba(0,0,0,0.25);
-}
-.bk-row.winner .bk-seed{color:#2ecc71;}
-
-/* Name */
-.bk-name{
-  flex:1;padding:0 5px;
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:500;
-  text-transform:uppercase;letter-spacing:0.1px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  color:rgba(255,255,255,0.82);
-}
-.bk-row.dimmed .bk-name{color:rgba(255,255,255,0.2);font-style:italic;}
-
-/* Score */
-.bk-score{
-  width:22px;flex-shrink:0;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  border-left:1px solid rgba(255,255,255,0.05);
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:700;color:var(--gold);
-}
-.bk-score input{
-  width:22px;height:100%;padding:0;border:none;outline:none;
-  background:transparent;color:var(--gold);
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:700;text-align:center;cursor:pointer;
-}
-/* Undo */
-.bk-undo{
-  width:11px;flex-shrink:0;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:7px;color:rgba(255,255,255,0.08);cursor:pointer;
-  border-left:1px solid rgba(255,255,255,0.03);
-}
-.bk-undo:hover{color:#e74c3c;}
-
-/* Pit strip */
-.bk-pit{
-  position:absolute;left:0;top:0;bottom:0;width:12px;
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:0px;cursor:pointer;z-index:2;
-  border-right:1px solid rgba(255,255,255,0.04);
-  background:rgba(0,0,0,0.2);
-}
-.bk-pit.on{background:rgba(212,175,55,0.1);border-right-color:rgba(212,175,55,0.2);}
-.bk-pit select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.bk-match.has-pit .bk-row{padding-left:12px;}
-
-/* Round label floating above column */
-.bk-rlbl{
-  position:absolute;
-  font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;
+.bhq-round-titles{display:flex;flex-direction:row;margin-bottom:8px;}
+.bhq-round-title{
+  width:245px;flex-shrink:0;
+  font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:1.5px;
-  color:rgba(255,255,255,0.22);
-  text-align:center;
+  color:rgba(255,255,255,0.35);text-align:center;
 }
-/* Section label */
-.bk-slbl{
-  position:absolute;
-  font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;
-  text-transform:uppercase;letter-spacing:2px;
+.bhq-round-title.bhq-conn{width:100px;}
+.bhq-round-title.bhq-grand{width:310px;}
+.bhq-winners,.bhq-losers{display:flex;flex-direction:row;align-items:flex-start;}
+.bhq-losers{margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);}
+.bhq-section-label{
+  font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;
 }
-
-/* GF inline card  — reuse gf-arena but narrower */
-.bk-gf-wrap{position:absolute;}
-.bk-gf-card{
-  background:#111c2d;border:1px solid rgba(212,175,55,0.35);
-  border-left:2px solid rgba(212,175,55,0.6);border-radius:3px;overflow:hidden;
+.bhq-section-label.wb{color:rgba(46,204,113,0.7);}
+.bhq-section-label.lb{color:rgba(231,76,60,0.65);}
+.bhq-round,.bhq-connectors{flex-shrink:0;}
+.bhq-round{padding-right:45px;}
+.bhq-connectors{width:100px;position:relative;align-self:stretch;}
+.bhq-connectors .bhq-connector{
+  position:absolute;left:0;width:100px;height:2px;
+  background:var(--bhq-line);
 }
-.bk-gf-label{
-  font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;
-  text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.6);
-  text-align:center;padding:3px 4px 2px;
-  border-bottom:1px solid rgba(212,175,55,0.15);
-  background:rgba(212,175,55,0.05);
+.bhq-game{
+  position:relative;width:200px;
+  border-right:2px solid var(--bhq-line);
+  box-sizing:border-box;
 }
+.bhq-game::before,.bhq-game::after{
+  content:' ';display:block;position:absolute;left:100%;
+  height:45px;z-index:1;pointer-events:none;
+}
+.bhq-game::before{
+  top:-2px;transform-origin:top left;
+  border-top:2px solid var(--bhq-line);
+}
+.bhq-game::after{
+  bottom:-2px;transform-origin:bottom left;
+  border-bottom:2px solid var(--bhq-line);
+}
+.bhq-game.bhq-no-lines::before,.bhq-game.bhq-no-lines::after{display:none;}
+.bhq-game.bhq-gf-game{border-color:rgba(212,175,55,0.55);}
+.bhq-game.bhq-gf-game::before,.bhq-game.bhq-gf-game::after{border-color:rgba(212,175,55,0.55);}
+.bhq-bracket-4 .bhq-round-4 .bhq-game::before,.bhq-bracket-4 .bhq-round-4 .bhq-game::after,
+.bhq-bracket-4 .bhq-round-2 .bhq-game::before,.bhq-bracket-4 .bhq-round-2 .bhq-game::after{width:110px;}
+.bhq-bracket-4 .bhq-round-4 .bhq-game::before,.bhq-bracket-4 .bhq-round-2 .bhq-game::before{rotate:65deg;}
+.bhq-bracket-4 .bhq-round-4 .bhq-game::after,.bhq-bracket-4 .bhq-round-2 .bhq-game::after{rotate:-65deg;}
+.bhq-bracket-8 .bhq-round-8 .bhq-game::before,.bhq-bracket-8 .bhq-round-8 .bhq-game::after{width:68px;}
+.bhq-bracket-8 .bhq-round-8 .bhq-game::before{rotate:47deg;}
+.bhq-bracket-8 .bhq-round-8 .bhq-game::after{rotate:-47deg;}
+.bhq-bracket-8 .bhq-round-4 .bhq-game::before,.bhq-bracket-8 .bhq-round-4 .bhq-game::after{width:110px;}
+.bhq-bracket-8 .bhq-round-4 .bhq-game::before{rotate:65deg;}
+.bhq-bracket-8 .bhq-round-4 .bhq-game::after{rotate:-65deg;}
+.bhq-bracket-8 .bhq-round-2 .bhq-game::before,.bhq-bracket-8 .bhq-round-2 .bhq-game::after{width:206px;}
+.bhq-bracket-8 .bhq-round-2 .bhq-game::before{rotate:77deg;}
+.bhq-bracket-8 .bhq-round-2 .bhq-game::after{rotate:-77deg;}
+.bhq-bracket-16 .bhq-round-16 .bhq-game::before,.bhq-bracket-16 .bhq-round-16 .bhq-game::after{width:40px;}
+.bhq-bracket-16 .bhq-round-16 .bhq-game::before{rotate:37.5deg;}
+.bhq-bracket-16 .bhq-round-16 .bhq-game::after{rotate:-37.5deg;}
+.bhq-bracket-16 .bhq-round-8 .bhq-game::before,.bhq-bracket-16 .bhq-round-8 .bhq-game::after{width:68px;}
+.bhq-bracket-16 .bhq-round-8 .bhq-game::before{rotate:47deg;}
+.bhq-bracket-16 .bhq-round-8 .bhq-game::after{rotate:-47deg;}
+.bhq-bracket-16 .bhq-round-4 .bhq-game::before,.bhq-bracket-16 .bhq-round-4 .bhq-game::after{width:110px;}
+.bhq-bracket-16 .bhq-round-4 .bhq-game::before{rotate:65deg;}
+.bhq-bracket-16 .bhq-round-4 .bhq-game::after{rotate:-65deg;}
+.bhq-bracket-16 .bhq-round-2 .bhq-game::before,.bhq-bracket-16 .bhq-round-2 .bhq-game::after{width:206px;}
+.bhq-bracket-16 .bhq-round-2 .bhq-game::before{rotate:77deg;}
+.bhq-bracket-16 .bhq-round-2 .bhq-game::after{rotate:-77deg;}
+.bhq-bracket-32 .bhq-round-32 .bhq-game::before,.bhq-bracket-32 .bhq-round-32 .bhq-game::after{width:40px;}
+.bhq-bracket-32 .bhq-round-32 .bhq-game::before{rotate:37.5deg;}
+.bhq-bracket-32 .bhq-round-32 .bhq-game::after{rotate:-37.5deg;}
+.bhq-bracket-32 .bhq-round-16 .bhq-game::before,.bhq-bracket-32 .bhq-round-16 .bhq-game::after{width:68px;}
+.bhq-bracket-32 .bhq-round-16 .bhq-game::before{rotate:47deg;}
+.bhq-bracket-32 .bhq-round-16 .bhq-game::after{rotate:-47deg;}
+.bhq-bracket-32 .bhq-round-8 .bhq-game::before,.bhq-bracket-32 .bhq-round-8 .bhq-game::after{width:110px;}
+.bhq-bracket-32 .bhq-round-8 .bhq-game::before{rotate:65deg;}
+.bhq-bracket-32 .bhq-round-8 .bhq-game::after{rotate:-65deg;}
+.bhq-bracket-32 .bhq-round-4 .bhq-game::before,.bhq-bracket-32 .bhq-round-4 .bhq-game::after{width:206px;}
+.bhq-bracket-32 .bhq-round-4 .bhq-game::before{rotate:77deg;}
+.bhq-bracket-32 .bhq-round-4 .bhq-game::after{rotate:-77deg;}
+.bhq-bracket-32 .bhq-round-2 .bhq-game::before,.bhq-bracket-32 .bhq-round-2 .bhq-game::after{width:403px;}
+.bhq-bracket-32 .bhq-round-2 .bhq-game::before{rotate:83.3deg;}
+.bhq-bracket-32 .bhq-round-2 .bhq-game::after{rotate:-83.3deg;}
+.bhq-bracket-32 .bhq-round-32{margin-top:0;}
+.bhq-bracket-32 .bhq-round-16{margin-top:12px;}
+.bhq-bracket-32 .bhq-round-8{margin-top:32px;}
+.bhq-bracket-32 .bhq-round-4{margin-top:72px;}
+.bhq-bracket-32 .bhq-round-2{margin-top:152px;}
+.bhq-game::before{width:68px;rotate:47deg;}
+.bhq-game::after{width:68px;rotate:-47deg;}
+.bhq-slot{
+  position:absolute;left:0;height:28px;line-height:28px;width:100%;
+  display:flex;align-items:center;color:var(--bhq-text);
+  font-family:'Barlow',sans-serif;font-size:14px;
+  padding:0 2px;transition:background .12s;
+}
+.bhq-slot-top{top:-30px;}
+.bhq-slot-bot{bottom:2px;}
+.bhq-slot.clickable{cursor:pointer;}
+.bhq-slot.clickable:hover{background:rgba(52,152,219,0.12);outline:2px solid #3498db;outline-offset:-2px;z-index:2;}
+.bhq-slot.winner .bhq-slot-name{color:var(--bhq-win);font-weight:700;}
+.bhq-slot.winner .bhq-slot-seed{color:var(--bhq-win);}
+.bhq-slot.empty .bhq-slot-name{color:rgba(255,255,255,0.28);font-style:italic;}
+.bhq-slot-seed{
+  width:22px;flex-shrink:0;font-weight:700;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;
+  color:rgba(255,255,255,0.55);text-align:center;
+}
+.bhq-slot-name{
+  flex:1;min-width:0;padding-left:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-weight:500;
+}
+.bhq-slot-score{
+  width:36px;flex-shrink:0;text-align:right;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+  color:var(--bhq-gold);padding-right:4px;
+}
+.bhq-slot-score input{
+  width:32px;padding:0;border:none;outline:none;background:transparent;
+  color:var(--bhq-gold);font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;font-weight:700;text-align:right;cursor:pointer;
+}
+.bhq-slot-check{
+  width:18px;flex-shrink:0;text-align:center;
+  color:var(--bhq-win);font-size:12px;opacity:0;
+}
+.bhq-slot.winner .bhq-slot-check{opacity:1;}
+.bhq-pit-badge{
+  position:absolute;right:-2px;top:50%;transform:translateY(-50%);
+  z-index:3;font-size:8px;font-weight:800;color:var(--gold);
+  background:rgba(10,22,40,0.9);border:1px solid rgba(212,175,55,0.35);
+  border-radius:3px;padding:1px 4px;cursor:pointer;
+}
+.bhq-pit-badge select{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;
+}
+.bhq-round-finals{margin-top:80px;}
+.bhq-type-d .bhq-round-finals{margin-top:60px;}
+.bhq-finals-game{margin-top:40px;margin-left:40px;}
+.bhq-bracket-4 .bhq-round-2{margin-top:40px;}
+.bhq-bracket-8 .bhq-round-4{margin-top:40px;}
+.bhq-bracket-8 .bhq-round-2{margin-top:120px;}
+.bhq-bracket-16 .bhq-round-8{margin-top:20px;}
+.bhq-bracket-16 .bhq-round-4{margin-top:60px;}
+.bhq-bracket-16 .bhq-round-2{margin-top:140px;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -549,8 +591,17 @@ let buyIn=20, pct1=70, pct2=30;
 let _mid = 0;
 function mkMatch(t1, t2, type='W'){
   const id = 'm' + (_mid++);
-  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:type||'W', bye:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
+  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:type||'W', bye:false, seed1:null, seed2:null, gameNum:null, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
   return id;
+}
+function bracketSeedPositions(size){
+  let seeds=[1];
+  while(seeds.length<size){
+    const next=[], max=seeds.length*2+1;
+    for(const s of seeds){ next.push(s); next.push(max-s); }
+    seeds=next;
+  }
+  return seeds;
 }
 function gm(id){ return id ? matches[id] : null; }
 function allM(){
@@ -709,22 +760,29 @@ function generateBracket(){
   const N=teams.length;
   const shuffled=shuffle(teams);
 
-  // Pad to next power of 2
+  // Pad to next power of 2 — traditional bracket seeding (like BracketHQ)
   let size=1; while(size<N) size*=2;
-  const r1Count=size/2;
-  const realPairs=N-r1Count;
-  const byeCount=r1Count-realPairs;
+  const seedOrder=bracketSeedPositions(size);
+  const seedTeam=seed=>seed<=N?shuffled[seed-1].name:'BYE';
 
   const r1ids=[];
-  // BYE teams auto-advance
-  for(let i=0;i<byeCount;i++){
-    const id=mkMatch(shuffled[i].name,'BYE');
-    matches[id].winner=shuffled[i].name;
+  let gameNum=1;
+  for(let p=0;p<size;p+=2){
+    const s1=seedOrder[p], s2=seedOrder[p+1];
+    const t1=seedTeam(s1), t2=seedTeam(s2);
+    const id=mkMatch(t1,t2);
+    const isBye=t1==='BYE'||t2==='BYE';
+    if(isBye){
+      matches[id].bye=true;
+      matches[id].winner=t1==='BYE'?t2:t1;
+      matches[id].seed1=s1<=N?s1:null;
+      matches[id].seed2=s2<=N?s2:null;
+    } else {
+      matches[id].gameNum=gameNum++;
+      matches[id].seed1=s1;
+      matches[id].seed2=s2;
+    }
     r1ids.push(id);
-  }
-  // Real matches
-  for(let i=byeCount;i<N;i+=2){
-    if(i+1<N) r1ids.push(mkMatch(shuffled[i].name, shuffled[i+1].name));
   }
   WBrounds.push(r1ids);
 
@@ -825,7 +883,7 @@ function buildLB(){
   while(lbPrev.length>1){
     const r=[];
     for(let i=0;i+1<lbPrev.length;i+=2){
-      const id=mkMatch(null,null);
+      const id=mkMatch(null,null,'L');
       gm(id).lbWinFrom2=[lbPrev[i],lbPrev[i+1]];
       r.push(id);
     }
@@ -1191,8 +1249,7 @@ function renderSpectator(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — single canvas, WB top, LB bottom, SVG connectors
-// Exactly matches the reference screenshot layout.
+// BRACKET RENDERER — BracketHQ classic line style
 // ═══════════════════════════════════════════════════════════════════════
 function renderBracket(containerId, spec){
   const el=document.getElementById(containerId);
@@ -1200,196 +1257,87 @@ function renderBracket(containerId, spec){
   el.innerHTML='';
   if(!WBrounds.length) return;
 
-  // ── Layout constants ────────────────────────────────────────────────
-  const CW   = 130;  // card width px
-  const RH   = 20;   // row height px
-  const MH   = RH*2; // match height = 2 rows
-  const GAP  = 28;   // horizontal gap between rounds
-  const SP   = 6;    // vertical padding above/below card in its slot
-  const LPAD = 6;    // left edge padding
-  const LBLH = 18;   // round-label height above first card
-  const SLBLH= 14;   // section-label height
-  const SGAP = 18;   // gap between WB bottom and LB top
-  const BASE = MH + SP*2; // slot height at round 0
+  const bracketSize=Math.pow(2, WBrounds.length);
+  const teamCount=teams.length;
+  const hasDbl=format==='double';
+  const BASE=80;
 
-  const nWB = WBrounds.length;
-  const nLB = LBrounds.length;
-  const hasDbl = format==='double';
+  const outer=document.createElement('div');
+  outer.className='bhq-outer';
 
-  const colX = ri => LPAD + ri*(CW+GAP);
+  const preview=document.createElement('div');
+  preview.className=`bhq-preview bhq-bracket-${bracketSize} bhq-count-${teamCount} ${hasDbl?'bhq-type-d':'bhq-type-s'}`;
 
-  const wbBase = WBrounds[0]?WBrounds[0].length:0;
-  const wbH    = wbBase * BASE;
+  preview.appendChild(bhqRoundTitles(WBrounds.length, hasDbl));
 
-  const lbBase = LBrounds[0]?LBrounds[0].length:0;
-  const lbH    = lbBase * BASE;
+  const wbWrap=document.createElement('div');
+  const wbLabel=document.createElement('div');
+  wbLabel.className='bhq-section-label wb';
+  wbLabel.textContent='Winners Bracket';
+  wbWrap.appendChild(wbLabel);
 
-  // Y where cards start
-  const wbY0 = SLBLH + LBLH;
-  const lbY0 = hasDbl && lbBase ? wbY0 + wbH + SGAP + SLBLH + LBLH : 0;
+  const winners=document.createElement('div');
+  winners.className='bhq-winners';
+  bhqRenderRounds(winners, WBrounds, 'wb', spec, BASE, hasDbl);
+  if(hasDbl && gfId){
+    winners.appendChild(bhqConnectorCol(0, BASE*Math.pow(2, WBrounds.length-1), true));
+    winners.appendChild(bhqFinalsCol(gfId, gf2Id, spec, BASE));
+  }
+  wbWrap.appendChild(winners);
+  preview.appendChild(wbWrap);
 
-  // GF goes one column past last WB round
-  const gfX = colX(nWB);
-
-  const totalW = gfX + CW + 8;
-  const totalH = (hasDbl && lbBase) ? lbY0 + lbH + 10 : wbY0 + wbH + 10;
-
-  // ── Build DOM ────────────────────────────────────────────────────────
-  const outer = document.createElement('div');
-  outer.style.cssText = 'overflow-x:auto;overflow-y:auto;width:100%;';
-
-  const canvas = document.createElement('div');
-  canvas.style.cssText = `position:relative;width:${totalW}px;height:${totalH}px;`;
-
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg   = document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH}px;overflow:visible;pointer-events:none;`);
-  canvas.appendChild(svg);
-
-  // cY maps matchId -> absolute card centre Y (for connector lines)
-  const cY = {};
-
-  // Section labels
-  mkSlbl(canvas, LPAD, 0,                          '🏆 Winners Bracket', 'rgba(46,204,113,0.7)');
-  if(hasDbl && lbBase)
-    mkSlbl(canvas, LPAD, wbY0+wbH+SGAP,            '💀 Losers Bracket',  'rgba(231,76,60,0.65)');
-
-  // ── Winners Bracket ─────────────────────────────────────────────────
-  WBrounds.forEach((roundIds, ri)=>{
-    const slotH = Math.pow(2,ri)*BASE;
-    const x     = colX(ri);
-    mkRlbl(canvas, x, wbY0-LBLH, CW, rlblName('wb',ri,nWB));
-
-    roundIds.forEach((matchId, mi)=>{
-      const m       = gm(matchId);
-      const slotTop = wbY0 + mi*slotH;
-      const cardTop = slotTop + (slotH-MH)/2;
-      const cardCY  = cardTop + MH/2;
-      cY[matchId]   = cardCY;
-
-      if(m && !m.bye && !m.lbBye)
-        mkCard(canvas, m, 'wb', spec, x, cardTop, CW, MH, RH);
-
-      // Connectors to next WB round
-      if(ri < nWB-1 && m && !m.bye && !m.lbBye){
-        const xR=x+CW, xM=xR+GAP/2, nextX=colX(ri+1);
-        svLine(svg,svgNS, xR,cardCY, xM,cardCY, 'rgba(46,204,113,0.2)');
-        if(mi%2===0 && mi+1<roundIds.length){
-          const sibCY = wbY0+(mi+1)*slotH+(slotH-MH)/2+MH/2;
-          const midY  = (cardCY+sibCY)/2;
-          svLine(svg,svgNS, xR,sibCY, xM,sibCY,  'rgba(46,204,113,0.2)');
-          svLine(svg,svgNS, xM,cardCY, xM,sibCY, 'rgba(46,204,113,0.2)');
-          svLine(svg,svgNS, xM,midY,  nextX,midY,'rgba(46,204,113,0.2)');
-        }
-      }
-    });
-  });
-
-  // ── Losers Bracket ───────────────────────────────────────────────────
-  if(hasDbl && lbBase){
-    LBrounds.forEach((roundIds, lri)=>{
-      const slotH = Math.pow(2,lri)*BASE;
-      const x     = colX(lri);
-      mkRlbl(canvas, x, lbY0-LBLH, CW, rlblName('lb',lri,nLB));
-
-      roundIds.forEach((matchId, mi)=>{
-        const m       = gm(matchId);
-        const skip    = !m||m.bye||m.lbBye||(!m.t1&&!m.t2&&!m.winner);
-        const slotTop = lbY0 + mi*slotH;
-        const cardTop = slotTop + (slotH-MH)/2;
-        const cardCY  = cardTop + MH/2;
-        cY[matchId]   = cardCY;
-
-        if(!skip)
-          mkCard(canvas, m, 'lb', spec, x, cardTop, CW, MH, RH);
-
-        // Connectors to next LB round
-        if(lri < nLB-1 && !skip){
-          const xR=x+CW, xM=xR+GAP/2, nextX=colX(lri+1);
-          svLine(svg,svgNS, xR,cardCY, xM,cardCY, 'rgba(231,76,60,0.2)');
-          if(mi%2===0 && mi+1<roundIds.length){
-            const sibCY = lbY0+(mi+1)*slotH+(slotH-MH)/2+MH/2;
-            const midY  = (cardCY+sibCY)/2;
-            svLine(svg,svgNS, xR,sibCY, xM,sibCY,  'rgba(231,76,60,0.2)');
-            svLine(svg,svgNS, xM,cardCY, xM,sibCY, 'rgba(231,76,60,0.2)');
-            svLine(svg,svgNS, xM,midY,  nextX,midY,'rgba(231,76,60,0.2)');
-          }
-        }
-      });
-    });
+  if(hasDbl && LBrounds.length){
+    const lbWrap=document.createElement('div');
+    const lbLabel=document.createElement('div');
+    lbLabel.className='bhq-section-label lb';
+    lbLabel.textContent='Losers Bracket';
+    lbWrap.appendChild(lbLabel);
+    const losers=document.createElement('div');
+    losers.className='bhq-losers';
+    bhqRenderRounds(losers, LBrounds, 'lb', spec, BASE, false);
+    if(gfId) losers.appendChild(bhqConnectorCol(0, BASE*Math.pow(2, Math.min(LBrounds.length, WBrounds.length)-1), true));
+    lbWrap.appendChild(losers);
+    preview.appendChild(lbWrap);
   }
 
-  // ── Grand Final ──────────────────────────────────────────────────────
-  if(gfId){
-    const gf       = gm(gfId);
-    const wbFinId  = WBrounds[WBrounds.length-1][0];
-    const lbFinId  = nLB>0 ? LBrounds[nLB-1][0] : null;
-    const wbCY     = cY[wbFinId] || (wbY0+wbH/2);
-    const lbCY     = (lbFinId&&cY[lbFinId]) ? cY[lbFinId] : wbCY;
-    const gfCY     = (hasDbl&&lbBase) ? (wbCY+lbCY)/2 : wbCY;
-    const gfTop    = gfCY - MH/2;
-    const goldLine = 'rgba(212,175,55,0.3)';
-
-    svLine(svg,svgNS, colX(nWB-1)+CW, wbCY, gfX, gfCY, goldLine);
-    if(lbFinId&&cY[lbFinId])
-      svLine(svg,svgNS, colX(nLB-1)+CW, lbCY, gfX, gfCY, goldLine);
-
-    // GF label
-    const gl=document.createElement('div');
-    gl.style.cssText=`position:absolute;left:${gfX}px;top:${gfTop-14}px;width:${CW}px;`
-      +`font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;`
-      +`text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.55);text-align:center;`;
-    gl.textContent='⚡ Grand Final';
-    canvas.appendChild(gl);
-
-    mkGFCard(canvas, gf, gfId, false, spec, gfX, gfTop, CW, MH, RH);
-
-    if(gf2Id && gm(gf2Id)){
-      const g2Top = gfTop + MH + 10;
-      const rl=document.createElement('div');
-      rl.style.cssText=`position:absolute;left:${gfX}px;top:${g2Top-11}px;width:${CW}px;`
-        +`font-family:'Oswald',sans-serif;font-size:7px;font-weight:700;`
-        +`text-transform:uppercase;letter-spacing:1px;color:rgba(212,175,55,0.4);text-align:center;`;
-      rl.textContent='🔄 Bracket Reset';
-      canvas.appendChild(rl);
-      mkGFCard(canvas, gm(gf2Id), gf2Id, true, spec, gfX, g2Top, CW, MH, RH);
-    }
-  }
-
-  outer.appendChild(canvas);
+  outer.appendChild(preview);
   el.appendChild(outer);
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function svLine(svg,ns,x1,y1,x2,y2,color){
-  const l=document.createElementNS(ns,'line');
-  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
-  l.setAttribute('stroke',color);l.setAttribute('stroke-width','1');
-  svg.appendChild(l);
+function bhqRoundTitles(nWB, hasDbl){
+  const row=document.createElement('div');
+  row.className='bhq-round-titles';
+  const wbNames=['Round of 64','Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
+  for(let ri=0;ri<nWB;ri++){
+    const d=document.createElement('div');
+    d.className='bhq-round-title';
+    d.textContent=wbNames[Math.max(0, wbNames.length-nWB+ri)]||`Round ${ri+1}`;
+    row.appendChild(d);
+    if(ri<nWB-1){
+      const c=document.createElement('div');
+      c.className='bhq-round-title bhq-conn';
+      row.appendChild(c);
+    }
+  }
+  if(hasDbl){
+    const c=document.createElement('div');
+    c.className='bhq-round-title bhq-conn';
+    row.appendChild(c);
+    const g=document.createElement('div');
+    g.className='bhq-round-title bhq-grand';
+    g.textContent='Grand Finals';
+    row.appendChild(g);
+  }
+  return row;
 }
 
-function mkSlbl(canvas,x,y,text,color){
-  const d=document.createElement('div');
-  d.style.cssText=`position:absolute;left:${x}px;top:${y}px;`
-    +`font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
-    +`text-transform:uppercase;letter-spacing:2px;color:${color};`;
-  d.textContent=text;
-  canvas.appendChild(d);
+function bhqIsVisible(m){
+  if(!m||m.bye||m.lbBye) return false;
+  if(m.t1==='BYE'||m.t2==='BYE') return false;
+  return true;
 }
 
-function mkRlbl(canvas,x,y,w,text){
-  const d=document.createElement('div');
-  d.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:${w}px;`
-    +`font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
-    +`text-transform:uppercase;letter-spacing:1.5px;`
-    +`color:rgba(255,255,255,0.22);text-align:center;`;
-  d.textContent=text;
-  canvas.appendChild(d);
-}
-
-function rlblName(type,ri,nR){
+function bhqRoundLabel(type, ri, nR){
   const wb=['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'];
   const lb=['LB Final','LB Semis','LB Rd 8','LB Rd 7','LB Rd 6','LB Rd 5','LB Rd 4','LB Rd 3','LB Rd 2','LB Rd 1'];
   const arr=type==='wb'?wb:lb;
@@ -1397,184 +1345,185 @@ function rlblName(type,ri,nR){
   return idx<arr.length?arr[idx]:`Rd ${ri+1}`;
 }
 
-function mkCard(canvas,m,type,spec,x,y,cw,mh,rh){
-  const hasPit=!spec;
-  const card=document.createElement('div');
-  const borderCol=type==='wb'?'rgba(46,204,113,0.45)':'rgba(231,76,60,0.4)';
-  card.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:${cw}px;height:${mh}px;`
-    +`background:#0e1b2c;border:1px solid rgba(255,255,255,0.08);`
-    +`border-left:2px solid ${borderCol};border-radius:3px;overflow:hidden;`;
+function bhqRenderRounds(container, rounds, type, spec, base, isWB){
+  const nR=rounds.length;
+  rounds.forEach((roundIds, ri)=>{
+    const visible=roundIds.map(id=>gm(id)).filter(m=>bhqIsVisible(m));
+    if(!visible.length && type==='lb') return;
 
-  if(hasPit){
+    const roundSize=Math.pow(2, nR-ri);
+    const gameH=base*Math.pow(2, ri);
+    const round=document.createElement('div');
+    round.className=`bhq-round bhq-round-${roundSize}`;
+
+    visible.forEach((m, mi)=>{
+      const isLast=mi===visible.length-1;
+      const noLines=isWB && ri===nR-1 && format==='double';
+      round.appendChild(bhqGame(m, type, spec, gameH, isLast, noLines));
+    });
+
+    container.appendChild(round);
+    if(ri<nR-1) container.appendChild(bhqConnectorCol(roundSize/2, gameH, false));
+  });
+}
+
+function bhqConnectorCol(size, gameH, isAdvance){
+  const col=document.createElement('div');
+  col.className=`bhq-connectors bhq-connectors-${size}${isAdvance?' bhq-connectors-advance':''}`;
+  if(isAdvance){
+    const line=document.createElement('div');
+    line.className='bhq-connector';
+    line.style.top=(gameH/2)+'px';
+    col.style.minHeight=gameH+'px';
+    col.appendChild(line);
+  }
+  return col;
+}
+
+function bhqFinalsCol(gfId, gf2Id, spec, base){
+  const col=document.createElement('div');
+  col.className='bhq-round bhq-round-finals';
+  const gf=gm(gfId);
+  if(gf) col.appendChild(bhqGFGame(gf, gfId, false, spec, base, false));
+  if(gf2Id && gm(gf2Id)) col.appendChild(bhqGFGame(gm(gf2Id), gf2Id, true, spec, base, true));
+  return col;
+}
+
+function bhqSlotInfo(m, tk, type){
+  const sk=tk==='t1'?'seed1':'seed2';
+  const name=m[tk];
+  if(name && name!=='BYE') return {text:name, seed:m[sk], empty:false, clickable:true};
+  if(name==='BYE') return {text:'', seed:null, empty:true, clickable:false};
+
+  if(type==='lb' && m.lbDropFrom){
+    const idx=tk==='t1'?0:(m.lbDropFrom.length>1?1:0);
+    const wbId=m.lbDropFrom[idx]??m.lbDropFrom[0];
+    if(wbId){
+      const wb=gm(wbId);
+      if(wb?.gameNum) return {text:`Loser of ${wb.gameNum}`, seed:null, empty:true, clickable:false};
+    }
+  }
+
+  if(m.lbWinFrom && tk==='t1' && !name){
+    const src=gm(m.lbWinFrom);
+    if(src?.gameNum) return {text:`Winner of ${src.gameNum}`, seed:null, empty:true, clickable:false};
+  }
+
+  if(m.fromWin && !name){
+    const ids=m.fromWin;
+    const src=gm(ids[tk==='t1'?0:1]);
+    if(src?.gameNum) return {text:`Winner of ${src.gameNum}`, seed:null, empty:true, clickable:false};
+  }
+
+  return {text:'', seed:null, empty:true, clickable:false};
+}
+
+function bhqGame(m, type, spec, gameH, isLast, noLines){
+  const game=document.createElement('div');
+  game.className='bhq-game'+(noLines?' bhq-no-lines':'');
+  game.style.height=gameH+'px';
+  if(!isLast) game.style.marginBottom=gameH+'px';
+
+  game.appendChild(bhqSlot(m, 't1', 's1', 'top', type, spec));
+  game.appendChild(bhqSlot(m, 't2', 's2', 'bot', type, spec));
+
+  if(!spec){
     const cur=m.pit||'';
     const pit=document.createElement('div');
-    pit.style.cssText=`position:absolute;left:0;top:0;bottom:0;width:12px;`
-      +`background:${cur?'rgba(212,175,55,0.12)':'rgba(0,0,0,0.2)'};`
-      +`border-right:1px solid ${cur?'rgba(212,175,55,0.2)':'rgba(255,255,255,0.04)'};`
-      +`display:flex;flex-direction:column;align-items:center;justify-content:center;`
-      +`cursor:pointer;z-index:2;`;
+    pit.className='bhq-pit-badge';
     pit.title=cur?`Court ${cur}`:'Assign court';
-    pit.innerHTML=`<span style="font-size:6px;color:${cur?'var(--gold)':'rgba(255,255,255,0.15)'};">🏟</span>`
-      +(cur?`<span style="font-size:5px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:'');
+    pit.textContent=cur?`Ct${cur}`:'+';
     let opts='<option value="">—</option>';
-    for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Ct ${p}</option>`;
+    for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>${p}</option>`;
     const sel=document.createElement('select');
-    sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
     sel.innerHTML=opts;
     sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
     pit.appendChild(sel);
-    card.appendChild(pit);
+    game.appendChild(pit);
   }
-
-  ['t1','t2'].forEach((tk,ti)=>{
-    mkRow(card, m, tk, ti===0?'s1':'s2', type, spec, rh, hasPit?12:0);
-  });
-  canvas.appendChild(card);
+  return game;
 }
 
-function mkRow(card,m,tk,sk,type,spec,rh,leftPad){
-  const name =m[tk], score=m[sk];
-  const isBye   =name==='BYE';
-  const isLBBye =type==='lb'&&isBye;
-  const isWin   =m.winner===name&&!!name&&!isBye;
-  const isEmpty =!name||isLBBye;
-  const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
+function bhqGFGame(m, mid, isReset, spec, base, stacked){
+  const game=document.createElement('div');
+  game.className='bhq-game bhq-gf-game bhq-no-lines'+(stacked?' bhq-finals-game':'');
+  game.style.height=base+'px';
+  if(stacked) game.style.marginTop='40px';
 
-  const row=document.createElement('div');
-  row.style.cssText=`display:flex;align-items:center;height:${rh}px;`
-    +`border-bottom:1px solid rgba(255,255,255,0.05);`
-    +`background:${isWin?'rgba(46,204,113,0.1)':'transparent'};`
-    +`${canClick?'cursor:pointer;':''}transition:background .1s;`
-    +`padding-left:${leftPad}px;`;
+  const t1Label=m.t1||'WB Winner';
+  const t2Label=m.t2||'LB Winner';
+  const fake1={...m, t1:m.t1, seed1:null};
+  const fake2={...m, t2:m.t2, seed2:null};
 
-  if(canClick){
-    row.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id,tk);
-    row.onmouseenter=()=>{if(!m.winner)row.style.background='rgba(255,255,255,0.06)';};
-    row.onmouseleave=()=>{row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent';};
+  game.appendChild(bhqSlot(fake1, 't1', 's1', 'top', 'gf', spec, ()=>clickGF(isReset,'t1'), t1Label));
+  game.appendChild(bhqSlot(fake2, 't2', 's2', 'bot', 'gf', spec, ()=>clickGF(isReset,'t2'), t2Label));
+
+  if(!spec){
+    const cur=m.pit||'';
+    const pit=document.createElement('div');
+    pit.className='bhq-pit-badge';
+    pit.textContent=cur?`Ct${cur}`:'+';
+    let opts='<option value="">—</option>';
+    for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>${p}</option>`;
+    const sel=document.createElement('select');
+    sel.innerHTML=opts;
+    sel.addEventListener('change',e=>{e.stopPropagation();setPit(mid,e.target.value);});
+    pit.appendChild(sel);
+    game.appendChild(pit);
+  }
+  return game;
+}
+
+function bhqSlot(m, tk, sk, pos, type, spec, gfClick, gfLabel){
+  const info=gfLabel!=null
+    ? {text:gfLabel, seed:null, empty:!m[tk], clickable:!!m[tk]}
+    : bhqSlotInfo(m, tk, type);
+  const name=m[tk];
+  const score=m[sk];
+  const isWin=m.winner===name&&!!name&&name!=='BYE';
+  const canClick=info.clickable && !spec && !m.winner && name && name!=='BYE';
+
+  const slot=document.createElement('div');
+  slot.className=`bhq-slot bhq-slot-${pos}`
+    +(canClick||gfClick?' clickable':'')
+    +(isWin?' winner':'')
+    +(info.empty&&!name?' empty':'');
+
+  if(!spec){
+    if(type==='gf' && gfClick && m[tk]) slot.onclick=gfClick;
+    else if((canClick || (isWin && name)) && type!=='gf')
+      slot.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id, tk);
   }
 
-  // Seed
-  const seed=document.createElement('div');
-  seed.style.cssText=`width:16px;flex-shrink:0;height:100%;display:flex;align-items:center;`
-    +`justify-content:center;background:rgba(0,0,0,0.2);`
-    +`font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
-    +`color:${isWin?'#2ecc71':isEmpty||isBye?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.22)'};`;
-  seed.textContent=isEmpty||isBye?'':tk==='t1'?'1':'2';
-  row.appendChild(seed);
+  const seedEl=document.createElement('div');
+  seedEl.className='bhq-slot-seed';
+  seedEl.textContent=info.seed||'';
+  slot.appendChild(seedEl);
 
-  // Name
   const nameEl=document.createElement('div');
-  nameEl.style.cssText=`flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;`
-    +`font-size:11px;font-weight:${isWin?700:500};text-transform:uppercase;letter-spacing:0.1px;`
-    +`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
-    +`color:${isWin?'#2ecc71':isEmpty?'rgba(255,255,255,0.18)':'rgba(255,255,255,0.82)'};`
-    +`${isEmpty?'font-style:italic;':''}`;
-  nameEl.textContent=isEmpty?'—':name;
-  row.appendChild(nameEl);
+  nameEl.className='bhq-slot-name';
+  nameEl.textContent=info.text||(name||'');
+  slot.appendChild(nameEl);
 
-  // Score
-  if(!isEmpty&&!isBye){
-    const sb=document.createElement('div');
-    sb.style.cssText=`width:22px;flex-shrink:0;height:100%;display:flex;align-items:center;`
-      +`justify-content:center;border-left:1px solid rgba(255,255,255,0.05);`
-      +`font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--gold);`;
-    if(!spec&&!m.winner){
+  const scoreEl=document.createElement('div');
+  scoreEl.className='bhq-slot-score';
+  if(name && name!=='BYE' && (info.clickable||isWin)){
+    if(!spec && !m.winner){
       const inp=document.createElement('input');
-      inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
-      inp.style.cssText='width:22px;height:100%;padding:0;border:none;outline:none;'
-        +'background:transparent;color:var(--gold);font-family:"Barlow Condensed",sans-serif;'
-        +'font-size:11px;font-weight:700;text-align:center;cursor:pointer;';
+      inp.type='number'; inp.min='0'; inp.value=score||''; inp.placeholder='–';
       inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
       inp.addEventListener('click',e=>e.stopPropagation());
-      sb.appendChild(inp);
-    } else { sb.textContent=(score||score===0)?score:''; }
-    row.appendChild(sb);
-
-    if(isWin&&!spec){
-      const u=document.createElement('div');
-      u.style.cssText='width:11px;flex-shrink:0;height:100%;display:flex;align-items:center;'
-        +'justify-content:center;font-size:7px;color:rgba(255,255,255,0.1);cursor:pointer;'
-        +'border-left:1px solid rgba(255,255,255,0.03);';
-      u.title='Undo';u.textContent='↩';
-      u.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(m.id,tk);};
-      u.onmouseenter=()=>u.style.color='#e74c3c';
-      u.onmouseleave=()=>u.style.color='rgba(255,255,255,0.1)';
-      row.appendChild(u);
-    }
+      scoreEl.appendChild(inp);
+    } else if(score||score===0) scoreEl.textContent=score;
   }
-  card.appendChild(row);
-}
+  slot.appendChild(scoreEl);
 
-function mkGFCard(canvas,m,mid,isReset,spec,x,y,cw,mh,rh){
-  const card=document.createElement('div');
-  card.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:${cw}px;height:${mh}px;`
-    +`background:#0e1b2c;border:1px solid rgba(212,175,55,0.35);`
-    +`border-left:2px solid rgba(212,175,55,0.6);border-radius:3px;overflow:hidden;`;
+  const check=document.createElement('div');
+  check.className='bhq-slot-check';
+  check.textContent='✓';
+  slot.appendChild(check);
 
-  ['t1','t2'].forEach((tk,ti)=>{
-    const sk=ti===0?'s1':'s2';
-    const name=m[tk], score=m[sk];
-    const isWin=m.winner===name&&!!name;
-    const isEmpty=!name;
-
-    const row=document.createElement('div');
-    row.style.cssText=`display:flex;align-items:center;height:${rh}px;`
-      +`border-bottom:1px solid rgba(255,255,255,0.05);`
-      +`background:${isWin?'rgba(46,204,113,0.1)':'transparent'};`
-      +`${!isEmpty&&!spec&&!m.winner?'cursor:pointer;':''}transition:background .1s;`;
-    if(!isEmpty&&!spec&&!m.winner){
-      row.onclick=()=>clickGF(isReset,tk);
-      row.onmouseenter=()=>row.style.background='rgba(255,255,255,0.06)';
-      row.onmouseleave=()=>row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent';
-    }
-
-    const seed=document.createElement('div');
-    seed.style.cssText=`width:16px;flex-shrink:0;height:100%;display:flex;align-items:center;`
-      +`justify-content:center;background:rgba(0,0,0,0.2);`
-      +`font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
-      +`color:${isWin?'#2ecc71':isEmpty?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.22)'};`;
-    seed.textContent=isEmpty?'':String(ti+1);
-    row.appendChild(seed);
-
-    const nameEl=document.createElement('div');
-    nameEl.style.cssText=`flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;`
-      +`font-size:11px;font-weight:${isWin?700:500};text-transform:uppercase;letter-spacing:0.1px;`
-      +`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
-      +`color:${isWin?'#2ecc71':isEmpty?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.82)'};`
-      +`${isEmpty?'font-style:italic;':''}`;
-    nameEl.textContent=isEmpty?(ti===0?'WB Winner':'LB Winner'):name;
-    row.appendChild(nameEl);
-
-    const sb=document.createElement('div');
-    sb.style.cssText=`width:22px;flex-shrink:0;height:100%;display:flex;align-items:center;`
-      +`justify-content:center;border-left:1px solid rgba(255,255,255,0.05);`
-      +`font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--gold);`;
-    if(!isEmpty&&!spec&&!m.winner){
-      const inp=document.createElement('input');
-      inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
-      inp.style.cssText='width:22px;height:100%;padding:0;border:none;outline:none;'
-        +'background:transparent;color:var(--gold);font-family:"Barlow Condensed",sans-serif;'
-        +'font-size:11px;font-weight:700;text-align:center;cursor:pointer;';
-      inp.addEventListener('change',e=>{e.stopPropagation();setScore(mid,sk,e.target.value);});
-      inp.addEventListener('click',e=>e.stopPropagation());
-      sb.appendChild(inp);
-    } else { sb.textContent=(score||score===0)?score:''; }
-    row.appendChild(sb);
-
-    if(isWin&&!spec){
-      const u=document.createElement('div');
-      u.style.cssText='width:11px;flex-shrink:0;height:100%;display:flex;align-items:center;'
-        +'justify-content:center;font-size:7px;color:rgba(255,255,255,0.1);cursor:pointer;'
-        +'border-left:1px solid rgba(255,255,255,0.03);';
-      u.title='Undo';u.textContent='↩';
-      u.onclick=e=>{e.stopPropagation();clickGF(isReset,tk);};
-      u.onmouseenter=()=>u.style.color='#e74c3c';
-      u.onmouseleave=()=>u.style.color='rgba(255,255,255,0.1)';
-      row.appendChild(u);
-    }
-    card.appendChild(row);
-  });
-  canvas.appendChild(card);
+  return slot;
 }
 
 // compat stubs
