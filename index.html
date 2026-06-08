@@ -135,6 +135,19 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .bhq-shell .bk-game:hover .bk-slot-top{
   border:2px solid #3498db;border-bottom:0;left:-2px;top:-34px;height:30px;background:var(--bk-bg);
 }
+.bhq-shell .bk-game:hover .bk-slot-bot{
+  border:2px solid #3498db;border-top:0;left:-2px;bottom:0;height:30px;background:var(--bk-bg);
+}
+.bhq-shell .bk-round-header{
+  float:left;width:243px;font-family:"Source Sans Pro",helvetica,arial,sans-serif;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:rgba(255,255,255,0.4);padding-left:4px;box-sizing:border-box;padding-bottom:6px;
+}
+.bhq-shell .bk-section-label{
+  clear:both;font-family:"Source Sans Pro",helvetica,arial,sans-serif;font-size:11px;
+  font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.25);
+  padding:14px 0 4px 4px;
+}
 .bhq-shell .bk-seed{width:24px;flex-shrink:0;font-weight:600;text-align:center;color:rgba(255,255,255,.55);}
 .bhq-shell .bk-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:3px;}
 .bhq-shell .bk-score-wrap{margin-left:auto;display:flex;align-items:center;gap:2px;padding-right:2px;}
@@ -1357,6 +1370,26 @@ function bhqMkGFConn(bSize){
   return d;
 }
 
+function bhqRoundLabel(ri, total){
+  const fromEnd=total-1-ri;
+  if(fromEnd===0) return 'Finals';
+  if(fromEnd===1) return 'Semifinals';
+  if(fromEnd===2) return 'Quarterfinals';
+  if(ri===0) return 'Round 1';
+  return 'Round '+(ri+1);
+}
+function bhqMkHeaders(rounds, prefix){
+  const row=document.createElement('div');
+  row.style.cssText='display:flow-root;';
+  rounds.forEach((_,ri)=>{
+    const h=document.createElement('div');
+    h.className='bk-round-header';
+    h.textContent=(prefix?prefix+' ':'')+bhqRoundLabel(ri,rounds.length);
+    row.appendChild(h);
+  });
+  return row;
+}
+
 function bhqApplyZoom(containerId){
   const z=_bhqZoom[containerId]||1;
   const preview=document.getElementById('bhq-preview-'+containerId);
@@ -1389,6 +1422,13 @@ function renderBracket(containerId, spec){
 
   const winners=document.createElement('div');
   winners.className='bk-section';
+  if(format==='double'){
+    const lbl=document.createElement('div');
+    lbl.className='bk-section-label';
+    lbl.textContent='Winners Bracket';
+    winners.appendChild(lbl);
+  }
+  winners.appendChild(bhqMkHeaders(WBrounds, ''));
   WBrounds.forEach((roundIds,ri)=>{
     const rs=bhqWBRoundSize(ri);
     const round=bhqMkRound(roundIds,'wb',spec,bSize,rs,false,false);
@@ -1422,6 +1462,11 @@ function renderBracket(containerId, spec){
   if(format==='double'&&LBrounds.length){
     const losers=document.createElement('div');
     losers.className='bk-section bk-losers';
+    const lbLbl=document.createElement('div');
+    lbLbl.className='bk-section-label';
+    lbLbl.textContent='Losers Bracket';
+    losers.appendChild(lbLbl);
+    losers.appendChild(bhqMkHeaders(LBrounds,'LB'));
     LBrounds.forEach((roundIds,li)=>{
       const {roundSize,advance}=bhqLBColSpec(li,bSize);
       const round=bhqMkRound(roundIds,'lb',spec,bSize,roundSize,false,false);
