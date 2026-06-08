@@ -1163,374 +1163,291 @@ function renderSpectator(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — BracketHQ classic (self-contained layout engine)
-// ═══════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — BracketHQ exact layout
-// Uses flexbox columns with CSS right-angle connectors via SVG.
-// WB flows left→right. LB flows left→right below. GF at right end.
+// BRACKET RENDERER  —  BracketHQ style, single canvas
+// WB top half, LB bottom half, SVG connector lines, GF at far right.
+// All cards are position:absolute. One scrollable div.
 // ═══════════════════════════════════════════════════════════════════════
 
 const _bhqZoom = {};
 
-// ── Layout constants ──────────────────────────────────────────────────
+// Dimensions
 const BQ = {
-  CW:  160,   // card width
-  RH:  26,    // row height (per team)
-  GAP: 40,    // horizontal space between rounds (connector zone)
-  SP:  4,     // vertical slot padding above+below card
-  LBL: 20,    // round label height
-  get MH(){ return this.RH * 2; },
-  get SLOT(){ return this.MH + this.SP * 2; },
+  CW:  150,   // card width
+  RH:  26,    // row height per team
+  GAP: 36,    // horizontal gap between rounds (connector space)
+  SP:  8,     // vertical padding above+below card in its slot
+  LBL: 20,    // round-label bar height
+  SL:  18,    // section label height
+  VG:  28,    // vertical gap between WB bottom and LB top
+  get MH()   { return this.RH * 2; },
+  get BASE()  { return this.MH + this.SP * 2; },  // slot height at round 0
 };
 
 function renderBracket(containerId, spec) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = '';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
   if (!WBrounds.length) return;
   backfillBracketMeta();
 
+  // ── Geometry ──────────────────────────────────────────────────────────
+  const nWB    = WBrounds.length;
+  const nLB    = LBrounds.length;
+  const wbBase = WBrounds[0].length;
+  const lbBase = LBrounds[0] ? LBrounds[0].length : 0;
+  const hasDbl = format === 'double';
+  const hasGF  = hasDbl && !!gfId;
+
+  // colX: X position of round column ri
+  const colX = ri => ri * (BQ.CW + BQ.GAP);
+
+  // slotH: slot height at round ri (doubles each round)
+  const slotH = ri => Math.pow(2, ri) * BQ.BASE;
+
+  // WB band: SL (section label) + LBL (round labels) + cards
+  const wbCardsTop = BQ.SL + BQ.LBL;
+  const wbBandH    = wbCardsTop + wbBase * BQ.BASE;
+
+  // LB band
+  const lbBandTop  = hasDbl && lbBase ? wbBandH + BQ.VG : 0;
+  const lbCardsTop = lbBandTop + BQ.SL + BQ.LBL;
+  const lbBandH    = hasDbl && lbBase ? BQ.SL + BQ.LBL + lbBase * BQ.BASE : 0;
+
+  // GF column
+  const gfColX = colX(nWB);
+
+  // Canvas total size
+  const totalW = gfColX + (hasGF ? BQ.CW + 8 : 0) + 4;
+  const totalH = (hasDbl && lbBase ? lbBandTop + lbBandH : wbBandH) + 8;
+
+  // ── DOM structure ─────────────────────────────────────────────────────
   const shell = document.createElement('div');
   shell.className = 'bhq-shell';
+  shell.style.cssText = 'position:relative;';
 
-  const viewport = document.createElement('div');
-  viewport.className = 'bk-viewport';
+  const scrollWrap = document.createElement('div');
+  scrollWrap.style.cssText = 'overflow:auto;position:relative;max-height:90vh;padding-bottom:50px;';
 
-  const scroll = document.createElement('div');
-  scroll.className = 'bk-scroll';
-  scroll.style.cssText = 'overflow:auto;padding:16px 16px 60px;position:relative;';
+  const canvas = document.createElement('div');
+  canvas.id = 'bhq-preview-' + containerId;
+  canvas.style.cssText = `position:relative;width:${totalW}px;height:${totalH}px;transform-origin:0 0;`;
 
-  const preview = document.createElement('div');
-  preview.id = 'bhq-preview-' + containerId;
-  preview.style.cssText = 'display:inline-block;transform-origin:0 0;position:relative;';
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.style.cssText = `position:absolute;inset:0;width:${totalW}px;height:${totalH}px;pointer-events:none;overflow:visible;`;
+  canvas.appendChild(svg);
 
-  // ── Build bracket ────────────────────────────────────────────────────
-  const {wbEl, wbW, wbH} = buildWBSection(spec, containerId);
-  const lbData = (format === 'double' && LBrounds.length)
-    ? buildLBSection(spec, containerId)
-    : null;
+  // ── Section labels ────────────────────────────────────────────────────
+  mkAbsLabel(canvas, 4, 0, BQ.SL, '🏆 Winners Bracket', 'rgba(46,204,113,0.7)');
+  if (hasDbl && lbBase)
+    mkAbsLabel(canvas, 4, lbBandTop, BQ.SL, '💀 Losers Bracket', 'rgba(231,76,60,0.65)');
 
-  const canvasW = wbW + 8;
-  const canvasH = wbH + (lbData ? 32 + lbData.lbH : 0) + 8;
+  // map matchId → absolute cardCY (for GF connector)
+  const cY = {};
 
-  preview.style.width  = canvasW + 'px';
-  preview.style.height = canvasH + 'px';
+  // ── Winners Bracket ───────────────────────────────────────────────────
+  WBrounds.forEach((roundIds, ri) => {
+    const sh = slotH(ri);
+    const x  = colX(ri);
 
-  preview.appendChild(wbEl);
+    // Round label
+    mkAbsLabel(canvas, x, BQ.SL, BQ.LBL, bkRndLabel('wb', ri, nWB), 'rgba(255,255,255,0.25)', BQ.CW, 'center');
 
-  if (lbData) {
-    lbData.el.style.top = (wbH + 32) + 'px';
-    lbData.el.style.position = 'absolute';
-    lbData.el.style.left = '0';
-    preview.appendChild(lbData.el);
+    roundIds.forEach((matchId, mi) => {
+      const m = gm(matchId);
+      if (!m) return;
 
-    // LB section label
-    const lbLbl = mkSectionLabel('💀 Losers Bracket', 'rgba(231,76,60,0.75)');
-    lbLbl.style.cssText += `position:absolute;top:${wbH + 8}px;left:4px;`;
-    preview.appendChild(lbLbl);
+      const top   = wbCardsTop + mi * sh + (sh - BQ.MH) / 2;
+      const cy    = top + BQ.MH / 2;
+      cY[matchId] = cy;
+
+      if (!m.bye && m.t1 !== 'BYE' && m.t2 !== 'BYE')
+        mkCard(canvas, m, 'wb', spec, x, top);
+
+      // Right-side connector lines to next WB round
+      if (ri < nWB - 1 && !m.bye) {
+        const xR   = x + BQ.CW;
+        const xMid = xR + BQ.GAP / 2;
+        const nextX = colX(ri + 1);
+        svgLine(svg, svgNS, xR, cy, xMid, cy, 'rgba(46,204,113,0.22)');
+        if (mi % 2 === 0 && mi + 1 < roundIds.length) {
+          const sibTop = wbCardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2;
+          const sibCY  = sibTop + BQ.MH / 2;
+          const midY   = (cy + sibCY) / 2;
+          svgLine(svg, svgNS, xR,   sibCY, xMid, sibCY, 'rgba(46,204,113,0.22)');
+          svgLine(svg, svgNS, xMid, cy,    xMid, sibCY, 'rgba(46,204,113,0.22)');
+          svgLine(svg, svgNS, xMid, midY,  nextX, midY, 'rgba(46,204,113,0.22)');
+        }
+      }
+    });
+  });
+
+  // ── Losers Bracket ────────────────────────────────────────────────────
+  if (hasDbl && lbBase) {
+    LBrounds.forEach((roundIds, lri) => {
+      const sh = slotH(lri);
+      const x  = colX(lri);
+
+      mkAbsLabel(canvas, x, lbBandTop + BQ.SL, BQ.LBL, bkRndLabel('lb', lri, nLB), 'rgba(255,255,255,0.22)', BQ.CW, 'center');
+
+      roundIds.forEach((matchId, mi) => {
+        const m    = gm(matchId);
+        if (!m) return;
+        const skip = m.bye || m.lbBye || (!m.t1 && !m.t2 && !m.winner);
+
+        const top   = lbCardsTop + mi * sh + (sh - BQ.MH) / 2;
+        const cy    = top + BQ.MH / 2;
+        cY[matchId] = cy;
+
+        if (!skip) mkCard(canvas, m, 'lb', spec, x, top);
+
+        if (lri < nLB - 1 && !skip) {
+          const xR   = x + BQ.CW;
+          const xMid = xR + BQ.GAP / 2;
+          const nextX = colX(lri + 1);
+          svgLine(svg, svgNS, xR, cy, xMid, cy, 'rgba(231,76,60,0.22)');
+          if (mi % 2 === 0 && mi + 1 < roundIds.length) {
+            const sibTop = lbCardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2;
+            const sibCY  = sibTop + BQ.MH / 2;
+            const midY   = (cy + sibCY) / 2;
+            svgLine(svg, svgNS, xR,   sibCY, xMid, sibCY, 'rgba(231,76,60,0.22)');
+            svgLine(svg, svgNS, xMid, cy,    xMid, sibCY, 'rgba(231,76,60,0.22)');
+            svgLine(svg, svgNS, xMid, midY,  nextX, midY, 'rgba(231,76,60,0.22)');
+          }
+        }
+      });
+    });
   }
 
-  // WB section label
-  const wbLbl = mkSectionLabel('🏆 Winners Bracket', 'rgba(46,204,113,0.75)');
-  wbLbl.style.cssText += 'position:absolute;top:0;left:4px;';
-  preview.appendChild(wbLbl);
+  // ── Grand Final ───────────────────────────────────────────────────────
+  if (hasGF) {
+    const gf = gm(gfId);
+    const wbFinCY = cY[WBrounds[nWB - 1][0]] || (wbCardsTop + wbBase * BQ.BASE / 2);
+    const lbFinCY = (nLB > 0 && cY[LBrounds[nLB - 1][0]])
+      ? cY[LBrounds[nLB - 1][0]]
+      : wbFinCY;
+    const gfCY  = hasDbl && lbBase ? (wbFinCY + lbFinCY) / 2 : wbFinCY;
+    const gfTop = gfCY - BQ.MH / 2;
 
-  scroll.appendChild(preview);
-  viewport.appendChild(scroll);
+    // Connector lines to GF
+    svgLine(svg, svgNS, colX(nWB - 1) + BQ.CW, wbFinCY, gfColX, gfCY, 'rgba(212,175,55,0.4)');
+    if (lbBase && cY[LBrounds[nLB - 1][0]])
+      svgLine(svg, svgNS, colX(nLB - 1) + BQ.CW, lbFinCY, gfColX, gfCY, 'rgba(212,175,55,0.4)');
 
-  // Zoom controls
+    // GF label
+    mkAbsLabel(canvas, gfColX, gfTop - 14, 14, '⚡ Grand Final', 'rgba(212,175,55,0.6)', BQ.CW, 'center');
+    mkCard(canvas, gf, 'gf', spec, gfColX, gfTop);
+
+    // Bracket reset
+    if (gf2Id && gm(gf2Id)) {
+      const g2Top = gfTop + BQ.MH + 14;
+      mkAbsLabel(canvas, gfColX, g2Top - 12, 12, '🔄 Reset', 'rgba(212,175,55,0.4)', BQ.CW, 'center');
+      mkCard(canvas, gm(gf2Id), 'gf', spec, gfColX, g2Top);
+    }
+  }
+
+  scrollWrap.appendChild(canvas);
+  shell.appendChild(scrollWrap);
+
+  // Zoom controls (admin only)
   if (!spec) {
-    const zoom = document.createElement('div');
-    zoom.className = 'bk-zoom';
-    zoom.innerHTML = `<button type="button">−</button><span id="bhq-zoom-num-${containerId}">100%</span><button type="button">+</button>`;
-    zoom.children[0].onclick = () => bhqZoomOut(containerId);
-    zoom.children[2].onclick = () => bhqZoomIn(containerId);
-    viewport.appendChild(zoom);
+    const zoomBar = document.createElement('div');
+    zoomBar.className = 'bk-zoom';
+    zoomBar.innerHTML = `<button type="button">−</button><span id="bhq-zoom-num-${containerId}">100%</span><button type="button">+</button>`;
+    zoomBar.children[0].onclick = () => bhqZoomOut(containerId);
+    zoomBar.children[2].onclick = () => bhqZoomIn(containerId);
+    shell.appendChild(zoomBar);
   }
 
-  shell.appendChild(viewport);
-  el.appendChild(shell);
+  container.appendChild(shell);
 
-  // Auto-zoom based on bracket size
-  const nT = teams.length;
-  const z = nT >= 32 ? 0.45 : nT >= 16 ? 0.6 : nT >= 8 ? 0.8 : 1;
+  // Auto-zoom
+  const z = wbBase >= 16 ? 0.5 : wbBase >= 8 ? 0.7 : 1;
   _bhqZoom[containerId] = z;
   bhqApplyZoom(containerId);
 }
 
-// ── Winners Bracket section ───────────────────────────────────────────
-function buildWBSection(spec, containerId) {
-  const nR    = WBrounds.length;
-  const base  = WBrounds[0].length;  // matches in round 0
-  const SEC   = 18; // section label height
-
-  // Column X for WB round ri
-  const colX = ri => ri * (BQ.CW + BQ.GAP);
-
-  // Slot height for round ri (doubles each round)
-  const slotH = ri => Math.pow(2, ri) * BQ.SLOT;
-
-  const wbH = SEC + BQ.LBL + base * BQ.SLOT;
-  const hasGF = format === 'double' && !!gfId;
-  const gfColX = colX(nR);
-  const wbW = gfColX + (hasGF ? BQ.CW + 8 : 0);
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = `position:absolute;top:${SEC}px;left:0;width:${wbW}px;height:${wbH - SEC}px;`;
-
-  // SVG for connector lines
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
-  svg.style.cssText = `position:absolute;inset:0;width:${wbW}px;height:${wbH}px;overflow:visible;pointer-events:none;z-index:0;`;
-  wrap.appendChild(svg);
-
-  // Track card centre-Y for SVG lines
-  const cY = {};
-
-  WBrounds.forEach((roundIds, ri) => {
-    const sh   = slotH(ri);
-    const x    = colX(ri);
-    const cardsTop = BQ.LBL; // below round label
-
-    // Round label
-    const rLbl = document.createElement('div');
-    rLbl.style.cssText = `position:absolute;left:${x}px;top:0;width:${BQ.CW}px;height:${BQ.LBL}px;`
-      + `display:flex;align-items:center;justify-content:center;`
-      + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
-      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);`;
-    rLbl.textContent = bkRndLabel('wb', ri, nR);
-    wrap.appendChild(rLbl);
-
-    roundIds.forEach((matchId, mi) => {
-      const m = gm(matchId);
-      if (!m) return;
-
-      const slotTop  = cardsTop + mi * sh;
-      const cardTop  = slotTop + (sh - BQ.MH) / 2;
-      const cardCY   = cardTop + BQ.MH / 2;
-      cY[matchId]    = cardCY;
-
-      if (m.bye || m.t1 === 'BYE' || m.t2 === 'BYE') return;
-
-      placeMatchCard(wrap, m, 'wb', spec, x, cardTop);
-
-      // Right-side connectors to next round
-      if (ri < nR - 1) {
-        const xR   = x + BQ.CW;
-        const xMid = xR + BQ.GAP / 2;
-
-        svgL(svg, svgNS, xR, cardCY, xMid, cardCY, 'rgba(46,204,113,0.22)');
-
-        if (mi % 2 === 0 && mi + 1 < roundIds.length) {
-          const sibCY = cardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2 + BQ.MH / 2;
-          const midY  = (cardCY + sibCY) / 2;
-          const nextX = colX(ri + 1);
-          svgL(svg, svgNS, xR,   sibCY, xMid,  sibCY, 'rgba(46,204,113,0.22)');
-          svgL(svg, svgNS, xMid, cardCY, xMid, sibCY, 'rgba(46,204,113,0.22)');
-          svgL(svg, svgNS, xMid, midY,  nextX, midY,  'rgba(46,204,113,0.22)');
-        }
-      }
-    });
-  });
-
-  // ── Grand Final card ──────────────────────────────────────────────
-  if (hasGF) {
-    const gf = gm(gfId);
-
-    // Vertical center: between WB final card and LB final card (approx)
-    const wbFinId = WBrounds[nR - 1][0];
-    const wbFinCY = cY[wbFinId] || (BQ.LBL + (base / 2) * BQ.SLOT);
-    // GF aligns with WB final for now (LB connector drawn separately after LB is built)
-    const gfCY  = wbFinCY;
-    const gfTop = gfCY - BQ.MH / 2;
-    const gfX   = gfColX;
-
-    // Line from WB final → GF
-    svgL(svg, svgNS, colX(nR - 1) + BQ.CW, wbFinCY, gfX, gfCY, 'rgba(212,175,55,0.35)');
-
-    // GF label
-    const gl = document.createElement('div');
-    gl.style.cssText = `position:absolute;left:${gfX}px;top:${gfTop - 14}px;width:${BQ.CW}px;`
-      + `font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;`
-      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.55);text-align:center;`;
-    gl.textContent = '⚡ Grand Final';
-    wrap.appendChild(gl);
-
-    placeMatchCard(wrap, gf, 'gf', spec, gfX, gfTop);
-
-    // GF2 (bracket reset)
-    if (gf2Id && gm(gf2Id)) {
-      const gf2  = gm(gf2Id);
-      const g2Top = gfTop + BQ.MH + 12;
-      const rl = document.createElement('div');
-      rl.style.cssText = `position:absolute;left:${gfX}px;top:${g2Top - 11}px;width:${BQ.CW}px;`
-        + `font-family:'Oswald',sans-serif;font-size:7px;font-weight:700;`
-        + `text-transform:uppercase;letter-spacing:1px;color:rgba(212,175,55,0.45);text-align:center;`;
-      rl.textContent = '🔄 Reset Match';
-      wrap.appendChild(rl);
-      placeMatchCard(wrap, gf2, 'gf', spec, gfX, g2Top);
-    }
-  }
-
-  el.appendChild(wrap);
-  return { wbEl: wrap, wbW, wbH };
-}
-
-// ── Losers Bracket section ────────────────────────────────────────────
-function buildLBSection(spec, containerId) {
-  const nL   = LBrounds.length;
-  const base = LBrounds[0].length;
-  const SEC  = 18;
-
-  const colX = ri => ri * (BQ.CW + BQ.GAP);
-  const slotH = ri => Math.pow(2, ri) * BQ.SLOT;
-  const lbH  = SEC + BQ.LBL + base * BQ.SLOT;
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = `position:relative;width:${nL * (BQ.CW + BQ.GAP)}px;height:${lbH - SEC}px;`;
-
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg   = document.createElementNS(svgNS, 'svg');
-  svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0;`;
-  wrap.appendChild(svg);
-
-  LBrounds.forEach((roundIds, lri) => {
-    const sh      = slotH(lri);
-    const x       = colX(lri);
-    const cardsTop = BQ.LBL;
-
-    // Round label
-    const rLbl = document.createElement('div');
-    rLbl.style.cssText = `position:absolute;left:${x}px;top:0;width:${BQ.CW}px;height:${BQ.LBL}px;`
-      + `display:flex;align-items:center;justify-content:center;`
-      + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
-      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.22);`;
-    rLbl.textContent = bkRndLabel('lb', lri, nL);
-    wrap.appendChild(rLbl);
-
-    roundIds.forEach((matchId, mi) => {
-      const m = gm(matchId);
-      if (!m) return;
-
-      const skip = m.bye || m.lbBye || (!m.t1 && !m.t2 && !m.winner);
-
-      const slotTop = cardsTop + mi * sh;
-      const cardTop = slotTop + (sh - BQ.MH) / 2;
-      const cardCY  = cardTop + BQ.MH / 2;
-
-      if (!skip) placeMatchCard(wrap, m, 'lb', spec, x, cardTop);
-
-      if (lri < nL - 1 && !skip) {
-        const xR   = x + BQ.CW;
-        const xMid = xR + BQ.GAP / 2;
-        svgL(svg, svgNS, xR, cardCY, xMid, cardCY, 'rgba(231,76,60,0.22)');
-
-        if (mi % 2 === 0 && mi + 1 < roundIds.length) {
-          const sibCY = cardsTop + (mi + 1) * sh + (sh - BQ.MH) / 2 + BQ.MH / 2;
-          const midY  = (cardCY + sibCY) / 2;
-          const nextX = colX(lri + 1);
-          svgL(svg, svgNS, xR,   sibCY, xMid,  sibCY, 'rgba(231,76,60,0.22)');
-          svgL(svg, svgNS, xMid, cardCY, xMid, sibCY, 'rgba(231,76,60,0.22)');
-          svgL(svg, svgNS, xMid, midY,  nextX, midY,  'rgba(231,76,60,0.22)');
-        }
-      }
-    });
-  });
-
-  return { el: wrap, lbH };
-}
-
-// ── Place an absolute match card ──────────────────────────────────────
-function placeMatchCard(parent, m, type, spec, x, y) {
+// ── Place one match card on canvas ────────────────────────────────────
+function mkCard(canvas, m, type, spec, x, y) {
   const isGF = type === 'gf';
-  const borderCol = isGF
-    ? 'rgba(212,175,55,0.6)'
-    : type === 'wb' ? 'rgba(46,204,113,0.45)' : 'rgba(231,76,60,0.4)';
+  const accent = isGF ? 'rgba(212,175,55,0.6)'
+    : type === 'wb' ? 'rgba(46,204,113,0.5)' : 'rgba(231,76,60,0.45)';
 
   const card = document.createElement('div');
-  card.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${BQ.CW}px;height:${BQ.MH}px;`
-    + `background:#0e1b2c;border:1px solid rgba(255,255,255,0.09);`
-    + `border-left:2px solid ${borderCol};border-radius:3px;overflow:hidden;`;
+  card.style.cssText = `position:absolute;left:${x}px;top:${y}px;`
+    + `width:${BQ.CW}px;height:${BQ.MH}px;`
+    + `background:#0d1a2a;border:1px solid rgba(255,255,255,0.09);`
+    + `border-left:2px solid ${accent};border-radius:3px;overflow:visible;`;
 
-  // Pit hover dropdown (admin only)
+  // Court badge (shows when assigned)
+  if (!spec && m.pit) {
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:absolute;top:-10px;left:0;right:0;text-align:center;'
+      + 'font-size:8px;color:var(--gold);font-family:"Barlow Condensed",sans-serif;font-weight:700;';
+    badge.textContent = '🏟 Court ' + m.pit;
+    card.appendChild(badge);
+  }
+
+  // Court picker on hover
   if (!spec) {
-    const cur = m.pit || '';
-    const pit = document.createElement('div');
-    pit.style.cssText = `position:absolute;bottom:-18px;left:0;right:0;`
-      + `font-size:10px;text-align:center;opacity:0;transition:opacity .15s;z-index:5;`;
-    let opts = `<option value="">🏟 Court</option>`;
+    const pitWrap = document.createElement('div');
+    pitWrap.style.cssText = 'position:absolute;bottom:-22px;left:0;right:0;text-align:center;'
+      + 'opacity:0;transition:opacity .15s;z-index:10;';
+    let opts = `<option value="">— Court —</option>`;
     for (let p = 1; p <= numPits; p++)
-      opts += `<option value="${p}" ${String(cur) === String(p) ? 'selected' : ''}>Court ${p}</option>`;
+      opts += `<option value="${p}" ${String(m.pit) === String(p) ? 'selected' : ''}>Court ${p}</option>`;
     const sel = document.createElement('select');
-    sel.style.cssText = 'background:#0e1b2c;color:var(--gold);border:1px solid rgba(212,175,55,.35);'
-      + 'border-radius:4px;padding:1px 4px;cursor:pointer;font-size:10px;width:100%;';
+    sel.style.cssText = 'font-size:10px;background:#0d1a2a;color:var(--gold);'
+      + 'border:1px solid rgba(212,175,55,.3);border-radius:3px;padding:1px 3px;cursor:pointer;';
     sel.innerHTML = opts;
     sel.addEventListener('change', e => { e.stopPropagation(); setPit(m.id, e.target.value); });
-    pit.appendChild(sel);
-    card.appendChild(pit);
-    if (cur) {
-      const badge = document.createElement('div');
-      badge.style.cssText = 'position:absolute;top:1px;right:3px;font-size:8px;color:var(--gold);opacity:0.7;pointer-events:none;';
-      badge.textContent = '🏟' + cur;
-      card.appendChild(badge);
-    }
-    card.onmouseenter = () => { pit.style.opacity = '1'; };
-    card.onmouseleave = () => { pit.style.opacity = '0'; };
+    pitWrap.appendChild(sel);
+    card.appendChild(pitWrap);
+    card.onmouseenter = () => pitWrap.style.opacity = '1';
+    card.onmouseleave = () => pitWrap.style.opacity = '0';
   }
 
   // Game number
   if (m.gameNum) {
-    const gnum = document.createElement('div');
-    gnum.style.cssText = 'position:absolute;right:3px;top:50%;transform:translateY(-50%);'
-      + 'font-size:9px;color:rgba(255,255,255,0.2);pointer-events:none;font-family:"Barlow Condensed",sans-serif;';
-    gnum.textContent = m.gameNum;
-    card.appendChild(gnum);
+    const gn = document.createElement('div');
+    gn.style.cssText = 'position:absolute;right:2px;top:50%;transform:translateY(-50%);'
+      + 'font-size:8px;color:rgba(255,255,255,0.18);pointer-events:none;';
+    gn.textContent = '#' + m.gameNum;
+    card.appendChild(gn);
   }
 
-  addTeamRow(card, m, 't1', 's1', type, spec, true);
-  addTeamRow(card, m, 't2', 's2', type, spec, false);
+  mkRow(card, m, 't1', 's1', type, spec, true);
+  mkRow(card, m, 't2', 's2', type, spec, false);
 
-  parent.appendChild(card);
+  canvas.appendChild(card);
 }
 
 // ── One team row ──────────────────────────────────────────────────────
-function addTeamRow(card, m, tk, sk, type, spec, isTop) {
+function mkRow(card, m, tk, sk, type, spec, isTop) {
   const name  = m[tk];
   const score = m[sk];
   const isGF  = type === 'gf';
+  const info  = bkSlotInfo(m, tk, type);
 
-  // Label logic: show "Loser of X", "Winner of X", etc. when slot is empty
-  const info = bkSlotInfo(m, tk, type);
-
-  const isBye    = name === 'BYE';
-  const isLBBye  = type === 'lb' && isBye;
-  const isWin    = m.winner === name && !!name && !isBye;
-  const isEmpty  = !name || isLBBye;
-  const hasReal  = !!name && !isBye && !isLBBye;
+  const isBye   = name === 'BYE';
+  const isWin   = m.winner === name && !!name && !isBye;
+  const hasReal = !!name && !isBye;
   const canClick = hasReal && !spec && !m.winner;
 
   const row = document.createElement('div');
-  row.style.cssText = `display:flex;align-items:center;height:${BQ.RH}px;`
-    + `${isTop ? 'border-bottom:1px solid rgba(255,255,255,0.05);' : ''}`
-    + `background:${isWin ? 'rgba(46,204,113,0.1)' : 'transparent'};`
-    + `${canClick ? 'cursor:pointer;' : ''}transition:background .1s;`;
+  row.style.cssText = `display:flex;align-items:center;height:${BQ.RH}px;overflow:hidden;`
+    + `${isTop ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : ''}`
+    + `background:${isWin ? 'rgba(46,204,113,0.12)' : 'transparent'};`
+    + `${(canClick || (isWin && !spec)) ? 'cursor:pointer;' : ''}transition:background .1s;`;
 
-  if (canClick) {
-    row.onclick = () => {
-      if (isGF) clickGF(m.isGF2 || false, tk);
-      else (type === 'lb' ? clickLB : clickWB)(m.id, tk);
-    };
-    row.onmouseenter = () => { if (!m.winner) row.style.background = 'rgba(255,255,255,0.06)'; };
-    row.onmouseleave = () => { row.style.background = isWin ? 'rgba(46,204,113,0.1)' : 'transparent'; };
-  }
-  // Undo: click winner to undo
-  if (isWin && !spec) {
-    row.style.cursor = 'pointer';
-    row.onclick = () => {
-      if (isGF) clickGF(m.isGF2 || false, tk);
-      else (type === 'lb' ? clickLB : clickWB)(m.id, tk);
-    };
+  const clickFn = () => {
+    if (isGF) clickGF(m.isGF2 || false, tk);
+    else (type === 'lb' ? clickLB : clickWB)(m.id, tk);
+  };
+  if (canClick || (isWin && !spec)) {
+    row.onclick = clickFn;
+    row.onmouseenter = () => { if (!m.winner || isWin) row.style.background = isWin ? 'rgba(46,204,113,0.18)' : 'rgba(255,255,255,0.05)'; };
+    row.onmouseleave = () => { row.style.background = isWin ? 'rgba(46,204,113,0.12)' : 'transparent'; };
   }
 
   // Seed
@@ -1539,32 +1456,32 @@ function addTeamRow(card, m, tk, sk, type, spec, isTop) {
     + `justify-content:center;background:rgba(0,0,0,0.2);`
     + `font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
     + `color:${isWin ? '#2ecc71' : 'rgba(255,255,255,0.2)'};`;
-  seed.textContent = info.seed || '';
+  seed.textContent = info.seed != null ? info.seed : '';
   row.appendChild(seed);
 
-  // Name / placeholder
-  const nameEl = document.createElement('div');
-  nameEl.style.cssText = `flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;`
-    + `font-size:${hasReal ? '11px' : '10px'};font-weight:${isWin ? 700 : 400};`
-    + `text-transform:uppercase;letter-spacing:0.1px;`
-    + `white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
-    + `color:${isWin ? '#2ecc71' : hasReal ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.22)'};`
+  // Name
+  const nm = document.createElement('div');
+  nm.style.cssText = `flex:1;padding:0 4px;font-family:'Barlow Condensed',sans-serif;`
+    + `font-size:${hasReal ? '11px' : '10px'};`
+    + `font-weight:${isWin ? 700 : hasReal ? 500 : 400};`
+    + `text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
+    + `color:${isWin ? '#2ecc71' : hasReal ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.28)'};`
     + `${!hasReal ? 'font-style:italic;' : ''}`;
-  nameEl.textContent = hasReal ? name : (info.text || '—');
-  row.appendChild(nameEl);
+  nm.textContent = hasReal ? name : (info.text || '—');
+  row.appendChild(nm);
 
-  // Score
+  // Score + undo
   if (hasReal) {
     const sb = document.createElement('div');
-    sb.style.cssText = `width:24px;flex-shrink:0;height:100%;display:flex;align-items:center;`
+    sb.style.cssText = `width:22px;flex-shrink:0;height:100%;display:flex;align-items:center;`
       + `justify-content:center;border-left:1px solid rgba(255,255,255,0.05);`
-      + `font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--gold);`;
+      + `font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--gold);`;
     if (!spec && !m.winner) {
       const inp = document.createElement('input');
       inp.type = 'number'; inp.min = '0'; inp.value = score || ''; inp.placeholder = '–';
-      inp.style.cssText = 'width:24px;height:100%;padding:0;border:none;outline:none;'
+      inp.style.cssText = 'width:22px;height:100%;padding:0;border:none;outline:none;'
         + 'background:transparent;color:var(--gold);font-family:"Barlow Condensed",sans-serif;'
-        + 'font-size:12px;font-weight:700;text-align:center;cursor:pointer;';
+        + 'font-size:11px;font-weight:700;text-align:center;cursor:pointer;';
       inp.addEventListener('change', e => { e.stopPropagation(); setScore(m.id, sk, e.target.value); });
       inp.addEventListener('click', e => e.stopPropagation());
       sb.appendChild(inp);
@@ -1573,15 +1490,14 @@ function addTeamRow(card, m, tk, sk, type, spec, isTop) {
     }
     row.appendChild(sb);
 
-    // Undo icon
     if (isWin && !spec) {
       const u = document.createElement('div');
       u.style.cssText = 'width:11px;flex-shrink:0;height:100%;display:flex;align-items:center;'
-        + 'justify-content:center;font-size:7px;color:rgba(255,255,255,0.1);cursor:pointer;'
-        + 'border-left:1px solid rgba(255,255,255,0.03);';
-      u.title = 'Undo'; u.textContent = '↩';
+        + 'justify-content:center;font-size:7px;color:rgba(255,255,255,0.12);cursor:pointer;'
+        + 'border-left:1px solid rgba(255,255,255,0.04);';
+      u.textContent = '↩';
       u.onmouseenter = () => u.style.color = '#e74c3c';
-      u.onmouseleave = () => u.style.color = 'rgba(255,255,255,0.1)';
+      u.onmouseleave = () => u.style.color = 'rgba(255,255,255,0.12)';
       row.appendChild(u);
     }
   }
@@ -1589,9 +1505,8 @@ function addTeamRow(card, m, tk, sk, type, spec, isTop) {
   card.appendChild(row);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
-
-function svgL(svg, ns, x1, y1, x2, y2, color) {
+// ── SVG line helper ───────────────────────────────────────────────────
+function svgLine(svg, ns, x1, y1, x2, y2, color) {
   const l = document.createElementNS(ns, 'line');
   l.setAttribute('x1', x1); l.setAttribute('y1', y1);
   l.setAttribute('x2', x2); l.setAttribute('y2', y2);
@@ -1599,61 +1514,67 @@ function svgL(svg, ns, x1, y1, x2, y2, color) {
   svg.appendChild(l);
 }
 
-function mkSectionLabel(text, color) {
+// ── Absolute label helper ─────────────────────────────────────────────
+function mkAbsLabel(parent, x, y, h, text, color, w, align) {
   const d = document.createElement('div');
-  d.style.cssText = `font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;`
-    + `text-transform:uppercase;letter-spacing:2px;color:${color};line-height:18px;`;
+  d.style.cssText = `position:absolute;left:${x}px;top:${y}px;height:${h}px;`
+    + `${w ? 'width:' + w + 'px;' : ''}`
+    + `display:flex;align-items:center;${align === 'center' ? 'justify-content:center;' : ''}`
+    + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
+    + `text-transform:uppercase;letter-spacing:1.5px;color:${color};white-space:nowrap;`;
   d.textContent = text;
-  return d;
+  parent.appendChild(d);
 }
 
+// ── Round label name ──────────────────────────────────────────────────
 function bkRndLabel(type, ri, nR) {
   const wb = ['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'];
-  const lb = ['LB Final','LB Semis','LB Rd 8','LB Rd 7','LB Rd 6','LB Rd 5','LB Rd 4','LB Rd 3','LB Rd 2','LB Rd 1'];
+  const lb = ['LB Final','LB Semis','LB Rd 8','LB Rd 7','LB Rd 6',
+              'LB Rd 5','LB Rd 4','LB Rd 3','LB Rd 2','LB Rd 1'];
   const arr = type === 'wb' ? wb : lb;
   const idx = nR - 1 - ri;
   return idx < arr.length ? arr[idx] : `Rd ${ri + 1}`;
 }
 
+// ── Slot info: name/seed/placeholder text ─────────────────────────────
 function bkSlotInfo(m, tk, type) {
   const name = m[tk];
   if (name && name !== 'BYE') {
-    const seed = tk === 't1' ? m.seed1 : m.seed2;
-    return { text: name, seed, click: true };
+    return { text: name, seed: tk === 't1' ? m.seed1 : m.seed2, click: true };
   }
   if (type === 'lb' && m.lbDropFrom) {
     const wbId = m.lbDropFrom[tk === 't1' ? 0 : (m.lbDropFrom.length > 1 ? 1 : 0)];
-    if (wbId) { const w = gm(wbId); if (w?.gameNum) return { text: `Loser of ${w.gameNum}`, seed: null, click: false }; }
+    if (wbId) { const w = gm(wbId); if (w && w.gameNum) return { text: `Loser of ${w.gameNum}`, seed: null, click: false }; }
   }
-  if (m.fromWin && !name) {
+  if (m.fromWin) {
     const pid = m.fromWin[tk === 't1' ? 0 : 1];
-    const s = gm(pid); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+    const s = gm(pid); if (s && s.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
   }
-  if (m.lbWinFrom && tk === 't1' && !name) {
-    const s = gm(m.lbWinFrom); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+  if (m.lbWinFrom && tk === 't1') {
+    const s = gm(m.lbWinFrom); if (s && s.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
   }
-  if (m.lbWinFrom2 && !name) {
-    const ids = m.lbWinFrom2;
-    const pid = tk === 't1' ? ids[0] : ids[1];
-    const s = gm(pid); if (s?.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
+  if (m.lbWinFrom2) {
+    const pid = m.lbWinFrom2[tk === 't1' ? 0 : 1];
+    const s = gm(pid); if (s && s.gameNum) return { text: `Winner of ${s.gameNum}`, seed: null, click: false };
   }
   if (type === 'gf') {
-    if (tk === 't1' && !name) return { text: 'WB Winner', seed: null, click: false };
-    if (tk === 't2' && !name) return { text: 'LB Winner', seed: null, click: false };
+    return { text: tk === 't1' ? 'WB Winner' : 'LB Winner', seed: null, click: false };
   }
   return { text: '', seed: null, click: false };
 }
 
-function bhqApplyZoom(containerId) {
-  const z = _bhqZoom[containerId] || 1;
-  const preview = document.getElementById('bhq-preview-' + containerId);
-  const num = document.getElementById('bhq-zoom-num-' + containerId);
-  if (preview) preview.style.transform = 'scale(' + z + ')';
+// ── Zoom ──────────────────────────────────────────────────────────────
+function bhqApplyZoom(id) {
+  const z   = _bhqZoom[id] || 1;
+  const pre = document.getElementById('bhq-preview-' + id);
+  const num = document.getElementById('bhq-zoom-num-' + id);
+  if (pre) pre.style.transform = 'scale(' + z + ')';
   if (num) num.textContent = Math.round(z * 100) + '%';
 }
-function bhqZoomIn(id)  { _bhqZoom[id] = Math.min(2, (_bhqZoom[id] || 1) + 0.1);  bhqApplyZoom(id); }
+function bhqZoomIn(id)  { _bhqZoom[id] = Math.min(2,   (_bhqZoom[id] || 1) + 0.1); bhqApplyZoom(id); }
 function bhqZoomOut(id) { _bhqZoom[id] = Math.max(0.3, (_bhqZoom[id] || 1) - 0.1); bhqApplyZoom(id); }
 
+// ── Backfill game numbers + seeds ─────────────────────────────────────
 function backfillBracketMeta() {
   if (!WBrounds.length) return;
   let n = 1;
