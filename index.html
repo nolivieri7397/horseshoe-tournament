@@ -95,151 +95,187 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-tag{font-size:10px;font-weight:700;color:var(--accent);background:rgba(240,165,0,0.1);padding:2px 8px;text-align:center;border-bottom:1px solid rgba(240,165,0,0.15);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
-/* ═══════════════════════════════════════════════════
-   BRACKET — exact brackethq.com CSS flexbox approach
-   ═══════════════════════════════════════════════════ */
-.bracket-section { margin-bottom: 0; }
-.section-header { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
-.section-badge { font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:3px; }
-.section-badge.wb { background:rgba(46,204,113,0.12);color:var(--wb);border:1px solid rgba(46,204,113,0.25); }
-.section-badge.lb { background:rgba(231,76,60,0.12);color:var(--lb);border:1px solid rgba(231,76,60,0.25); }
-.section-badge.gf { background:rgba(212,175,55,0.12);color:var(--gf);border:1px solid rgba(212,175,55,0.3); }
-.section-divider { flex:1;height:1px;background:var(--border); }
+/* ─── BRACKET — BracketHQ exact style ─────────────────────────────────────── */
+/* Outer scroll */
+.bhq-scroll{overflow-x:auto;overflow-y:visible;padding:0 0 1.5rem;}
+/* Section label row */
+.bhq-label{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;padding:10px 0 6px;
+  display:flex;align-items:center;gap:10px;}
+.bhq-label span{padding:2px 10px;border-radius:3px;font-size:11px;}
+.bhq-label .wb{color:#2ecc71;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);}
+.bhq-label .lb{color:#e74c3c;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);}
+.bhq-label .gf{color:#d4af37;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);}
+.bhq-label hr{flex:1;border:none;border-top:1px solid rgba(255,255,255,0.06);margin:0;}
 
-/* Scroll wrapper */
-.bkt-scroll { overflow-x:auto;overflow-y:visible;padding-bottom:1.5rem;padding-top:0.5rem; }
-
-/* The whole bracket = flex row of rounds */
-.bkt-rounds { display:flex;flex-direction:row;align-items:stretch;gap:0; }
-
-/* One round column */
-.bkt-round { display:flex;flex-direction:column;justify-content:space-around;flex:1;min-width:0; }
-.bkt-round-label {
-  font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);
-  text-align:center;padding:0 4px 6px;white-space:nowrap;
+/* The bracket itself = horizontal flex row of round columns */
+.bhq-bracket{
+  display:inline-flex;
+  flex-direction:row;
+  align-items:stretch;
+  min-width:max-content;
+  padding: 8px 0;
 }
 
-/* Match wrapper — handles the connector lines via pseudo-elements */
-.bkt-match-wrap {
+/* One round = vertical flex column */
+.bhq-round{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-around;
+  min-width:160px;
+  width:160px;
+}
+
+/* Round title above column */
+.bhq-round-title{
+  font-family:'Oswald',sans-serif;
+  font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:rgba(255,255,255,0.25);
+  text-align:center;
+  padding-bottom:8px;
+  white-space:nowrap;
+}
+
+/* Each match slot — grows to fill vertical space so they space-around */
+.bhq-slot{
   display:flex;
   flex:1;
-  align-items:center;
+  flex-direction:column;
+  justify-content:center;
   position:relative;
-  padding: 4px 0;
+  padding:0 0 0 0;
+  min-height:52px;
 }
 
-/* The vertical bar on the right that becomes the bracket line */
-.bkt-match-wrap::after {
-  content:'';
-  position:absolute;
-  right:0;
-  width:12px;
-  top:25%;
-  bottom:25%;
-  border-top:1px solid rgba(255,255,255,0.12);
-  border-right:1px solid rgba(255,255,255,0.12);
-  border-bottom:1px solid rgba(255,255,255,0.12);
+/* The bracket connector lines — right half bracket shape */
+/* Top match of a pair: draws top-right corner + vertical down to midpoint */
+.bhq-slot.pair-top::after{
+  content:'';position:absolute;
+  right:-20px; top:50%;
+  width:20px; height:calc(50% + 50%);   /* from self centre down to sib centre */
+  border-top:1px solid rgba(255,255,255,0.13);
+  border-right:1px solid rgba(255,255,255,0.13);
+  pointer-events:none;
 }
-/* Last round — no connector */
-.bkt-round:last-child .bkt-match-wrap::after { display:none; }
-
-/* Horizontal line going right from the pair bracket */
-.bkt-match-wrap::before {
-  content:'';
-  position:absolute;
-  right:-12px;
-  top:50%;
-  width:12px;
-  border-top:1px solid rgba(255,255,255,0.12);
+/* Bottom match: draws bottom-right corner UP to midpoint + horizontal nub right */
+.bhq-slot.pair-bot::after{
+  content:'';position:absolute;
+  right:-20px; bottom:50%;
+  width:20px; height:calc(50% + 50%);
+  border-bottom:1px solid rgba(255,255,255,0.13);
+  border-right:1px solid rgba(255,255,255,0.13);
+  pointer-events:none;
 }
-.bkt-round:last-child .bkt-match-wrap::before { display:none; }
+/* Horizontal stub entering FROM left (rounds 2+) */
+.bhq-slot.has-entry::before{
+  content:'';position:absolute;
+  left:-20px; top:50%;
+  width:20px; height:0;
+  border-top:1px solid rgba(255,255,255,0.13);
+  pointer-events:none;
+}
+/* Last round — no outgoing connector */
+.bhq-round.last-round .bhq-slot::after{display:none;}
 
 /* The actual match card */
-.bkt-card {
-  flex:1;
-  margin:0 12px 0 0;
-  border:1px solid rgba(255,255,255,0.08);
+.bhq-card{
+  margin:3px 20px 3px 20px;
+  border:1px solid rgba(255,255,255,0.09);
   border-radius:4px;
   overflow:hidden;
-  background:#0c1a28;
-  min-width:130px;
-  max-width:170px;
+  background:#0b1929;
+  flex-shrink:0;
+  position:relative;
 }
-.bkt-card.wb-card { border-left:2px solid rgba(46,204,113,0.45); }
-.bkt-card.lb-card { border-left:2px solid rgba(231,76,60,0.4); }
-.bkt-card.gf-card { border-left:2px solid rgba(212,175,55,0.55); }
+/* First round — no left margin (entry line not drawn) */
+.bhq-round:first-child .bhq-card{margin-left:8px;}
+/* Last round — no right margin */
+.bhq-round.last-round .bhq-card{margin-right:8px;}
 
-/* Left entry line (connector coming in from previous round) */
-.bkt-round:first-child .bkt-card { margin-left:0; }
-.bkt-card-with-entry { position:relative; }
-.bkt-card-with-entry::before {
-  content:'';
-  position:absolute;
-  left:-12px;top:50%;
-  width:12px;border-top:1px solid rgba(255,255,255,0.12);
-}
+/* WB/LB accent on left edge */
+.bhq-card.wb{border-left:2px solid rgba(46,204,113,0.5);}
+.bhq-card.lb{border-left:2px solid rgba(231,76,60,0.45);}
+.bhq-card.gf{border-left:2px solid rgba(212,175,55,0.6);}
 
 /* Team row */
-.bkt-row {
-  display:flex;align-items:center;height:24px;
+.bhq-row{
+  display:flex;align-items:center;
+  height:26px;
   border-bottom:1px solid rgba(255,255,255,0.05);
-  transition:background 0.1s;position:relative;
+  transition:background .1s;
+  cursor:default;
 }
-.bkt-row:last-child { border-bottom:none; }
-.bkt-row.can-click { cursor:pointer; }
-.bkt-row.can-click:hover { background:rgba(255,255,255,0.05); }
-.bkt-row.is-win { background:rgba(46,204,113,0.1); }
-.bkt-row.is-tbd { opacity:0.4; }
+.bhq-row:last-child{border-bottom:none;}
+.bhq-row.clickable{cursor:pointer;}
+.bhq-row.clickable:hover{background:rgba(255,255,255,0.05);}
+.bhq-row.won{background:rgba(46,204,113,0.1);}
+.bhq-row.won .bhq-name{color:#2ecc71;font-weight:700;}
+.bhq-row.empty{opacity:0.35;}
 
-.bkt-seed {
-  width:18px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,0.2);
-  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;
-  color:rgba(255,255,255,0.22);
-}
-.bkt-row.is-win .bkt-seed { color:var(--success); }
-
-.bkt-name {
-  flex:1;padding:0 5px;
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:500;
-  text-transform:uppercase;letter-spacing:0.2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  color:rgba(255,255,255,0.82);
-}
-.bkt-row.is-win .bkt-name { color:var(--success);font-weight:700; }
-.bkt-row.is-tbd .bkt-name { color:rgba(255,255,255,0.2);font-style:italic; }
-
-.bkt-score {
-  width:22px;flex-shrink:0;height:100%;
+/* Seed number */
+.bhq-seed{
+  width:20px;flex-shrink:0;height:100%;
   display:flex;align-items:center;justify-content:center;
-  border-left:1px solid rgba(255,255,255,0.05);
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--accent);
+  background:rgba(0,0,0,0.2);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;font-weight:700;
+  color:rgba(255,255,255,0.2);
 }
-.bkt-score input {
-  width:22px;height:100%;padding:0;border:none;outline:none;background:transparent;
-  color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
-  text-align:center;cursor:pointer;
+.bhq-row.won .bhq-seed{color:#2ecc71;}
+
+/* Team name */
+.bhq-name{
+  flex:1;padding:0 6px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:rgba(255,255,255,0.85);
 }
-.bkt-undo {
-  width:12px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;
+.bhq-row.empty .bhq-name{color:rgba(255,255,255,0.2);font-style:italic;}
+
+/* Score box */
+.bhq-score{
+  width:26px;flex-shrink:0;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  border-left:1px solid rgba(255,255,255,0.06);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:700;color:var(--gold);
+}
+.bhq-score input{
+  width:26px;height:100%;border:none;outline:none;
+  background:transparent;color:var(--gold);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:700;text-align:center;
+  padding:0;cursor:pointer;
+}
+
+/* Pit button (admin only) — tiny left strip */
+.bhq-pit{
+  position:absolute;left:0;top:0;bottom:0;width:14px;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1px;cursor:pointer;
+  background:rgba(0,0,0,0.15);
+  border-right:1px solid rgba(255,255,255,0.04);
+  z-index:1;
+}
+.bhq-pit.on{background:rgba(212,175,55,0.12);border-right-color:rgba(212,175,55,0.25);}
+.bhq-pit select{
+  position:absolute;inset:0;opacity:0;
+  cursor:pointer;width:100%;height:100%;
+}
+/* shift card content right when pit strip present */
+.bhq-card.has-pit .bhq-row{padding-left:14px;}
+
+/* Undo icon */
+.bhq-undo{
+  width:13px;flex-shrink:0;height:100%;
+  display:flex;align-items:center;justify-content:center;
   font-size:7px;color:rgba(255,255,255,0.1);cursor:pointer;
   border-left:1px solid rgba(255,255,255,0.04);
 }
-.bkt-undo:hover { color:var(--danger); }
-
-/* Pit strip on left of card (admin only) */
-.bkt-pit {
-  width:16px;flex-shrink:0;height:48px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:1px;cursor:pointer;position:relative;
-  border-right:1px solid rgba(255,255,255,0.05);
-}
-.bkt-pit.assigned { background:rgba(212,175,55,0.12); }
-.bkt-pit select { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
-
-/* Section gap */
-.bkt-lb-gap { height:28px;display:flex;align-items:center;padding:0 2px; }
-.bkt-lb-gap-line { flex:1;height:1px;background:rgba(255,255,255,0.06); }
+.bhq-undo:hover{color:#e74c3c;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1222,163 +1258,143 @@ function renderSpectator(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — brackethq.com style pure CSS flexbox tree
-// WB rounds flow left→right. LB rounds flow left→right below.
-// Connectors are pure CSS border lines via ::before/::after (see CSS).
+// BRACKET RENDERER  —  exact BracketHQ layout
+//
+// Structure per bracket band:
+//   .bhq-scroll > .bhq-bracket > .bhq-round* > .bhq-slot* > .bhq-card
+//
+// CSS ::before / ::after pseudo-elements on .bhq-slot draw the connector
+// lines automatically based on pair-top / pair-bot / has-entry classes.
+// No SVG, no absolute positioning, no JS geometry.
 // ═══════════════════════════════════════════════════════════════════════════
 
 function renderBracket(containerId, spec){
-  const el=document.getElementById(containerId); if(!el) return;
+  const el=document.getElementById(containerId);
+  if(!el) return;
   el.innerHTML='';
 
+  // Single elimination
   if(format!=='double'){
-    el.appendChild(makeSectionHeader('🏆 Winners Bracket','wb'));
-    const scroll=document.createElement('div'); scroll.className='bkt-scroll';
-    scroll.appendChild(buildBand(WBrounds,'wb',spec));
-    el.appendChild(scroll);
+    bhqBand(el, WBrounds, 'wb', 'Winners Bracket', spec);
     return;
   }
 
-  // Winners Bracket
-  el.appendChild(makeSectionHeader('🏆 Winners Bracket','wb'));
-  const wbScroll=document.createElement('div'); wbScroll.className='bkt-scroll';
-  wbScroll.appendChild(buildBand(WBrounds,'wb',spec));
-  el.appendChild(wbScroll);
-
-  // Gap + Losers Bracket
-  const gap=document.createElement('div'); gap.className='bkt-lb-gap';
-  gap.innerHTML='<div class="bkt-lb-gap-line"></div>';
-  el.appendChild(gap);
-
-  el.appendChild(makeSectionHeader('💀 Losers Bracket','lb'));
-  const lbScroll=document.createElement('div'); lbScroll.className='bkt-scroll';
-  if(LBrounds.length){
-    lbScroll.appendChild(buildBand(LBrounds,'lb',spec));
-  } else {
-    lbScroll.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px 0;">Fills in as matches are played…</div>';
-  }
-  el.appendChild(lbScroll);
+  // Double elimination
+  bhqBand(el, WBrounds, 'wb', 'Winners Bracket', spec);
+  bhqBand(el, LBrounds, 'lb', 'Losers Bracket',  spec);
 
   // Grand Final
-  if(gfId){
-    const gap2=document.createElement('div'); gap2.className='bkt-lb-gap';
-    gap2.innerHTML='<div class="bkt-lb-gap-line"></div>';
-    el.appendChild(gap2);
-    el.appendChild(makeSectionHeader('⚡ Grand Final','gf'));
-    el.appendChild(buildGrandFinal(spec));
+  if(gfId) bhqGF(el, spec);
+}
+
+// ── Render one bracket band (WB or LB) ───────────────────────────────────────
+function bhqBand(container, rounds, type, title, spec){
+  // Section label
+  const lbl=document.createElement('div');
+  lbl.className='bhq-label';
+  lbl.innerHTML=`<span class="${type}">${type==='wb'?'🏆':'💀'} ${title}</span><hr/>`;
+  container.appendChild(lbl);
+
+  const scroll=document.createElement('div');
+  scroll.className='bhq-scroll';
+
+  if(!rounds.length){
+    scroll.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 8px;">Fills in as matches are played…</div>';
+    container.appendChild(scroll);
+    return;
   }
-}
 
-function makeSectionHeader(label,cls){
-  const d=document.createElement('div'); d.className='section-header';
-  d.innerHTML=`<div class="section-badge ${cls}">${label}</div><div class="section-divider"></div>`;
-  return d;
-}
+  const bracket=document.createElement('div');
+  bracket.className='bhq-bracket';
 
-// ── Build one horizontal band (WB or LB) using flexbox rounds ────────────────
-function buildBand(rounds, type, spec){
-  if(!rounds.length) return document.createElement('div');
+  const nR=rounds.length;
 
-  const roundLabels={
-    wb:['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'],
-    lb:['LB Final','LB Semi','LB Round 8','LB Round 7','LB Round 6','LB Round 5','LB Round 4','LB Round 3','LB Round 2','LB Round 1'],
-  };
-
-  const wrap=document.createElement('div');
-  wrap.className='bkt-rounds';
-  // min-width so it scrolls rather than squishes
-  wrap.style.minWidth=`${rounds.length*182}px`;
-
-  rounds.forEach((roundIds, ri)=>{
-    const nR=rounds.length;
-    const lblArr=roundLabels[type]||[];
-    const lbl=ri>=nR-lblArr.length ? lblArr[nR-1-ri] : `Round ${ri+1}`;
-
+  rounds.forEach((matchIds, ri)=>{
     const col=document.createElement('div');
-    col.className='bkt-round';
+    col.className='bhq-round'+(ri===nR-1?' last-round':'');
 
-    // Round label
-    const lblEl=document.createElement('div');
-    lblEl.className='bkt-round-label';
-    lblEl.textContent=lbl;
-    col.appendChild(lblEl);
+    // Round title
+    const title=document.createElement('div');
+    title.className='bhq-round-title';
+    title.textContent=bhqRoundLabel(type, ri, nR);
+    col.appendChild(title);
 
-    roundIds.forEach((matchId)=>{
+    matchIds.forEach((matchId, mi)=>{
       const m=gm(matchId);
-      const wrap2=document.createElement('div');
-      wrap2.className='bkt-match-wrap';
+      const slot=document.createElement('div');
+      slot.className='bhq-slot';
 
-      // Skip invisible bye/lbBye matches
-      if(!m||m.bye||m.lbBye){
-        // Still need the space for connector alignment
-        const ghost=document.createElement('div');
-        ghost.className=`bkt-card ${type}-card`;
-        ghost.style.cssText='visibility:hidden;margin-right:12px;';
-        wrap2.appendChild(ghost);
-        col.appendChild(wrap2);
-        return;
+      // Connector classes — pairs are even/odd
+      if(ri < nR-1){
+        slot.classList.add(mi%2===0 ? 'pair-top' : 'pair-bot');
+      }
+      // Entry line from previous round (all rounds except first)
+      if(ri > 0) slot.classList.add('has-entry');
+
+      // Skip invisible (BYE, lbBye, empty LB slot)
+      const invisible = !m || m.bye || m.lbBye ||
+        (type==='lb' && !m.t1 && !m.t2 && !m.winner);
+
+      if(!invisible){
+        slot.appendChild(bhqCard(m, type, spec, ri===0));
       }
 
-      // Skip LB matches where both teams still empty (not yet populated)
-      if(type==='lb'&&!m.t1&&!m.t2&&!m.winner){
-        const ghost=document.createElement('div');
-        ghost.className=`bkt-card ${type}-card`;
-        ghost.style.cssText='visibility:hidden;margin-right:12px;';
-        wrap2.appendChild(ghost);
-        col.appendChild(wrap2);
-        return;
-      }
-
-      // Pit strip (admin only)
-      if(!spec){
-        const cur=m.pit||'';
-        const pit=document.createElement('div');
-        pit.className='bkt-pit'+(cur?' assigned':'');
-        pit.title=cur?`Court ${cur}`:'Assign court';
-        pit.innerHTML=`<span style="font-size:7px;color:${cur?'var(--gold)':'rgba(255,255,255,0.18)'};">🏟</span>`
-          +(cur?`<span style="font-size:7px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:'');
-        let opts=`<option value="">—</option>`;
-        for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Ct ${p}</option>`;
-        const sel=document.createElement('select');
-        sel.innerHTML=opts;
-        sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
-        pit.appendChild(sel);
-        wrap2.appendChild(pit);
-      }
-
-      // Match card
-      const card=document.createElement('div');
-      card.className=`bkt-card ${type}-card bkt-card-with-entry`;
-      // On the first round, no entry line needed
-      if(ri===0) card.classList.remove('bkt-card-with-entry');
-
-      buildTeamRow(card, m, 't1','s1', type, spec);
-      buildTeamRow(card, m, 't2','s2', type, spec);
-
-      wrap2.appendChild(card);
-      col.appendChild(wrap2);
+      col.appendChild(slot);
     });
 
-    wrap.appendChild(col);
+    bracket.appendChild(col);
   });
 
-  return wrap;
+  scroll.appendChild(bracket);
+  container.appendChild(scroll);
 }
 
-// ── Build one team row inside a match card ────────────────────────────────────
-function buildTeamRow(card, m, tk, sk, type, spec){
-  const name =m[tk], score=m[sk];
-  const isBye   =name==='BYE';
-  const isLBBye =type==='lb'&&isBye;
-  const isWin   =m.winner===name&&!!name&&!isBye;
-  const isEmpty =!name||isLBBye;
-  const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
+// ── Build a single match card ─────────────────────────────────────────────────
+function bhqCard(m, type, spec, isFirstRound){
+  const hasPit = !spec;
+
+  const card=document.createElement('div');
+  card.className=`bhq-card ${type}${hasPit?' has-pit':''}`;
+
+  // Pit strip (admin only)
+  if(hasPit){
+    const cur=m.pit||'';
+    const pit=document.createElement('div');
+    pit.className='bhq-pit'+(cur?' on':'');
+    pit.title=cur?`Court ${cur}`:'Assign court';
+    pit.innerHTML=`<span style="font-size:6px;line-height:1;color:${cur?'var(--gold)':'rgba(255,255,255,0.18)'};">🏟</span>`
+      +(cur?`<span style="font-size:6px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;line-height:1;">${cur}</span>`:'');
+    let opts='<option value="">—</option>';
+    for(let p=1;p<=numPits;p++)
+      opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Ct ${p}</option>`;
+    const sel=document.createElement('select');
+    sel.innerHTML=opts;
+    sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
+    pit.appendChild(sel);
+    card.appendChild(pit);
+  }
+
+  bhqRow(card, m, 't1','s1', type, spec);
+  bhqRow(card, m, 't2','s2', type, spec);
+
+  return card;
+}
+
+// ── Build one team row ────────────────────────────────────────────────────────
+function bhqRow(card, m, tk, sk, type, spec){
+  const name  = m[tk];
+  const score = m[sk];
+  const isBye    = name==='BYE';
+  const isLBBye  = type==='lb' && isBye;
+  const isWin    = m.winner===name && !!name && !isBye;
+  const isEmpty  = !name || isLBBye;
+  const canClick = !isEmpty && !isBye && !spec && !m.winner;
 
   const row=document.createElement('div');
-  let cls='bkt-row';
-  if(isWin) cls+=' is-win';
-  if(isEmpty) cls+=' is-tbd';
-  if(canClick) cls+=' can-click';
+  let cls='bhq-row';
+  if(isWin)    cls+=' won';
+  if(isEmpty)  cls+=' empty';
+  if(canClick) cls+=' clickable';
   row.className=cls;
 
   if(canClick){
@@ -1387,23 +1403,23 @@ function buildTeamRow(card, m, tk, sk, type, spec){
     row.onmouseleave=()=>{row.style.background=isWin?'rgba(46,204,113,0.1)':'';};
   }
 
-  // Seed number
+  // Seed
   const seed=document.createElement('div');
-  seed.className='bkt-seed';
+  seed.className='bhq-seed';
   seed.textContent=isEmpty||isBye?'':tk==='t1'?'1':'2';
   row.appendChild(seed);
 
   // Name
   const nameEl=document.createElement('div');
-  nameEl.className='bkt-name';
+  nameEl.className='bhq-name';
   nameEl.textContent=isEmpty?'—':name;
   row.appendChild(nameEl);
 
   // Score
-  if(!isEmpty&&!isBye){
+  if(!isEmpty && !isBye){
     const sb=document.createElement('div');
-    sb.className='bkt-score';
-    if(!spec&&!m.winner){
+    sb.className='bhq-score';
+    if(!spec && !m.winner){
       const inp=document.createElement('input');
       inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
       inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
@@ -1414,10 +1430,10 @@ function buildTeamRow(card, m, tk, sk, type, spec){
     }
     row.appendChild(sb);
 
-    // Undo
-    if(isWin&&!spec){
+    // Undo icon
+    if(isWin && !spec){
       const u=document.createElement('div');
-      u.className='bkt-undo';u.title='Undo';u.textContent='↩';
+      u.className='bhq-undo';u.title='Undo';u.textContent='↩';
       u.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(m.id,tk);};
       row.appendChild(u);
     }
@@ -1426,11 +1442,31 @@ function buildTeamRow(card, m, tk, sk, type, spec){
   card.appendChild(row);
 }
 
-// ── Stubs kept for backward-compat (called nowhere critical) ─────────────────
+// ── Grand Final section (styled same as a match card) ────────────────────────
+function bhqGF(container, spec){
+  const lbl=document.createElement('div');
+  lbl.className='bhq-label';
+  lbl.innerHTML='<span class="gf">⚡ Grand Final</span><hr/>';
+  container.appendChild(lbl);
+
+  container.appendChild(buildGrandFinal(spec));
+}
+
+// ── Round label helper ────────────────────────────────────────────────────────
+function bhqRoundLabel(type, ri, nR){
+  const wbNames=['Final','Semi-Finals','Quarter-Finals','Round of 16','Round of 32','Round of 64'];
+  const lbNames=['LB Final','LB Semis','LB Round 8','LB Round 7','LB Round 6',
+                 'LB Round 5','LB Round 4','LB Round 3','LB Round 2','LB Round 1'];
+  const arr = type==='wb' ? wbNames : lbNames;
+  const fromEnd = nR - 1 - ri;
+  return fromEnd < arr.length ? arr[fromEnd] : `Round ${ri+1}`;
+}
+
+// ── Compat stubs (not called externally but kept for safety) ──────────────────
+function makeSecHeader(l,c){ const d=document.createElement('div');d.className='bhq-label';d.innerHTML=`<span class="${c}">${l}</span><hr/>`;return d; }
 function buildMatchRow(){return '';}
 function buildPitTag(){return '';}
 function buildGFEl(spec){return buildGrandFinal(spec);}
-function makeSecHeader(label,cls){return makeSectionHeader(label,cls);}
 
 // ─── CHAMPION + STATUS ────────────────────────────────────────────────────────
 function checkChamp(spec){
