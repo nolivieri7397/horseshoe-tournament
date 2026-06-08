@@ -1143,174 +1143,199 @@ function makeSecHeader(label,cls){
 }
 
 function buildRoundsEl(rounds, type, spec){
-  const CARD_W=210, ROW_H=30, MATCH_H=ROW_H*2, SEED_W=26, CONN=28;
-  const SLOT0=MATCH_H+6;
-  const LINE='rgba(255,255,255,0.08)';
-  const nRounds=rounds.length;
-  const baseN=rounds[0]?rounds[0].length:0;
+  // BracketHQ-style renderer: stable round columns, centered match rows, and clean SVG connectors.
+  // Keeps your existing click handlers, scores, pit assignment, and Firebase state intact.
+  const CARD_W = spec ? 190 : 220;
+  const MATCH_H = 70;
+  const ROW_H = MATCH_H / 2;
+  const ROUND_GAP = 58;
+  const BASE_GAP = 18;
+  const SEED_W = 28;
+  const PIT_W = spec ? 0 : 28;
+  const LINE = type === 'lb' ? 'rgba(231,76,60,0.35)' : 'rgba(46,204,113,0.35)';
+  const ACTIVE_LINE = 'rgba(212,175,55,0.75)';
+  const nRounds = rounds.length;
+  const baseN = rounds[0] ? rounds[0].length : 0;
   if(!baseN) return document.createElement('div');
 
-  const totalH=baseN*SLOT0;
-  const totalW=nRounds*(CARD_W+CONN)+CONN;
+  const roundLabels = ['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
+  const roundName = (ri) => ri >= nRounds - roundLabels.length ? roundLabels[nRounds - 1 - ri] : `Round ${ri + 1}`;
+  const slotH = (ri) => Math.pow(2, ri) * (MATCH_H + BASE_GAP);
+  const colX = (ri) => ri * (CARD_W + PIT_W + ROUND_GAP) + PIT_W + 4;
+  const getY = (ri, mi) => mi * slotH(ri) + (slotH(ri) - MATCH_H) / 2;
+  const totalH = Math.max(110, baseN * (MATCH_H + BASE_GAP));
+  const totalW = nRounds * (CARD_W + PIT_W) + Math.max(0, nRounds - 1) * ROUND_GAP + 18;
 
-  const outer=document.createElement('div');
-  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:0.5rem;padding-top:26px;';
+  const outer = document.createElement('div');
+  outer.style.cssText = 'overflow-x:auto;overflow-y:visible;padding:0.25rem 0 0.75rem;';
 
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
+  const board = document.createElement('div');
+  board.style.cssText = `position:relative;width:${totalW}px;min-width:100%;height:${totalH + 34}px;padding-top:30px;`;
 
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH}px;overflow:visible;pointer-events:none;`);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('width', totalW);
+  svg.setAttribute('height', totalH + 34);
+  svg.setAttribute('style', 'position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;');
+  board.appendChild(svg);
 
-  const cY={};
+  const centers = {};
 
-  rounds.forEach((roundIds,ri)=>{
-    const slotH=Math.pow(2,ri)*SLOT0;
-    const colX=CONN+ri*(CARD_W+CONN);
+  function addLine(x1,y1,x2,y2,color=LINE,width=1.5){
+    const line = document.createElementNS(svgNS,'line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke',color); line.setAttribute('stroke-width',width);
+    line.setAttribute('stroke-linecap','round');
+    svg.appendChild(line);
+  }
 
-    // Round label
-    const lbls=['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
-    const lbl=ri>=nRounds-lbls.length?lbls[nRounds-1-ri]:`Round ${ri+1}`;
-    const lbEl=document.createElement('div');
-    lbEl.style.cssText=`position:absolute;left:${colX}px;top:-20px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);`;
-    lbEl.textContent=lbl;
-    wrap.appendChild(lbEl);
+  function getMatchStatus(m){
+    if(!m || m.bye || m.lbBye) return 'empty';
+    if(m.winner) return 'complete';
+    if(m.t1 && m.t2) return 'active';
+    return 'pending';
+  }
 
-    roundIds.forEach((matchId,mi)=>{
-      const m=gm(matchId);
-      const cardTop=mi*slotH+(slotH-MATCH_H)/2;
-      const cardCY=cardTop+MATCH_H/2;
-      if(m) cY[matchId]=cardCY;
+  function buildPitButton(m){
+    const cur = m.pit || '';
+    const pitBtn = document.createElement('div');
+    pitBtn.style.cssText = `width:${PIT_W}px;height:${MATCH_H}px;background:${cur?'rgba(212,175,55,0.22)':'rgba(255,255,255,0.035)'};border:1px solid ${cur?'rgba(212,175,55,0.45)':'rgba(255,255,255,0.08)'};border-right:none;border-radius:8px 0 0 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;position:relative;flex-shrink:0;`;
+    pitBtn.title = cur ? `Court ${cur} - click to change` : 'Assign court';
+    pitBtn.innerHTML = `<span style="font-size:10px;color:${cur?'var(--gold)':'var(--muted)'};">Court</span>${cur?`<span style="font-size:14px;font-weight:800;color:var(--gold);font-family:'Oswald',sans-serif;">${cur}</span>`:'<span style="font-size:13px;color:rgba(255,255,255,0.22);">+</span>'}`;
+    let opts = `<option value="">No Court</option>`;
+    for(let i=1;i<=numPits;i++) opts += `<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
+    const sel = document.createElement('select');
+    sel.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
+    sel.innerHTML = opts;
+    sel.addEventListener('change',e=>{ e.stopPropagation(); setPit(m.id,e.target.value); });
+    pitBtn.appendChild(sel);
+    return pitBtn;
+  }
 
-      if(m&&!m.bye&&!m.lbBye){
-        // Outer wrapper: pit button on left + card
-        const outerWrap=document.createElement('div');
-        outerWrap.style.cssText=`position:absolute;left:${colX-28}px;top:${cardTop}px;display:flex;align-items:stretch;`;
+  function buildTeamRow(m, tk, sk, ti, status){
+    const name = m[tk], score = m[sk];
+    const isBye = name === 'BYE';
+    const isEmpty = !name;
+    const isWin = m.winner === name && !!name && !isBye;
+    const isLoser = m.winner && !isWin && !isBye && !isEmpty;
+    const canClick = !isEmpty && !isBye && !spec && !m.winner;
 
-        // PIT BUTTON on left (admin only)
-        if(!spec){
-          const cur=m.pit||'';
-          const pitBtn=document.createElement('div');
-          pitBtn.style.cssText=`width:26px;background:${cur?'rgba(212,175,55,0.2)':'rgba(255,255,255,0.04)'};border:1px solid ${cur?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.06)'};border-right:none;border-radius:6px 0 0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;position:relative;`;
-          pitBtn.title=cur?`Court ${cur} — click to change`:'Assign court';
-          pitBtn.innerHTML=`<span style="font-size:9px;color:${cur?'var(--gold)':'var(--muted)'};">🏟</span>${cur?`<span style="font-size:8px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:''}`;
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;height:${ROW_H}px;${ti===0?'border-bottom:1px solid rgba(255,255,255,0.07);':''}background:${isWin?'rgba(46,204,113,0.16)':canClick?'rgba(255,255,255,0.015)':'transparent'};cursor:${canClick?'pointer':'default'};transition:background 0.12s,color 0.12s;`;
+    if(canClick){
+      row.onclick = () => (type === 'lb' ? clickLB : clickWB)(m.id, tk);
+      row.onmouseenter = () => { row.style.background = 'rgba(212,175,55,0.12)'; };
+      row.onmouseleave = () => { row.style.background = 'rgba(255,255,255,0.015)'; };
+    }
 
-          // Dropdown on click
-          let opts=`<option value="">No Court</option>`;
-          for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
-          const sel=document.createElement('select');
-          sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;';
-          sel.innerHTML=opts;
-          sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
-          pitBtn.appendChild(sel);
-          outerWrap.appendChild(pitBtn);
-        }
+    const seed = document.createElement('div');
+    seed.style.cssText = `width:${SEED_W}px;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.18);font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.16)':'rgba(255,255,255,0.36)'};flex-shrink:0;`;
+    seed.textContent = isEmpty || isBye ? '' : String(ti + 1);
+    row.appendChild(seed);
 
-        // Match card
-        const card=document.createElement('div');
-        const lw=spec?0:28;
-        card.style.cssText=`width:${CARD_W}px;background:rgba(255,255,255,0.05);border-radius:${spec?'6px':'0 6px 6px 0'};overflow:hidden;border:1px solid rgba(255,255,255,0.07);`;
+    const nm = document.createElement('div');
+    nm.style.cssText = `flex:1;min-width:0;padding:0 9px;font-family:'Oswald',sans-serif;font-size:${isBye?'11px':'14px'};font-weight:${isWin?'800':'650'};letter-spacing:0.25px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${isWin?'var(--success)':isLoser?'rgba(245,236,215,0.5)':isEmpty||isBye?'rgba(255,255,255,0.22)':'var(--text)'};${isBye?'font-style:italic;':''}`;
+    nm.textContent = isEmpty ? 'TBD' : name;
+    row.appendChild(nm);
 
-        // Team rows
-        ['t1','t2'].forEach((tk,ti)=>{
-          const sk=ti===0?'s1':'s2';
-          const name=m[tk], score=m[sk];
-          const isBye=name==='BYE';
-          const isWin=m.winner===name&&!!name&&!isBye;
-          const isEmpty=!name;
-          const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
-          const fn=type==='lb'?'clickLB':'clickWB';
-
-          const row=document.createElement('div');
-          row.style.cssText=`display:flex;align-items:center;height:${ROW_H}px;${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}background:${isWin?'rgba(46,204,113,0.1)':'transparent'};${canClick?'cursor:pointer;':''};transition:background 0.12s;`;
-
-          if(canClick){
-            row.onclick=()=>{ const fn2=type==='lb'?clickLB:clickWB; fn2(m.id,tk); };
-            row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.06)'; };
-            row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
-          }
-
-          // Seed
-          const seedEl=document.createElement('div');
-          seedEl.style.cssText=`width:${SEED_W}px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:${isWin?'var(--success)':isBye||isEmpty?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.3)'};flex-shrink:0;height:100%;background:rgba(0,0,0,0.15);`;
-          seedEl.textContent=isBye||isEmpty?'':String(ti+1);
-          row.appendChild(seedEl);
-
-          // Name
-          const nameEl=document.createElement('div');
-          nameEl.style.cssText=`flex:1;padding:0 8px;font-family:'Barlow Condensed',sans-serif;font-size:${isBye?'11px':'14px'};font-weight:${isWin?'700':'600'};color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.2)':'var(--text)'};text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.3px;${isBye?'font-style:italic;':''}`;
-          nameEl.textContent=isEmpty?'—':name;
-          row.appendChild(nameEl);
-
-          // Score / undo
-          if(!isEmpty&&!isBye){
-            if(!spec&&!m.winner){
-              const inp=document.createElement('input');
-              inp.type='number'; inp.min='0'; inp.value=score||''; inp.placeholder='–';
-              inp.style.cssText='width:32px;background:rgba(0,0,0,0.25);border:none;border-left:1px solid rgba(255,255,255,0.05);color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;text-align:center;height:100%;outline:none;padding:0;';
-              inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
-              inp.addEventListener('click',e=>e.stopPropagation());
-              row.appendChild(inp);
-            } else if(score){
-              const sc=document.createElement('div');
-              sc.style.cssText='width:32px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.05);height:100%;display:flex;align-items:center;justify-content:center;';
-              sc.textContent=score;
-              row.appendChild(sc);
-            }
-            if(isWin&&!spec){
-              const u=document.createElement('div');
-              u.style.cssText='width:18px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;';
-              u.textContent='↩';
-              u.onclick=e=>{e.stopPropagation();type==='lb'?clickLB(m.id,tk):clickWB(m.id,tk);};
-              row.appendChild(u);
-            }
-          }
-          card.appendChild(row);
-        });
-
-        outerWrap.appendChild(card);
-        wrap.appendChild(outerWrap);
+    if(!isEmpty && !isBye){
+      if(!spec && !m.winner){
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.min = '0'; inp.value = score || ''; inp.placeholder = '-';
+        inp.style.cssText = 'width:36px;height:100%;border:none;border-left:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.28);color:var(--gold);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;text-align:center;outline:none;padding:0;';
+        inp.addEventListener('change',e=>{ e.stopPropagation(); setScore(m.id,sk,e.target.value); });
+        inp.addEventListener('click',e=>e.stopPropagation());
+        row.appendChild(inp);
+      } else if(score !== '' && score != null){
+        const sc = document.createElement('div');
+        sc.style.cssText = 'width:36px;height:100%;display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,0.07);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;color:var(--gold);';
+        sc.textContent = score;
+        row.appendChild(sc);
       }
-
-      // SVG connectors
-      if(ri<nRounds-1&&m&&!m.bye&&!m.lbBye){
-        const xR=colX+CARD_W;
-        const xM=xR+CONN/2;
-        const xN=xR+CONN;
-        const y=cardCY;
-
-        const h1=document.createElementNS(svgNS,'line');
-        h1.setAttribute('x1',xR);h1.setAttribute('y1',y);
-        h1.setAttribute('x2',xM);h1.setAttribute('y2',y);
-        h1.setAttribute('stroke',LINE);h1.setAttribute('stroke-width','1');
-        svg.appendChild(h1);
-
-        if(mi%2===0&&mi+1<roundIds.length){
-          const pairCY=(mi+1)*slotH+(slotH-MATCH_H)/2+MATCH_H/2;
-          const midY=(y+pairCY)/2;
-
-          const v=document.createElementNS(svgNS,'line');
-          v.setAttribute('x1',xM);v.setAttribute('y1',y);
-          v.setAttribute('x2',xM);v.setAttribute('y2',pairCY);
-          v.setAttribute('stroke',LINE);v.setAttribute('stroke-width','1');
-          svg.appendChild(v);
-
-          const h2=document.createElementNS(svgNS,'line');
-          h2.setAttribute('x1',xM);h2.setAttribute('y1',midY);
-          h2.setAttribute('x2',xN);h2.setAttribute('y2',midY);
-          h2.setAttribute('stroke',LINE);h2.setAttribute('stroke-width','1');
-          svg.appendChild(h2);
-        }
+      if(isWin && !spec){
+        const undo = document.createElement('button');
+        undo.type = 'button';
+        undo.textContent = '↩';
+        undo.title = 'Undo winner';
+        undo.style.cssText = 'width:24px;height:100%;border:none;border-left:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.18);color:rgba(255,255,255,0.42);cursor:pointer;font-size:12px;';
+        undo.onclick = e => { e.stopPropagation(); (type === 'lb' ? clickLB : clickWB)(m.id, tk); };
+        row.appendChild(undo);
       }
+    }
+    return row;
+  }
+
+  function buildMatchCard(m){
+    const status = getMatchStatus(m);
+    const accent = type === 'lb' ? 'var(--lb)' : 'var(--wb)';
+    const card = document.createElement('div');
+    const borderColor = status === 'active' ? 'rgba(212,175,55,0.7)' : status === 'complete' ? 'rgba(46,204,113,0.45)' : 'rgba(255,255,255,0.09)';
+    const shadow = status === 'active' ? '0 0 0 1px rgba(212,175,55,0.18),0 10px 30px rgba(0,0,0,0.22)' : '0 8px 22px rgba(0,0,0,0.18)';
+    card.style.cssText = `width:${CARD_W}px;height:${MATCH_H}px;background:linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035));border:1px solid ${borderColor};border-left:4px solid ${accent};border-radius:${spec?'9px':'0 9px 9px 0'};overflow:hidden;box-shadow:${shadow};opacity:${status==='pending'?0.74:1};`;
+    card.appendChild(buildTeamRow(m,'t1','s1',0,status));
+    card.appendChild(buildTeamRow(m,'t2','s2',1,status));
+    return card;
+  }
+
+  rounds.forEach((roundIds, ri) => {
+    const x = colX(ri);
+    const label = document.createElement('div');
+    label.style.cssText = `position:absolute;left:${x}px;top:2px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.8px;color:var(--muted);`;
+    label.textContent = roundName(ri);
+    board.appendChild(label);
+
+    roundIds.forEach((matchId, mi) => {
+      const m = gm(matchId);
+      if(!m) return;
+      const y = 30 + getY(ri, mi);
+      centers[matchId] = {x:x + CARD_W, y:y + MATCH_H / 2, left:x, top:y};
+
+      // Keep invisible/byed matches in spacing so later rounds stay aligned.
+      if(m.bye || m.lbBye) return;
+
+      const holder = document.createElement('div');
+      holder.style.cssText = `position:absolute;left:${x - PIT_W}px;top:${y}px;height:${MATCH_H}px;display:flex;align-items:stretch;`;
+      if(!spec) holder.appendChild(buildPitButton(m));
+      holder.appendChild(buildMatchCard(m));
+      board.appendChild(holder);
     });
   });
 
-  wrap.appendChild(svg);
-  outer.appendChild(wrap);
+  // BracketHQ-style elbow connectors. Draw from each two-match pair into the next round.
+  rounds.forEach((roundIds, ri) => {
+    if(ri >= nRounds - 1) return;
+    const nextIds = rounds[ri + 1] || [];
+    for(let i = 0; i < roundIds.length; i += 2){
+      const a = gm(roundIds[i]);
+      const b = gm(roundIds[i + 1]);
+      const next = gm(nextIds[Math.floor(i / 2)]);
+      if(!next) continue;
+      const ca = centers[roundIds[i]];
+      const cb = centers[roundIds[i + 1]];
+      const cn = centers[nextIds[Math.floor(i / 2)]];
+      if(!ca || !cn) continue;
+
+      const x1 = ca.x;
+      const x2 = cn.left - PIT_W;
+      const midX = x1 + Math.max(18, (x2 - x1) / 2);
+      const yA = ca.y;
+      const yB = cb ? cb.y : ca.y;
+      const yN = cn.y;
+      const isLiveFeed = (a && a.winner) || (b && b.winner) || getMatchStatus(next) === 'active';
+      const color = isLiveFeed ? ACTIVE_LINE : LINE;
+      const width = isLiveFeed ? 2 : 1.4;
+
+      addLine(x1, yA, midX, yA, color, width);
+      if(cb) addLine(cb.x, yB, midX, yB, color, width);
+      if(cb) addLine(midX, yA, midX, yB, color, width);
+      addLine(midX, yN, x2, yN, color, width);
+    }
+  });
+
+  outer.appendChild(board);
   return outer;
 }
-
 
 function buildMatchRow(m, tk, sk, seed, spec, type){
   const name=m[tk], score=m[sk];
