@@ -95,35 +95,14 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-tag{font-size:10px;font-weight:700;color:var(--accent);background:rgba(240,165,0,0.1);padding:2px 8px;text-align:center;border-bottom:1px solid rgba(240,165,0,0.15);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
-/* BRACKET — brackethq style */
-.bracket-section{margin-bottom:2rem;}
-.section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+/* BRACKET */
+.bracket-section{margin-bottom:1.5rem;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .section-badge{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:4px;}
 .section-badge.wb{background:rgba(46,204,113,0.12);color:var(--wb);border:1px solid rgba(46,204,113,0.25);}
 .section-badge.lb{background:rgba(231,76,60,0.12);color:var(--lb);border:1px solid rgba(231,76,60,0.25);}
 .section-badge.gf{background:rgba(240,165,0,0.12);color:var(--gf);border:1px solid rgba(240,165,0,0.3);}
 .section-divider{flex:1;height:1px;background:var(--border);}
-.bracket-scroll{overflow-x:auto;padding-bottom:1rem;}
-/* Individual match card — brackethq tight style */
-.bq-match{display:flex;flex-direction:column;background:#0d1b2e;border:1px solid rgba(255,255,255,0.09);border-radius:5px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.4);}
-.bq-match.wb-match{border-left:2px solid rgba(46,204,113,0.55);}
-.bq-match.lb-match{border-left:2px solid rgba(231,76,60,0.5);}
-.bq-row{display:flex;align-items:center;height:28px;border-bottom:1px solid rgba(255,255,255,0.06);position:relative;transition:background 0.1s;}
-.bq-row:last-child{border-bottom:none;}
-.bq-row.can-click{cursor:pointer;}
-.bq-row.can-click:hover{background:rgba(255,255,255,0.06);}
-.bq-row.is-winner{background:rgba(46,204,113,0.1);}
-.bq-row.is-tbd{opacity:0.45;}
-.bq-seed{width:20px;text-align:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);font-family:'Barlow Condensed',sans-serif;flex-shrink:0;background:rgba(0,0,0,0.2);height:100%;display:flex;align-items:center;justify-content:center;}
-.bq-row.is-winner .bq-seed{color:var(--success);}
-.bq-name{flex:1;padding:0 7px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
-.bq-row.is-winner .bq-name{color:var(--success);font-weight:700;}
-.bq-row.is-tbd .bq-name{color:rgba(255,255,255,0.25);font-style:italic;}
-.bq-score{width:28px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);border-left:1px solid rgba(255,255,255,0.06);height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.bq-score input{width:28px;background:transparent;border:none;outline:none;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-align:center;height:100%;padding:0;cursor:pointer;}
-.bq-undo{width:18px;text-align:center;font-size:9px;color:rgba(255,255,255,0.18);cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.04);}
-.bq-undo:hover{color:var(--danger);}
-.round-lbl{font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:6px;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1105,49 +1084,32 @@ function renderSpectator(){
   renderSpectatorPrize(); checkChamp(true); renderChampionshipLive(); renderSpectatorPits(); renderRoster();
 }
 
+// ─── UNIFIED CANVAS BRACKET RENDERER ─────────────────────────────────────────
+// Renders WB on top half and LB on bottom half of a single scrollable canvas,
+// matching the brackethq.com style from the reference screenshot.
+
 function renderBracket(containerId, spec){
   const el=document.getElementById(containerId); if(!el) return;
   el.innerHTML='';
 
   if(format!=='double'){
-    // Single elim - just WB
-    const wbSec=document.createElement('div'); wbSec.className='bracket-section';
-    wbSec.appendChild(makeSecHeader('🏆 Winners Bracket','wb'));
-    const wbScroll=document.createElement('div'); wbScroll.className='bracket-scroll';
-    wbScroll.appendChild(buildRoundsEl(WBrounds,'wb',spec));
-    wbSec.appendChild(wbScroll); el.appendChild(wbSec);
+    // Single elim — simple single-band canvas
+    el.appendChild(buildSingleCanvas(WBrounds,'wb',spec));
     return;
   }
 
-  // Double elim: WB on top, then LB below, then GF
-  // WB
-  const wbSec=document.createElement('div'); wbSec.className='bracket-section';
-  wbSec.appendChild(makeSecHeader('🏆 Winners Bracket','wb'));
-  const wbScroll=document.createElement('div'); wbScroll.className='bracket-scroll';
-  wbScroll.appendChild(buildRoundsEl(WBrounds,'wb',spec));
-  wbSec.appendChild(wbScroll); el.appendChild(wbSec);
+  // Double elim — unified canvas
+  el.appendChild(buildDoubleCanvas(spec));
 
-  // LB
-  const lbSec=document.createElement('div'); lbSec.className='bracket-section';
-  lbSec.appendChild(makeSecHeader('💀 Losers Bracket','lb'));
-  if(LBrounds.length){
-    const lbScroll=document.createElement('div'); lbScroll.className='bracket-scroll';
-    lbScroll.appendChild(buildRoundsEl(LBrounds,'lb',spec));
-    lbSec.appendChild(lbScroll);
-  } else {
-    const msg=document.createElement('p');
-    msg.style.cssText='color:var(--muted);font-size:13px;padding-bottom:1rem;';
-    msg.textContent='Fills in as matches are played.'; lbSec.appendChild(msg);
+  // GF below canvas
+  if(gfId){
+    const gfSec=document.createElement('div');
+    gfSec.style.cssText='margin-top:1.5rem;';
+    gfSec.appendChild(makeSecHeader('⚡ Grand Final','gf'));
+    gfSec.appendChild(buildGrandFinal(spec));
+    el.appendChild(gfSec);
   }
-  el.appendChild(lbSec);
-
-  // GF
-  const gfSec=document.createElement('div'); gfSec.className='bracket-section';
-  gfSec.appendChild(makeSecHeader('⚡ Grand Final','gf'));
-  gfSec.appendChild(buildGrandFinal(spec));
-  el.appendChild(gfSec);
 }
-
 
 function makeSecHeader(label,cls){
   const d=document.createElement('div'); d.className='section-header';
@@ -1155,266 +1117,284 @@ function makeSecHeader(label,cls){
   return d;
 }
 
-function buildRoundsEl(rounds, type, spec){
-  // ── brackethq-style layout ──────────────────────────────────────────────────
-  // Dimensions
-  const CARD_W = 160;   // match card width
-  const ROW_H  = 26;    // height per team row
-  const MATCH_H= ROW_H * 2; // total card height (2 teams)
-  const PIT_W  = spec ? 0 : 22; // pit button on left
-  const GAP_X  = 36;   // horizontal gap between rounds (for connectors)
-  const LINE   = 'rgba(255,255,255,0.12)';
-  const LINE_W = '1.5';
+// ── shared constants ──────────────────────────────────────────────────────────
+const BQ={
+  CARD_W: 130,   // match card width
+  ROW_H:  22,    // height of one team row
+  get MATCH_H(){ return this.ROW_H*2; },
+  PIT_W:  20,    // pit button strip
+  GAP_X:  30,    // horizontal gap between rounds (connector space)
+  SLOT_PAD: 10,  // extra vertical padding in a slot
+  get SLOT0(){ return this.MATCH_H + this.SLOT_PAD*2; }, // base slot height (round 0)
+  LINE:  'rgba(255,255,255,0.13)',
+  LINE_WB: 'rgba(46,204,113,0.25)',
+  LINE_LB: 'rgba(231,76,60,0.22)',
+  LBL_H: 22,     // round label height above canvas
+  SEC_GAP: 28,   // vertical gap between WB and LB sections
+  SEC_LBL: 18,   // section label strip height
+};
 
-  const nRounds = rounds.length;
-  const baseN   = rounds[0] ? rounds[0].length : 0;
-  if(!baseN) return document.createElement('div');
+// ── build a single-elimination canvas ────────────────────────────────────────
+function buildSingleCanvas(rounds, type, spec){
+  const baseN=rounds[0]?rounds[0].length:0; if(!baseN) return document.createElement('div');
+  const nR=rounds.length;
+  const totalW=(spec?0:BQ.PIT_W)*nR + nR*BQ.CARD_W + (nR+1)*BQ.GAP_X;
+  const totalH=BQ.LBL_H + baseN*BQ.SLOT0;
 
-  // Each slot's vertical span doubles each round
-  const SLOT0 = MATCH_H + 16; // base slot height (r0)
+  const outer=document.createElement('div');
+  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:1rem;';
+  const wrap=document.createElement('div');
+  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
 
-  // Compute total canvas size
-  const totalH = baseN * SLOT0;
-  const totalW = nRounds * (PIT_W + CARD_W + GAP_X) + GAP_X;
-
-  // SVG namespace
-  const svgNS = 'http://www.w3.org/2000/svg';
-
-  // Outer scroll wrapper
-  const outer = document.createElement('div');
-  outer.style.cssText = 'overflow-x:auto;overflow-y:visible;padding-bottom:0.5rem;';
-
-  // Canvas
-  const wrap = document.createElement('div');
-  wrap.style.cssText = `position:relative;width:${totalW}px;height:${totalH + 30}px;margin-top:4px;`;
-
-  // SVG for connector lines (sits behind cards)
-  const svg = document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH+30}px;overflow:visible;pointer-events:none;`);
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('style',`position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;`);
   wrap.appendChild(svg);
 
-  // Track card centre-Y for connector drawing
-  const cY = {};
-
-  rounds.forEach((roundIds, ri) => {
-    const slotH  = Math.pow(2, ri) * SLOT0;   // slot height grows per round
-    const colX   = GAP_X + ri * (PIT_W + CARD_W + GAP_X); // left edge of pit+card block
-    const cardX  = colX + PIT_W;              // left edge of card itself
-
-    // ── Round label ──────────────────────────────────────────────────────────
-    const lbls = ['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
-    const lbl  = ri >= nRounds - lbls.length ? lbls[nRounds - 1 - ri] : `Round ${ri+1}`;
-    const lbEl = document.createElement('div');
-    lbEl.className = 'round-lbl';
-    lbEl.style.cssText = `position:absolute;left:${cardX}px;top:0;width:${CARD_W}px;`;
-    lbEl.textContent = lbl;
-    wrap.appendChild(lbEl);
-
-    roundIds.forEach((matchId, mi) => {
-      const m = gm(matchId);
-      if(!m) return;
-
-      // Vertical position: centre of slot, offset from label
-      const slotTop = 26 + mi * slotH;
-      const cardTop = slotTop + (slotH - MATCH_H) / 2;
-      const cardCY  = cardTop + MATCH_H / 2;
-      cY[matchId]   = cardCY;
-
-      // Skip BYE / lbBye cards
-      if(m.bye || m.lbBye) return;
-
-      // Skip LB cards where both slots are still empty
-      const lbBothEmpty = type === 'lb' && !m.t1 && !m.t2 && !m.winner;
-      if(lbBothEmpty) return;
-
-      // ── Pit button (admin only) ────────────────────────────────────────────
-      if(!spec){
-        const cur = m.pit || '';
-        const pitBtn = document.createElement('div');
-        pitBtn.style.cssText = `position:absolute;left:${colX}px;top:${cardTop}px;width:${PIT_W}px;height:${MATCH_H}px;`
-          + `background:${cur?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.03)'};`
-          + `border:1px solid ${cur?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.07)'};`
-          + `border-right:none;border-radius:4px 0 0 4px;`
-          + `display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;position:absolute;`;
-        pitBtn.title = cur ? `Court ${cur} — click to change` : 'Assign court';
-        pitBtn.innerHTML = `<span style="font-size:8px;line-height:1;color:${cur?'var(--gold)':'rgba(255,255,255,0.2)'};">🏟</span>`
-          + (cur ? `<span style="font-size:8px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;line-height:1;">${cur}</span>` : '');
-
-        let opts = `<option value="">—</option>`;
-        for(let i=1;i<=numPits;i++) opts += `<option value="${i}" ${String(cur)===String(i)?'selected':''}>Court ${i}</option>`;
-        const sel = document.createElement('select');
-        sel.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
-        sel.innerHTML = opts;
-        sel.addEventListener('change', e => { e.stopPropagation(); setPit(m.id, e.target.value); });
-        pitBtn.appendChild(sel);
-        wrap.appendChild(pitBtn);
-      }
-
-      // ── Match card ─────────────────────────────────────────────────────────
-      const card = document.createElement('div');
-      card.className = `bq-match ${type}-match`;
-      card.style.cssText = `position:absolute;left:${cardX}px;top:${cardTop}px;width:${CARD_W}px;height:${MATCH_H}px;`
-        + (spec ? 'border-radius:5px;' : 'border-radius:0 5px 5px 0;');
-
-      // If assigned to a pit, show a tiny gold dot top-right
-      if(m.pit && spec){
-        const dot = document.createElement('div');
-        dot.style.cssText = 'position:absolute;top:3px;right:4px;font-size:8px;color:var(--gold);opacity:0.7;pointer-events:none;';
-        dot.textContent = `🏟${m.pit}`;
-        card.appendChild(dot);
-      }
-
-      // Two team rows
-      ['t1','t2'].forEach((tk, ti) => {
-        const sk = ti === 0 ? 's1' : 's2';
-        const name  = m[tk];
-        const score = m[sk];
-        const isBye    = name === 'BYE';
-        const isLBBye  = type === 'lb' && isBye;
-        const isWin    = m.winner === name && !!name && !isBye;
-        const isEmpty  = !name || isLBBye;
-        const canClick = !isEmpty && !isBye && !spec && !m.winner;
-
-        const row = document.createElement('div');
-        let rowCls = 'bq-row';
-        if(isWin)    rowCls += ' is-winner';
-        if(isEmpty || isBye) rowCls += ' is-tbd';
-        if(canClick) rowCls += ' can-click';
-        row.className = rowCls;
-        row.style.cssText = `height:${ROW_H}px;`;
-
-        if(canClick){
-          row.onclick = () => { (type==='lb'?clickLB:clickWB)(m.id, tk); };
-        }
-
-        // Seed bubble
-        const seed = document.createElement('div');
-        seed.className = 'bq-seed';
-        seed.textContent = isEmpty || isBye ? '' : String(ti+1);
-        row.appendChild(seed);
-
-        // Team name
-        const nameEl = document.createElement('div');
-        nameEl.className = 'bq-name';
-        nameEl.textContent = isEmpty ? '—' : name;
-        row.appendChild(nameEl);
-
-        // Score / input
-        if(!isEmpty && !isBye){
-          const scoreWrap = document.createElement('div');
-          scoreWrap.className = 'bq-score';
-          if(!spec && !m.winner){
-            const inp = document.createElement('input');
-            inp.type = 'number'; inp.min = '0';
-            inp.value = score || ''; inp.placeholder = '–';
-            inp.addEventListener('change', e => { e.stopPropagation(); setScore(m.id, sk, e.target.value); });
-            inp.addEventListener('click', e => e.stopPropagation());
-            scoreWrap.appendChild(inp);
-          } else if(score || score === 0){
-            scoreWrap.textContent = score;
-          }
-          row.appendChild(scoreWrap);
-
-          // Undo button (admin, winner set)
-          if(isWin && !spec){
-            const u = document.createElement('div');
-            u.className = 'bq-undo';
-            u.title = 'Undo result';
-            u.textContent = '↩';
-            u.onclick = e => { e.stopPropagation(); (type==='lb'?clickLB:clickWB)(m.id, tk); };
-            row.appendChild(u);
-          }
-        }
-
-        card.appendChild(row);
-      });
-
-      wrap.appendChild(card);
-
-      // ── SVG connectors ─────────────────────────────────────────────────────
-      // Draw the L-shaped line from this card's right edge to the next round's input
-      if(ri < nRounds - 1 && !_skipConnector(m, type)){
-        const xRight = cardX + CARD_W;        // right edge of card
-        const xMid   = xRight + GAP_X / 2;    // midpoint of gap
-        const y      = cardCY;
-
-        // Horizontal stub right from card
-        const hOut = document.createElementNS(svgNS,'line');
-        hOut.setAttribute('x1', xRight); hOut.setAttribute('y1', y);
-        hOut.setAttribute('x2', xMid);   hOut.setAttribute('y2', y);
-        hOut.setAttribute('stroke', LINE); hOut.setAttribute('stroke-width', LINE_W);
-        svg.appendChild(hOut);
-
-        // Pair with next sibling match in this round
-        if(mi % 2 === 0 && mi + 1 < roundIds.length){
-          const sibId = roundIds[mi+1];
-          const sibSlotTop = 26 + (mi+1) * slotH;
-          const sibCY = sibSlotTop + (slotH - MATCH_H) / 2 + MATCH_H / 2;
-
-          // Vertical bridge between the two horizontals
-          const vBridge = document.createElementNS(svgNS,'line');
-          vBridge.setAttribute('x1', xMid); vBridge.setAttribute('y1', y);
-          vBridge.setAttribute('x2', xMid); vBridge.setAttribute('y2', sibCY);
-          vBridge.setAttribute('stroke', LINE); vBridge.setAttribute('stroke-width', LINE_W);
-          svg.appendChild(vBridge);
-
-          // Horizontal stub right for sibling
-          const hSib = document.createElementNS(svgNS,'line');
-          hSib.setAttribute('x1', xRight); hSib.setAttribute('y1', sibCY);
-          hSib.setAttribute('x2', xMid);   hSib.setAttribute('y2', sibCY);
-          hSib.setAttribute('stroke', LINE); hSib.setAttribute('stroke-width', LINE_W);
-          svg.appendChild(hSib);
-
-          // Horizontal stub from midpoint to next-round card
-          const midY = (y + sibCY) / 2;
-          const nextCardX = GAP_X + (ri+1) * (PIT_W + CARD_W + GAP_X) + PIT_W;
-          const hIn = document.createElementNS(svgNS,'line');
-          hIn.setAttribute('x1', xMid);      hIn.setAttribute('y1', midY);
-          hIn.setAttribute('x2', nextCardX);  hIn.setAttribute('y2', midY);
-          hIn.setAttribute('stroke', LINE); hIn.setAttribute('stroke-width', LINE_W);
-          svg.appendChild(hIn);
-        }
-      }
-    });
-  });
+  renderRoundBand(wrap, svg, rounds, type, spec, 0, BQ.LBL_H, BQ.LINE_WB, svgNS);
 
   outer.appendChild(wrap);
   return outer;
 }
 
-function _skipConnector(m, type){
-  return type === 'lb' && !m.t1 && !m.t2 && !m.winner;
-}
+// ── build the unified double-elim canvas (WB top, LB bottom) ─────────────────
+function buildDoubleCanvas(spec){
+  const wbN=WBrounds[0]?WBrounds[0].length:0;
+  const lbN=LBrounds[0]?LBrounds[0].length:0;
+  const wbR=WBrounds.length, lbR=LBrounds.length;
+  const pitW=spec?0:BQ.PIT_W;
 
+  // Canvas width = widest bracket band
+  const wbW=(pitW)*wbR + wbR*BQ.CARD_W + (wbR+1)*BQ.GAP_X;
+  const lbW=lbR?(pitW)*lbR + lbR*BQ.CARD_W + (lbR+1)*BQ.GAP_X:0;
+  const totalW=Math.max(wbW, lbW, 300);
 
-function buildMatchRow(m, tk, sk, seed, spec, type){
-  const name=m[tk], score=m[sk];
-  const isBye=name==='BYE';
-  const isW=m.winner===name&&!!name&&!isBye, isEmpty=!name;
-  let cls='mrow';
-  if(isW) cls+=' is-winner';
-  if(isEmpty||isBye) cls+=' is-tbd';
-  if(!isEmpty&&!spec) cls+=' can-click';
-  const fn=type==='lb'?'clickLB':'clickWB';
-  const oc=(!isEmpty&&!spec)?`onclick="${fn}('${m.id}','${tk}')"`:'' ;
-  const disp=isEmpty?'—':name;
-  const undo=isW&&!spec?`<span class="undo-hint">↩</span>`:'';
-  const sc=(!isEmpty&&!spec&&!m.winner)?`<input type="number" class="score-box" value="${score}" placeholder="-" onchange="setScore('${m.id}','${sk}',this.value)" onclick="event.stopPropagation()"/>`:
-    (score?`<span style="font-size:11px;font-weight:600;color:var(--accent);">${score}</span>`:'');
-  return `<div class="${cls}" ${oc}><span class="mseed">#${seed}</span><span class="mname">${disp}</span>${sc}${undo}</div>`;
-}
+  // Heights
+  const wbH=wbN ? BQ.LBL_H + wbN*BQ.SLOT0 : 0;
+  const lbH=lbN ? BQ.LBL_H + lbN*BQ.SLOT0 : 0;
+  // Section label row heights
+  const secLblH=BQ.SEC_LBL;
+  const totalH= secLblH + wbH + (lbN ? BQ.SEC_GAP + secLblH + lbH : 0) + 8;
 
-function buildPitTag(m, spec){
-  const pit = m.pit||'';
-  if(spec){
-    return pit ? `<div class="pit-tag">🏟 Pit ${pit}</div>` : '';
+  const svgNS='http://www.w3.org/2000/svg';
+
+  const outer=document.createElement('div');
+  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:1rem;';
+
+  const wrap=document.createElement('div');
+  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
+
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('style',`position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;`);
+  wrap.appendChild(svg);
+
+  // ── WB section label ──────────────────────────────────────────────────────
+  addSectionLabel(wrap, 0, '🏆 Winners Bracket', 'rgba(46,204,113,0.8)');
+  const wbTop = secLblH;
+  renderRoundBand(wrap, svg, WBrounds, 'wb', spec, wbTop, BQ.LBL_H, BQ.LINE_WB, svgNS);
+
+  // ── LB section label + band ───────────────────────────────────────────────
+  if(lbN){
+    const lbSecTop = secLblH + wbH + BQ.SEC_GAP;
+    addSectionLabel(wrap, lbSecTop, '💀 Losers Bracket', 'rgba(231,76,60,0.8)');
+    const lbTop = lbSecTop + secLblH;
+    renderRoundBand(wrap, svg, LBrounds, 'lb', spec, lbTop, BQ.LBL_H, BQ.LINE_LB, svgNS);
+  } else if(LBrounds.length===0 && format==='double'){
+    // Placeholder label
+    const ph=document.createElement('div');
+    const lbSecTop = secLblH + wbH + BQ.SEC_GAP;
+    ph.style.cssText=`position:absolute;top:${lbSecTop}px;left:0;font-size:12px;color:var(--muted);font-family:'Barlow',sans-serif;padding:4px 0;`;
+    ph.textContent='💀 Losers Bracket — fills in as matches are played.';
+    wrap.appendChild(ph);
   }
-  // Build pit dropdown options
-  let opts=`<option value="">— No Pit —</option>`;
-  for(let i=1;i<=numPits;i++) opts+=`<option value="${i}" ${pit==i?'selected':''}>${i}</option>`;
-  return `<select class="pit-select" onchange="setPit('${m.id}',this.value)" onclick="event.stopPropagation()">
-    ${opts}
-  </select>`;
+
+  outer.appendChild(wrap);
+  return outer;
+}
+
+function addSectionLabel(wrap, top, text, color){
+  const lbl=document.createElement('div');
+  lbl.style.cssText=`position:absolute;top:${top}px;left:0;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${color};line-height:${BQ.SEC_LBL}px;`;
+  lbl.textContent=text;
+  wrap.appendChild(lbl);
+}
+
+// ── render one horizontal band of rounds ──────────────────────────────────────
+// bandTop = y offset from canvas top where this band starts (after its own lbl)
+// lblH    = height reserved above first card row for round labels
+function renderRoundBand(wrap, svg, rounds, type, spec, bandTop, lblH, lineColor, svgNS){
+  if(!rounds.length) return;
+  const baseN=rounds[0].length;
+  const pitW=spec?0:BQ.PIT_W;
+
+  // map matchId -> absolute cardCY within the canvas
+  const cY={};
+
+  rounds.forEach((roundIds, ri)=>{
+    const slotH=Math.pow(2,ri)*BQ.SLOT0;
+    const colLeft=BQ.GAP_X + ri*(pitW+BQ.CARD_W+BQ.GAP_X);
+    const cardLeft=colLeft+pitW;
+
+    // Round label
+    const lblEl=document.createElement('div');
+    const lbls=['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
+    const lbl=ri>=rounds.length-lbls.length?lbls[rounds.length-1-ri]:`Rd ${ri+1}`;
+    lblEl.style.cssText=`position:absolute;left:${cardLeft}px;top:${bandTop}px;width:${BQ.CARD_W}px;height:${lblH}px;`
+      +`display:flex;align-items:center;justify-content:center;`
+      +`font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);`;
+    lblEl.textContent=lbl;
+    wrap.appendChild(lblEl);
+
+    const cardsTop=bandTop+lblH;
+
+    roundIds.forEach((matchId, mi)=>{
+      const m=gm(matchId); if(!m) return;
+
+      const slotTop=cardsTop + mi*slotH;
+      const cardTop=slotTop + (slotH-BQ.MATCH_H)/2;
+      const cardCY =cardTop + BQ.MATCH_H/2;
+      cY[matchId]=cardCY;
+
+      // Skip invisible slots
+      if(m.bye||m.lbBye) return;
+      if(type==='lb'&&!m.t1&&!m.t2&&!m.winner) return;
+
+      // ── Pit strip ────────────────────────────────────────────────────────
+      if(!spec&&pitW>0){
+        const cur=m.pit||'';
+        const pitBtn=document.createElement('div');
+        pitBtn.style.cssText=`position:absolute;left:${colLeft}px;top:${cardTop}px;`
+          +`width:${pitW}px;height:${BQ.MATCH_H}px;`
+          +`background:${cur?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.03)'};`
+          +`border:1px solid ${cur?'rgba(212,175,55,0.35)':'rgba(255,255,255,0.06)'};`
+          +`border-right:none;border-radius:3px 0 0 3px;`
+          +`display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;`;
+        pitBtn.title=cur?`Court ${cur}`:'Assign court';
+        pitBtn.innerHTML=`<span style="font-size:7px;color:${cur?'var(--gold)':'rgba(255,255,255,0.2)'};">🏟</span>`
+          +(cur?`<span style="font-size:7px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:'');
+        let opts=`<option value="">—</option>`;
+        for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Court ${p}</option>`;
+        const sel=document.createElement('select');
+        sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
+        sel.innerHTML=opts;
+        sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
+        pitBtn.appendChild(sel);
+        wrap.appendChild(pitBtn);
+      }
+
+      // ── Match card ────────────────────────────────────────────────────────
+      const card=document.createElement('div');
+      const borderAccent=type==='wb'?'rgba(46,204,113,0.5)':'rgba(231,76,60,0.45)';
+      card.style.cssText=`position:absolute;left:${cardLeft}px;top:${cardTop}px;`
+        +`width:${BQ.CARD_W}px;height:${BQ.MATCH_H}px;`
+        +`background:#0c1824;border:1px solid rgba(255,255,255,0.08);`
+        +`border-left:2px solid ${borderAccent};`
+        +`border-radius:${spec||pitW===0?'3px':'0 3px 3px 0'};overflow:hidden;`;
+
+      ['t1','t2'].forEach((tk,ti)=>{
+        const sk=ti===0?'s1':'s2';
+        const name=m[tk], score=m[sk];
+        const isBye=name==='BYE';
+        const isLBBye=type==='lb'&&isBye;
+        const isWin=m.winner===name&&!!name&&!isBye;
+        const isEmpty=!name||isLBBye;
+        const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
+
+        const row=document.createElement('div');
+        row.style.cssText=`display:flex;align-items:center;height:${BQ.ROW_H}px;`
+          +`${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}`
+          +`background:${isWin?'rgba(46,204,113,0.1)':'transparent'};`
+          +`${canClick?'cursor:pointer;':''}transition:background 0.1s;`;
+        if(canClick){
+          row.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id,tk);
+          row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.05)'; };
+          row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
+        }
+
+        // Seed
+        const seed=document.createElement('div');
+        seed.style.cssText=`width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;`
+          +`height:100%;background:rgba(0,0,0,0.2);`
+          +`font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
+          +`color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.22)'};`;
+        seed.textContent=isEmpty||isBye?'':String(ti+1);
+        row.appendChild(seed);
+
+        // Name
+        const nameEl=document.createElement('div');
+        nameEl.style.cssText=`flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;`
+          +`font-weight:${isWin?'700':'500'};text-transform:uppercase;letter-spacing:0.2px;`
+          +`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
+          +`color:${isWin?'var(--success)':isEmpty?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.85)'};`
+          +`${isEmpty?'font-style:italic;':''}`;
+        nameEl.textContent=isEmpty?'—':name;
+        row.appendChild(nameEl);
+
+        // Score
+        if(!isEmpty&&!isBye){
+          const scoreBox=document.createElement('div');
+          scoreBox.style.cssText=`width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;`
+            +`height:100%;border-left:1px solid rgba(255,255,255,0.05);`
+            +`font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--accent);`;
+          if(!spec&&!m.winner){
+            const inp=document.createElement('input');
+            inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
+            inp.style.cssText='width:24px;background:transparent;border:none;outline:none;'
+              +'color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;'
+              +'text-align:center;height:100%;padding:0;cursor:pointer;';
+            inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
+            inp.addEventListener('click',e=>e.stopPropagation());
+            scoreBox.appendChild(inp);
+          } else {
+            scoreBox.textContent=(score||score===0)?score:'';
+          }
+          row.appendChild(scoreBox);
+
+          // Undo
+          if(isWin&&!spec){
+            const u=document.createElement('div');
+            u.style.cssText='width:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
+              +'height:100%;font-size:8px;color:rgba(255,255,255,0.15);cursor:pointer;border-left:1px solid rgba(255,255,255,0.04);';
+            u.title='Undo';u.textContent='↩';
+            u.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(m.id,tk);};
+            u.onmouseenter=()=>u.style.color='var(--danger)';
+            u.onmouseleave=()=>u.style.color='rgba(255,255,255,0.15)';
+            row.appendChild(u);
+          }
+        }
+        card.appendChild(row);
+      });
+      wrap.appendChild(card);
+
+      // ── SVG connectors (right-to-next-round) ─────────────────────────────
+      if(ri<rounds.length-1){
+        const xR=cardLeft+BQ.CARD_W;
+        const xMid=xR+BQ.GAP_X/2;
+        const y=cardCY;
+
+        line(svg, xR, y, xMid, y, lineColor, svgNS);
+
+        if(mi%2===0&&mi+1<roundIds.length){
+          const sibSlotTop=cardsTop+(mi+1)*slotH;
+          const sibCY=sibSlotTop+(slotH-BQ.MATCH_H)/2+BQ.MATCH_H/2;
+          const midY=(y+sibCY)/2;
+
+          line(svg, xR, sibCY, xMid, sibCY, lineColor, svgNS);   // sib horizontal
+          line(svg, xMid, y, xMid, sibCY, lineColor, svgNS);     // vertical bridge
+          const nextCardLeft=BQ.GAP_X+(ri+1)*(pitW+BQ.CARD_W+BQ.GAP_X)+pitW;
+          line(svg, xMid, midY, nextCardLeft, midY, lineColor, svgNS); // to next col
+        }
+      }
+    });
+  });
+}
+
+function line(svg, x1,y1,x2,y2, color, svgNS){
+  const l=document.createElementNS(svgNS,'line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('stroke',color);l.setAttribute('stroke-width','1.2');
+  svg.appendChild(l);
 }
 
 function buildGFEl(spec){
