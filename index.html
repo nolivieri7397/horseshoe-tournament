@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Godfathers Horseshoe Tournament</title>
 <link rel="icon" type="image/png" href="horseshoe.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<link href="https://brackethq.com/theme/styles/style-all.min.css?v009a" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -96,51 +97,35 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .pit-select{width:100%;background:var(--surface);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 8px;font-family:'Barlow',sans-serif;cursor:pointer;text-align:center;}
 .pit-select:focus{outline:none;color:var(--accent);}
 /* ═══════════════════════════════════════
-   BRACKET — BracketHQ line style (canvas layout)
+   BRACKET — BracketHQ classic theme (embedded)
    ═══════════════════════════════════════ */
-.bhq-outer{overflow:auto;width:100%;padding:12px 0 24px;}
-.bhq-canvas{position:relative;}
-.bhq-game{
-  position:absolute;width:200px;
-  border-right:2px solid #fff;
-  box-sizing:border-box;z-index:2;
+.bhq-shell{position:relative;font-family:"Source Sans Pro",helvetica,arial,sans-serif;}
+.bhq-shell .viewport{position:relative;background:#1e1f24;border-radius:8px;overflow:hidden;}
+.bhq-shell .viewport-scroll{overflow:auto;max-height:85vh;padding:8px 8px 56px;}
+.bhq-shell .preview{width:auto!important;min-width:0!important;transform-origin:0 0;}
+.bhq-shell .slot-score input.bhq-score-inp{
+  width:36px;border:none;outline:none;background:transparent;color:inherit;
+  font:inherit;text-align:right;cursor:pointer;padding:0;
 }
-.bhq-game.bhq-gf{border-right-color:rgba(212,175,55,0.6);}
-.bhq-slot{
-  position:absolute;left:0;right:0;height:28px;line-height:28px;
-  display:flex;align-items:center;color:#fff;
-  font-family:'Barlow',sans-serif;font-size:14px;
-  padding:0 2px;transition:background .12s;z-index:3;
+.bhq-shell .hs-pit-badge{
+  position:absolute;right:-4px;top:50%;transform:translateY(-50%);
+  font-size:9px;font-weight:700;color:var(--gold);background:rgba(10,22,40,0.95);
+  border:1px solid rgba(212,175,55,0.35);border-radius:3px;padding:1px 4px;z-index:5;
+  opacity:0;transition:opacity .15s;pointer-events:none;
 }
-.bhq-slot-top{top:-30px;}
-.bhq-slot-bot{bottom:0;}
-.bhq-slot.clickable{cursor:pointer;}
-.bhq-slot.clickable:hover{background:rgba(52,152,219,0.15);outline:2px solid #3498db;outline-offset:-2px;}
-.bhq-slot.winner .bhq-slot-name,.bhq-slot.winner .bhq-slot-seed{color:#2ecc71;font-weight:700;}
-.bhq-slot.empty .bhq-slot-name{color:rgba(255,255,255,0.3);font-style:italic;}
-.bhq-slot-seed{width:24px;flex-shrink:0;font-weight:700;font-size:13px;color:rgba(255,255,255,0.5);text-align:center;}
-.bhq-slot-name{flex:1;min-width:0;padding-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bhq-slot-score{width:34px;flex-shrink:0;text-align:right;font-size:13px;font-weight:700;color:var(--gold);}
-.bhq-slot-score input{width:30px;padding:0;border:none;outline:none;background:transparent;color:var(--gold);font-size:13px;font-weight:700;text-align:right;cursor:pointer;}
-.bhq-slot-check{width:16px;flex-shrink:0;text-align:center;color:#2ecc71;font-size:11px;opacity:0;}
-.bhq-slot.winner .bhq-slot-check{opacity:1;}
-.bhq-pit{
-  position:absolute;left:-18px;top:50%;transform:translateY(-50%);
-  font-size:7px;font-weight:800;color:var(--gold);
-  background:rgba(10,22,40,0.95);border:1px solid rgba(212,175,55,0.3);
-  border-radius:3px;padding:1px 3px;cursor:pointer;z-index:4;
+.bhq-shell .game:hover .hs-pit-badge,.bhq-shell .game:hover .hs-pit-sel-wrap{opacity:1;}
+.bhq-shell .hs-pit-sel-wrap{
+  position:absolute;left:-2px;bottom:-18px;opacity:0;transition:opacity .15s;z-index:6;
 }
-.bhq-pit select{position:absolute;inset:0;opacity:0;cursor:pointer;}
-.bhq-lbl{
-  position:absolute;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.32);text-align:center;
+.bhq-shell .hs-pit-sel-wrap select{
+  font-size:10px;background:#1e1f24;color:var(--gold);border:1px solid rgba(212,175,55,0.3);
+  border-radius:4px;padding:1px 4px;cursor:pointer;
 }
-.bhq-sec{
-  position:absolute;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:2px;
-}
-.bhq-sec.wb{color:rgba(46,204,113,0.65);}
-.bhq-sec.lb{color:rgba(231,76,60,0.6);}
+.bhq-shell .icon-check::before{content:"✓";color:#2ecc71;font-size:14px;font-weight:700;}
+.bhq-shell .game-completed .slot.winner-slot .slot-name{color:#2ecc71;font-weight:600;}
+.bhq-shell .game-completed .slot.winner-slot .icon-check::before{opacity:1;}
+.bhq-shell .slot:not(.winner-slot) .icon-check::before{opacity:0;}
+.bhq-shell #game-000{margin-top:50px;left:50px;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1139,8 +1124,10 @@ function renderSpectator(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// BRACKET RENDERER — canvas layout + SVG connectors (BracketHQ lines)
+// BRACKET RENDERER — BracketHQ classic DOM + CSS
 // ═══════════════════════════════════════════════════════════════════════
+const _bhqZoom={};
+
 function backfillBracketMeta(){
   if(!WBrounds.length) return;
   let n=1;
@@ -1153,147 +1140,21 @@ function backfillBracketMeta(){
   });
 }
 
-function renderBracket(containerId, spec){
-  const el=document.getElementById(containerId);
-  if(!el) return;
-  el.innerHTML='';
-  if(!WBrounds.length) return;
-  backfillBracketMeta();
-
-  const GW=200, GAP=100, UNIT=50, PAD=16, LBL=22, SEC=18, SGAP=36;
-  const nWB=WBrounds.length, nLB=LBrounds.length;
-  const hasDbl=format==='double';
-  const colX=ri=>PAD+ri*(GW+GAP);
-
-  const wbVis0=WBrounds[0].map(id=>gm(id)).filter(bhqIsVisible);
-  const wbH=wbVis0.length*UNIT*2;
-  const lbVis0=LBrounds[0]?LBrounds[0].map(id=>gm(id)).filter(bhqIsVisible):[];
-  const lbH=lbVis0.length?lbVis0.length*UNIT*2:0;
-
-  const wbY0=SEC+LBL+8;
-  const lbY0=hasDbl&&lbH?wbY0+wbH+SGAP+SEC+LBL+8:0;
-  const gfX=colX(nWB);
-  const totalW=gfX+(hasDbl&&gfId?GW+GAP+GW:GW)+24;
-  const totalH=(hasDbl&&lbH)?lbY0+lbH+40:wbY0+wbH+40;
-
-  const outer=document.createElement('div');
-  outer.className='bhq-outer';
-  const canvas=document.createElement('div');
-  canvas.className='bhq-canvas';
-  canvas.style.width=totalW+'px';
-  canvas.style.height=totalH+'px';
-
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:${totalW}px;height:${totalH}px;pointer-events:none;overflow:visible;`);
-  canvas.appendChild(svg);
-
-  const cY={};
-  const wbNames=['Round of 64','Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final'];
-
-  bhqSecLbl(canvas, PAD, 4, 'Winners Bracket', 'wb');
-  WBrounds.forEach((roundIds,ri)=>{
-    const vis=roundIds.map(id=>gm(id)).filter(bhqIsVisible);
-    const slotH=Math.pow(2,ri)*UNIT*2;
-    const x=colX(ri);
-    bhqRlbl(canvas, x, wbY0-LBL, GW, wbNames[Math.max(0,wbNames.length-nWB+ri)]||`Rd ${ri+1}`);
-    vis.forEach((m,mi)=>{
-      const top=wbY0+mi*slotH+(slotH-UNIT)/2;
-      cY[m.id]=top+UNIT/2;
-      bhqPlaceGame(canvas, m, 'wb', spec, x, top, GW, UNIT);
-      if(ri<nWB-1){
-        const xR=x+GW, xM=xR+GAP/2, nx=colX(ri+1);
-        bhqLine(svg,svgNS,xR,cY[m.id],xM,cY[m.id],'#fff');
-        if(mi%2===0&&mi+1<vis.length){
-          const s2=wbY0+(mi+1)*slotH+(slotH-UNIT)/2+UNIT/2;
-          const mid=(cY[m.id]+s2)/2;
-          bhqLine(svg,svgNS,xR,s2,xM,s2,'#fff');
-          bhqLine(svg,svgNS,xM,cY[m.id],xM,s2,'#fff');
-          bhqLine(svg,svgNS,xM,mid,nx,mid,'#fff');
-        }
-      }
-    });
-  });
-
-  if(hasDbl&&lbH){
-    bhqSecLbl(canvas, PAD, lbY0-SEC-LBL-4, 'Losers Bracket', 'lb');
-    LBrounds.forEach((roundIds,lri)=>{
-      const vis=roundIds.map(id=>gm(id)).filter(bhqIsVisible);
-      if(!vis.length) return;
-      const slotH=Math.pow(2,lri)*UNIT*2;
-      const x=colX(lri);
-      bhqRlbl(canvas, x, lbY0-LBL, GW, bhqLbName(lri,nLB));
-      vis.forEach((m,mi)=>{
-        const top=lbY0+mi*slotH+(slotH-UNIT)/2;
-        cY[m.id]=top+UNIT/2;
-        bhqPlaceGame(canvas, m, 'lb', spec, x, top, GW, UNIT);
-        if(lri<nLB-1){
-          const xR=x+GW, xM=xR+GAP/2, nx=colX(lri+1);
-          bhqLine(svg,svgNS,xR,cY[m.id],xM,cY[m.id],'rgba(231,76,60,0.85)');
-          if(mi%2===0&&mi+1<vis.length){
-            const s2=lbY0+(mi+1)*slotH+(slotH-UNIT)/2+UNIT/2;
-            const mid=(cY[m.id]+s2)/2;
-            bhqLine(svg,svgNS,xR,s2,xM,s2,'rgba(231,76,60,0.85)');
-            bhqLine(svg,svgNS,xM,cY[m.id],xM,s2,'rgba(231,76,60,0.85)');
-            bhqLine(svg,svgNS,xM,mid,nx,mid,'rgba(231,76,60,0.85)');
-          }
-        }
-      });
-    });
-  }
-
-  if(gfId&&gm(gfId)){
-    const gf=gm(gfId);
-    const wbFin=WBrounds[nWB-1].map(id=>gm(id)).filter(bhqIsVisible)[0];
-    const lbFin=nLB?LBrounds[nLB-1].map(id=>gm(id)).filter(bhqIsVisible)[0]:null;
-    const wbCY=wbFin?cY[wbFin.id]:wbY0+wbH/2;
-    const lbCY=lbFin?cY[lbFin.id]:wbCY;
-    const gfCY=hasDbl&&lbH?(wbCY+lbCY)/2:wbCY;
-    const gfTop=gfCY-UNIT/2;
-    bhqLine(svg,svgNS,colX(nWB-1)+GW,wbCY,gfX,gfCY,'rgba(212,175,55,0.7)');
-    if(lbFin) bhqLine(svg,svgNS,colX(nLB-1)+GW,lbCY,gfX,gfCY,'rgba(212,175,55,0.7)');
-    bhqRlbl(canvas, gfX, gfTop-28, GW, 'Grand Final');
-    bhqPlaceGF(canvas, gf, gfId, false, spec, gfX, gfTop, GW, UNIT);
-    if(gf2Id&&gm(gf2Id)) bhqPlaceGF(canvas, gm(gf2Id), gf2Id, true, spec, gfX, gfTop+UNIT+24, GW, UNIT);
-  }
-
-  outer.appendChild(canvas);
-  el.appendChild(outer);
+function bhqGetBracketSize(){
+  let s=1; while(s<teams.length) s*=2;
+  return s;
 }
 
-function bhqIsVisible(m){
-  if(!m||m.bye||m.lbBye) return false;
-  if(m.t1==='BYE'||m.t2==='BYE') return false;
-  return true;
+function bhqWBRoundSize(ri){ return bhqGetBracketSize()>>ri; }
+
+function bhqLBColSpec(lbIdx,bSize){
+  if(lbIdx===0) return {roundSize:bSize,advance:false};
+  const n=lbIdx-1, level=Math.floor(n/2)+1;
+  return {roundSize:bSize/Math.pow(2,level), advance:n%2===1};
 }
 
-function bhqLbName(lri,nLB){
-  const n=['LB Final','LB Semis','LB QF','LB R8','LB R16','LB R32'];
-  return n[Math.min(lri,n.length-1)]||`LB ${lri+1}`;
-}
-
-function bhqLine(svg,ns,x1,y1,x2,y2,c){
-  const l=document.createElementNS(ns,'line');
-  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
-  l.setAttribute('stroke',c);l.setAttribute('stroke-width','2');
-  svg.appendChild(l);
-}
-
-function bhqSecLbl(canvas,x,y,t,cls){
-  const d=document.createElement('div');
-  d.className='bhq-sec '+cls;
-  d.style.left=x+'px'; d.style.top=y+'px';
-  d.textContent=t;
-  canvas.appendChild(d);
-}
-
-function bhqRlbl(canvas,x,y,w,t){
-  const d=document.createElement('div');
-  d.className='bhq-lbl';
-  d.style.cssText=`left:${x}px;top:${y}px;width:${w}px;`;
-  d.textContent=t;
-  canvas.appendChild(d);
+function bhqIsHidden(m){
+  return !m||m.bye||m.t1==='BYE'||m.t2==='BYE';
 }
 
 function bhqSlotInfo(m,tk,type){
@@ -1310,85 +1171,267 @@ function bhqSlotInfo(m,tk,type){
   if(m.lbWinFrom&&tk==='t1'&&!name){
     const s=gm(m.lbWinFrom); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
   }
+  if(m.lbWinFrom2&&!name){
+    const ids=m.lbWinFrom2;
+    const pid=tk==='t1'?ids[0]:ids[1];
+    const s=gm(pid); if(s?.gameNum) return {text:`Winner of ${s.gameNum}`,seed:null,click:false};
+  }
+  if(type==='gf'){
+    if(tk==='t1'&&!name) return {text:'WB Winner',seed:null,click:false};
+    if(tk==='t2'&&!name) return {text:'LB Winner',seed:null,click:false};
+  }
   return {text:'',seed:null,click:false};
 }
 
-function bhqPlaceGame(canvas,m,type,spec,x,y,w,h){
-  const g=document.createElement('div');
-  g.className='bhq-game';
-  g.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
-  g.appendChild(bhqMkSlot(m,'t1','s1','top',type,spec));
-  g.appendChild(bhqMkSlot(m,'t2','s2','bot',type,spec));
-  if(!spec) bhqMkPit(g,m.id,m.pit);
-  canvas.appendChild(g);
-}
+function bhqConnSize(roundSize){ return Math.max(2, roundSize/2); }
 
-function bhqPlaceGF(canvas,m,mid,isReset,spec,x,y,w,h){
-  const g=document.createElement('div');
-  g.className='bhq-game bhq-gf';
-  g.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
-  const f1={...m}, f2={...m};
-  g.appendChild(bhqMkSlot(f1,'t1','s1','top','gf',spec,()=>clickGF(isReset,'t1'),m.t1||'WB Winner'));
-  g.appendChild(bhqMkSlot(f2,'t2','s2','bot','gf',spec,()=>clickGF(isReset,'t2'),m.t2||'LB Winner'));
-  if(!spec) bhqMkPit(g,mid,m.pit);
-  canvas.appendChild(g);
-}
-
-function bhqMkPit(game,mid,pit){
+function bhqMkConnectors(roundSize,extra,forceSize){
+  const connSize=forceSize!=null?forceSize:bhqConnSize(roundSize);
   const d=document.createElement('div');
-  d.className='bhq-pit';
-  d.title=pit?`Court ${pit}`:'Assign court';
-  d.textContent=pit||'+';
-  let o='<option value="">—</option>';
-  for(let p=1;p<=numPits;p++) o+=`<option value="${p}" ${String(pit)===String(p)?'selected':''}>${p}</option>`;
-  const s=document.createElement('select');
-  s.innerHTML=o;
-  s.onchange=e=>{e.stopPropagation();setPit(mid,e.target.value);};
-  d.appendChild(s);
-  game.appendChild(d);
+  d.className='connectors connectors-'+connSize+(extra?' '+extra:'');
+  if(connSize>=0||extra){
+    const c=document.createElement('div');
+    c.className='connector';
+    d.appendChild(c);
+  }
+  return d;
 }
 
-function bhqMkSlot(m,tk,sk,pos,type,spec,gfFn,label){
-  const info=label!=null?{text:label,seed:null,click:!!m[tk]}:bhqSlotInfo(m,tk,type);
+function bhqMkBHQSlot(m,tk,sk,pos,type,spec,mid,isReset){
+  const info=bhqSlotInfo(m,tk,type);
   const name=m[tk], score=m[sk];
   const win=m.winner===name&&!!name&&name!=='BYE';
   const can=info.click&&!spec&&!m.winner&&name&&name!=='BYE';
 
   const s=document.createElement('div');
-  s.className=`bhq-slot bhq-slot-${pos}`+(can||gfFn?' clickable':'')+(win?' winner':'')+(!name&&!info.text?' empty':'');
+  s.className='slot slot-'+pos+(win?' winner-slot':'');
   if(!spec){
-    if(gfFn&&m[tk]) s.onclick=gfFn;
-    else if((can||(win&&name))&&type!=='gf') s.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id,tk);
+    if(type==='gf'&&name){
+      s.onclick=e=>{e.stopPropagation();clickGF(isReset,tk);};
+    } else if((can||(win&&name))&&type!=='gf'){
+      s.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(mid,tk);};
+    }
   }
 
   const seed=document.createElement('div');
-  seed.className='bhq-slot-seed';
+  seed.className='slot-seed';
   seed.textContent=info.seed||'';
   s.appendChild(seed);
 
   const nm=document.createElement('div');
-  nm.className='bhq-slot-name';
+  nm.className='slot-name';
   nm.textContent=info.text||(name||'');
   s.appendChild(nm);
 
   const sc=document.createElement('div');
-  sc.className='bhq-slot-score';
+  sc.className='slot-score';
+  const scv=document.createElement('div');
+  scv.className='slot-score-val';
   if(name&&name!=='BYE'&&(info.click||win)){
     if(!spec&&!m.winner){
       const inp=document.createElement('input');
-      inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
-      inp.onchange=e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);};
+      inp.type='number';inp.min='0';inp.className='bhq-score-inp';
+      inp.value=score||'';inp.placeholder='';
+      inp.onchange=e=>{e.stopPropagation();setScore(mid,sk,e.target.value);};
       inp.onclick=e=>e.stopPropagation();
-      sc.appendChild(inp);
-    } else if(score||score===0) sc.textContent=score;
+      scv.appendChild(inp);
+    } else if(score||score===0) scv.textContent=score;
   }
-  s.appendChild(sc);
-
+  sc.appendChild(scv);
   const ck=document.createElement('div');
-  ck.className='bhq-slot-check';
-  ck.textContent='✓';
-  s.appendChild(ck);
+  ck.className='slot-check';
+  const icon=document.createElement('div');
+  icon.className='icon icon-check';
+  ck.appendChild(icon);
+  sc.appendChild(ck);
+  s.appendChild(sc);
   return s;
+}
+
+function bhqAddPitUI(game,mid,pit){
+  if(pit){
+    const b=document.createElement('div');
+    b.className='hs-pit-badge';
+    b.textContent='P'+pit;
+    b.title='Court '+pit;
+    game.appendChild(b);
+  }
+  const wrap=document.createElement('div');
+  wrap.className='hs-pit-sel-wrap';
+  let o='<option value="">Court</option>';
+  for(let p=1;p<=numPits;p++) o+=`<option value="${p}" ${String(pit)===String(p)?'selected':''}>${p}</option>`;
+  const sel=document.createElement('select');
+  sel.innerHTML=o;
+  sel.onchange=e=>{e.stopPropagation();setPit(mid,e.target.value);};
+  wrap.appendChild(sel);
+  game.appendChild(wrap);
+}
+
+function bhqMkGame(m,type,spec,mid,isGf2,isReset){
+  const g=document.createElement('div');
+  g.className='game';
+  g.id=isGf2?'game-000':'game-'+mid;
+  if(m.winner) g.classList.add('game-completed');
+
+  g.appendChild(bhqMkBHQSlot(m,'t1','s1','top',type,spec,mid,isReset));
+  g.appendChild(bhqMkBHQSlot(m,'t2','s2','bot',type,spec,mid,isReset));
+
+  if(m.gameNum){
+    const num=document.createElement('div');
+    num.className='game-number';
+    num.textContent=m.gameNum;
+    g.appendChild(num);
+  }
+  if(!spec) bhqAddPitUI(g,mid,m.pit);
+  return g;
+}
+
+function bhqMkRoundCol(cls,matchIds,type,spec,gfOpts){
+  const round=document.createElement('div');
+  round.className=cls;
+  matchIds.forEach(id=>{
+    const m=gm(id); if(!m) return;
+    const isGf2=gfOpts&&gfOpts.gf2Id===id;
+    const isReset=gfOpts&&gfOpts.isReset;
+    const game=bhqMkGame(m,type,spec,id,isGf2,isReset);
+    if(bhqIsHidden(m)) game.style.display='none';
+    round.appendChild(game);
+  });
+  return round;
+}
+
+function bhqWBRoundTitle(ri,nWB){
+  const names=['Round of 64','Round of 32','Round of 16','Quarter-Finals','Semi-Finals','Final','Grand Final'];
+  return names[Math.max(0,names.length-nWB+ri)]||('Round '+(ri+1));
+}
+
+function bhqMkRoundTitlesWinners(nWB,hasGF){
+  const titles=document.createElement('div');
+  titles.className='round-titles round-titles-winners';
+  for(let ri=0;ri<nWB;ri++){
+    const t=document.createElement('div');
+    t.className='round-title round-title-'+(ri+1);
+    t.innerHTML='<t>'+bhqWBRoundTitle(ri,nWB)+'</t>';
+    titles.appendChild(t);
+  }
+  if(hasGF){
+    const t=document.createElement('div');
+    t.className='round-title round-title-grand';
+    t.innerHTML='<t>Grand Finals</t>';
+    titles.appendChild(t);
+  }
+  return titles;
+}
+
+function bhqApplyZoom(containerId){
+  const z=_bhqZoom[containerId]||1;
+  const preview=document.getElementById('bhq-preview-'+containerId);
+  const num=document.getElementById('bhq-zoom-num-'+containerId);
+  if(preview) preview.style.transform='scale('+z+')';
+  if(num) num.textContent=Math.round(z*100)+'%';
+}
+
+function bhqZoomIn(containerId){
+  _bhqZoom[containerId]=Math.min(2,(_bhqZoom[containerId]||1)+0.1);
+  bhqApplyZoom(containerId);
+}
+function bhqZoomOut(containerId){
+  _bhqZoom[containerId]=Math.max(0.4,(_bhqZoom[containerId]||1)-0.1);
+  bhqApplyZoom(containerId);
+}
+function bhqZoomReset(containerId){
+  _bhqZoom[containerId]=1;
+  bhqApplyZoom(containerId);
+}
+
+function renderBracket(containerId, spec){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML='';
+  if(!WBrounds.length) return;
+  backfillBracketMeta();
+
+  const bSize=bhqGetBracketSize();
+  const bClass='bracket-'+bSize;
+  const cntClass='count-'+teams.length;
+  const typeClass=format==='double'?'type-d':'type-s';
+  const hasGF=format==='double'&&!!gfId;
+
+  const shell=document.createElement('div');
+  shell.className='bhq-shell';
+
+  const viewport=document.createElement('div');
+  viewport.className='viewport web classic classic-dark';
+
+  const scroll=document.createElement('div');
+  scroll.className='viewport-scroll';
+
+  const area=document.createElement('div');
+  area.className='viewport-area';
+
+  const wrapper=document.createElement('div');
+  wrapper.className='preview-wrapper';
+
+  const minW={2:400,4:860,8:1280,16:1740,32:2220,64:2700};
+  const preview=document.createElement('div');
+  preview.className='preview '+bClass+' '+cntClass+' '+typeClass+' round-titles-shown';
+  preview.id='bhq-preview-'+containerId;
+  preview.style.minWidth=(minW[bSize]||860)+'px';
+
+  const winners=document.createElement('div');
+  winners.className='winners';
+
+  WBrounds.forEach((roundIds,ri)=>{
+    const rs=bhqWBRoundSize(ri);
+    winners.appendChild(bhqMkRoundCol('round round-'+rs, roundIds, 'wb', spec));
+    if(ri<WBrounds.length-1) winners.appendChild(bhqMkConnectors(rs));
+  });
+
+  if(hasGF){
+    winners.appendChild(bhqMkConnectors(2,'connectors-advance connectors-advance-final'));
+    const finals=document.createElement('div');
+    finals.className='round round-finals';
+    finals.appendChild(bhqMkGame(gm(gfId),'gf',spec,gfId,false,false));
+    if(gf2Id&&gm(gf2Id)) finals.appendChild(bhqMkGame(gm(gf2Id),'gf',spec,gf2Id,true,true));
+    winners.appendChild(finals);
+    winners.appendChild(bhqMkConnectors(0,null,0));
+  }
+
+  winners.appendChild(bhqMkRoundTitlesWinners(WBrounds.length,hasGF));
+  preview.appendChild(winners);
+
+  if(format==='double'&&LBrounds.length){
+    const losers=document.createElement('div');
+    losers.className='losers';
+    LBrounds.forEach((roundIds,li)=>{
+      const {roundSize,advance}=bhqLBColSpec(li,bSize);
+      const cls='round round-'+roundSize+(advance?' round-advance':'');
+      losers.appendChild(bhqMkRoundCol(cls,roundIds,'lb',spec));
+      const extra=advance?'connectors-advance':'';
+      losers.appendChild(bhqMkConnectors(roundSize,extra));
+    });
+    const lt=document.createElement('div');
+    lt.className='round-titles round-titles-losers';
+    lt.innerHTML='<div class="round-title round-title-l-finals"><t>Losers Finals</t></div>';
+    losers.appendChild(lt);
+    preview.appendChild(losers);
+  }
+
+  wrapper.appendChild(preview);
+  area.appendChild(wrapper);
+  scroll.appendChild(area);
+  viewport.appendChild(scroll);
+
+  const zoom=document.createElement('div');
+  zoom.className='zoom';
+  zoom.innerHTML='<div class="zoom-out"></div><div class="zoom-num" id="bhq-zoom-num-'+containerId+'">100%</div><div class="zoom-in"></div>';
+  zoom.querySelector('.zoom-in').onclick=()=>bhqZoomIn(containerId);
+  zoom.querySelector('.zoom-out').onclick=()=>bhqZoomOut(containerId);
+  viewport.appendChild(zoom);
+
+  shell.appendChild(viewport);
+  el.appendChild(shell);
+  bhqApplyZoom(containerId);
 }
 
 // compat stubs
