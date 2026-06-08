@@ -547,9 +547,9 @@ let buyIn=20, pct1=70, pct2=30;
 
 // ─── MATCH FACTORY ───────────────────────────────────────────────────────────
 let _mid = 0;
-function mkMatch(t1, t2){
+function mkMatch(t1, t2, type='W'){
   const id = 'm' + (_mid++);
-  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:'W', bye:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
+  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:type||'W', bye:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
   return id;
 }
 function gm(id){ return id ? matches[id] : null; }
@@ -777,13 +777,13 @@ function buildLB(){
   // LB Round 1: WB-R1 losers vs each other
   const lb0=[];
   for(let i=0;i+1<wbR1.length;i+=2){
-    const id=mkMatch(null,null);
+    const id=mkMatch(null,null,'L');
     gm(id).lbDropFrom=[wbR1[i], wbR1[i+1]]; // losers from these WB matches
     lb0.push(id);
   }
   if(wbR1.length%2===1){
     // odd loser gets a bye slot — will be filled when that WB match is decided
-    const id=mkMatch(null,null);
+    const id=mkMatch(null,null,'L');
     gm(id).lbDropFrom=[wbR1[wbR1.length-1]];
     gm(id).lbBye=true; // only one team, auto advances
     lb0.push(id);
@@ -799,7 +799,7 @@ function buildLB(){
     // Drop round: LB survivors vs WB-Ri losers
     const dropRound=[];
     for(let i=0;i<lbPrev.length;i++){
-      const id=mkMatch(null,null);
+      const id=mkMatch(null,null,'L');
       gm(id).lbWinFrom=lbPrev[i];           // winner of this LB match comes here
       if(wbRound[i]) gm(id).lbDropFrom=[wbRound[i]]; // loser of this WB match comes here
       dropRound.push(id);
@@ -810,7 +810,7 @@ function buildLB(){
     if(lbPrev.length>1){
       const consRound=[];
       for(let i=0;i+1<lbPrev.length;i+=2){
-        const id=mkMatch(null,null);
+        const id=mkMatch(null,null,'L');
         gm(id).lbWinFrom2=[lbPrev[i], lbPrev[i+1]];
         consRound.push(id);
       }
