@@ -103,6 +103,7 @@ input.score-box{width:42px!important;flex:none;padding:4px 5px!important;font-si
 .section-badge.lb{background:rgba(231,76,60,0.12);color:var(--lb);border:1px solid rgba(231,76,60,0.25);}
 .section-badge.gf{background:rgba(240,165,0,0.12);color:var(--gf);border:1px solid rgba(240,165,0,0.3);}
 .section-divider{flex:1;height:1px;background:var(--border);}
+.bracket-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:1rem;}
 /* GF */
 .gf-arena{background:radial-gradient(ellipse at center top,rgba(212,175,55,0.12) 0%,transparent 65%);border:2px solid rgba(212,175,55,0.4);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 0 30px rgba(212,175,55,0.08);}
 .gf-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
@@ -1084,30 +1085,38 @@ function renderSpectator(){
   renderSpectatorPrize(); checkChamp(true); renderChampionshipLive(); renderSpectatorPits(); renderRoster();
 }
 
-// ─── UNIFIED CANVAS BRACKET RENDERER ─────────────────────────────────────────
-// Renders WB on top half and LB on bottom half of a single scrollable canvas,
-// matching the brackethq.com style from the reference screenshot.
+// ═══════════════════════════════════════════════════════════════════════════════
+// UNIFIED BRACKET CANVAS — WB top, LB bottom, same column grid, drop lines
+// Matches the brackethq.com layout from the reference screenshot exactly.
+// ═══════════════════════════════════════════════════════════════════════════════
 
+// Layout constants
+const C={
+  W:  140,   // card width
+  RH: 22,    // row height (one team)
+  get MH(){ return this.RH*2; }, // match card height
+  GAP: 32,   // horizontal gap between rounds
+  PAD: 6,    // vertical padding within a slot
+  get SH(){ return this.MH + this.PAD*2; }, // base slot height
+  PW: 18,    // pit strip width (admin only, 0 for spectator)
+  LH: 20,    // round-label height above each band
+  SL: 16,    // section label height (WB / LB text strip)
+  VG: 32,    // vertical gap between WB bottom and LB top
+  // colours
+  WBL:'rgba(46,204,113,0.3)',
+  LBL:'rgba(231,76,60,0.28)',
+  DRP:'rgba(212,175,55,0.35)', // drop line (WB→LB)
+  GFL:'rgba(212,175,55,0.45)', // Grand Final line
+};
+
+// ── top-level entry point ────────────────────────────────────────────────────
 function renderBracket(containerId, spec){
   const el=document.getElementById(containerId); if(!el) return;
   el.innerHTML='';
-
   if(format!=='double'){
-    // Single elim — simple single-band canvas
-    el.appendChild(buildSingleCanvas(WBrounds,'wb',spec));
-    return;
-  }
-
-  // Double elim — unified canvas
-  el.appendChild(buildDoubleCanvas(spec));
-
-  // GF below canvas
-  if(gfId){
-    const gfSec=document.createElement('div');
-    gfSec.style.cssText='margin-top:1.5rem;';
-    gfSec.appendChild(makeSecHeader('⚡ Grand Final','gf'));
-    gfSec.appendChild(buildGrandFinal(spec));
-    el.appendChild(gfSec);
+    el.appendChild(buildSingleElimCanvas(spec));
+  } else {
+    el.appendChild(buildDoubleElimCanvas(spec));
   }
 }
 
@@ -1117,352 +1126,382 @@ function makeSecHeader(label,cls){
   return d;
 }
 
-// ── shared constants ──────────────────────────────────────────────────────────
-const BQ={
-  CARD_W: 130,   // match card width
-  ROW_H:  22,    // height of one team row
-  get MATCH_H(){ return this.ROW_H*2; },
-  PIT_W:  20,    // pit button strip
-  GAP_X:  30,    // horizontal gap between rounds (connector space)
-  SLOT_PAD: 10,  // extra vertical padding in a slot
-  get SLOT0(){ return this.MATCH_H + this.SLOT_PAD*2; }, // base slot height (round 0)
-  LINE:  'rgba(255,255,255,0.13)',
-  LINE_WB: 'rgba(46,204,113,0.25)',
-  LINE_LB: 'rgba(231,76,60,0.22)',
-  LBL_H: 22,     // round label height above canvas
-  SEC_GAP: 28,   // vertical gap between WB and LB sections
-  SEC_LBL: 18,   // section label strip height
-};
-
-// ── build a single-elimination canvas ────────────────────────────────────────
-function buildSingleCanvas(rounds, type, spec){
-  const baseN=rounds[0]?rounds[0].length:0; if(!baseN) return document.createElement('div');
-  const nR=rounds.length;
-  const totalW=(spec?0:BQ.PIT_W)*nR + nR*BQ.CARD_W + (nR+1)*BQ.GAP_X;
-  const totalH=BQ.LBL_H + baseN*BQ.SLOT0;
-
-  const outer=document.createElement('div');
-  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:1rem;';
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
-
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;`);
-  wrap.appendChild(svg);
-
-  renderRoundBand(wrap, svg, rounds, type, spec, 0, BQ.LBL_H, BQ.LINE_WB, svgNS);
-
-  outer.appendChild(wrap);
-  return outer;
+// ── single elimination: simple left→right canvas ─────────────────────────────
+function buildSingleElimCanvas(spec){
+  const pitW=spec?0:C.PW;
+  const nR=WBrounds.length, baseN=WBrounds[0]?WBrounds[0].length:0;
+  if(!baseN) return document.createElement('div');
+  const totalW=(pitW+C.W+C.GAP)*nR+C.GAP;
+  const totalH=C.LH+C.SL+baseN*C.SH;
+  const {outer,wrap,svg,svgNS}=mkCanvas(totalW,totalH);
+  const cardY={}; // matchId→absolute cardCY
+  drawBand(wrap,svg,svgNS,WBrounds,'wb',spec,pitW,C.SL+C.LH,C.SH,cardY);
+  outer.appendChild(wrap); return outer;
 }
 
-// ── build the unified double-elim canvas (WB top, LB bottom) ─────────────────
-function buildDoubleCanvas(spec){
-  const wbN=WBrounds[0]?WBrounds[0].length:0;
-  const lbN=LBrounds[0]?LBrounds[0].length:0;
-  const wbR=WBrounds.length, lbR=LBrounds.length;
-  const pitW=spec?0:BQ.PIT_W;
-
-  // Canvas width = widest bracket band
-  const wbW=(pitW)*wbR + wbR*BQ.CARD_W + (wbR+1)*BQ.GAP_X;
-  const lbW=lbR?(pitW)*lbR + lbR*BQ.CARD_W + (lbR+1)*BQ.GAP_X:0;
-  const totalW=Math.max(wbW, lbW, 300);
-
-  // Heights
-  const wbH=wbN ? BQ.LBL_H + wbN*BQ.SLOT0 : 0;
-  const lbH=lbN ? BQ.LBL_H + lbN*BQ.SLOT0 : 0;
-  // Section label row heights
-  const secLblH=BQ.SEC_LBL;
-  const totalH= secLblH + wbH + (lbN ? BQ.SEC_GAP + secLblH + lbH : 0) + 8;
-
+// ── double elimination: WB top + LB bottom, aligned columns ──────────────────
+function buildDoubleElimCanvas(spec){
+  const pitW=spec?0:C.PW;
   const svgNS='http://www.w3.org/2000/svg';
 
-  const outer=document.createElement('div');
-  outer.style.cssText='overflow-x:auto;overflow-y:visible;padding-bottom:1rem;';
+  const wbN=WBrounds.length, wbBase=WBrounds[0]?WBrounds[0].length:0;
+  const lbN=LBrounds.length, lbBase=LBrounds[0]?LBrounds[0].length:0;
 
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`position:relative;width:${totalW}px;height:${totalH}px;`;
+  // Column grid: each WB round ri occupies colX(ri). LB round lri sits at
+  // colX(lri+1) so that LB-R1 (which gets WB-R1 losers) is under WB-R1,
+  // and LB drop rounds align with their corresponding WB round column.
+  const colX=(ri)=>C.GAP + ri*(pitW+C.W+C.GAP);
 
-  const svg=document.createElementNS(svgNS,'svg');
-  svg.setAttribute('style',`position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;`);
-  wrap.appendChild(svg);
+  // Heights of each band
+  const wbBandH = wbBase ? C.LH + wbBase*C.SH : 0;
+  const lbBandH = lbBase ? C.LH + lbBase*C.SH : 0;
 
-  // ── WB section label ──────────────────────────────────────────────────────
-  addSectionLabel(wrap, 0, '🏆 Winners Bracket', 'rgba(46,204,113,0.8)');
-  const wbTop = secLblH;
-  renderRoundBand(wrap, svg, WBrounds, 'wb', spec, wbTop, BQ.LBL_H, BQ.LINE_WB, svgNS);
+  // GF column: one column past the last WB round
+  const gfColX = colX(wbN);
+  const gfW    = pitW+C.W;
 
-  // ── LB section label + band ───────────────────────────────────────────────
-  if(lbN){
-    const lbSecTop = secLblH + wbH + BQ.SEC_GAP;
-    addSectionLabel(wrap, lbSecTop, '💀 Losers Bracket', 'rgba(231,76,60,0.8)');
-    const lbTop = lbSecTop + secLblH;
-    renderRoundBand(wrap, svg, LBrounds, 'lb', spec, lbTop, BQ.LBL_H, BQ.LINE_LB, svgNS);
-  } else if(LBrounds.length===0 && format==='double'){
-    // Placeholder label
+  // Total canvas size
+  const totalW = gfColX + gfW + C.GAP;
+  const totalH = C.SL + wbBandH + (lbBase?(C.VG+C.SL+lbBandH):0) + 8;
+
+  const {outer,wrap,svg}=mkCanvas(totalW,totalH);
+
+  // Section labels
+  addLabel(wrap,0,C.SL,'🏆 Winners Bracket','rgba(46,204,113,0.75)');
+  const wbTop=C.SL+C.LH;
+
+  // Maps matchId → absolute cardCY on the canvas
+  const cardY={};
+
+  // ── Draw WB band ────────────────────────────────────────────────────────────
+  drawBand(wrap,svg,svgNS,WBrounds,'wb',spec,pitW,wbTop,C.SH,cardY,colX);
+
+  // ── Draw LB band ────────────────────────────────────────────────────────────
+  let lbTop=0;
+  if(lbBase){
+    lbTop = C.SL + wbBandH + C.VG;
+    addLabel(wrap,lbTop,C.SL,'💀 Losers Bracket','rgba(231,76,60,0.75)');
+    lbTop += C.SL + C.LH;
+    drawBand(wrap,svg,svgNS,LBrounds,'lb',spec,pitW,lbTop,C.SH,cardY,colX);
+  } else if(format==='double'){
+    lbTop = C.SL + wbBandH + C.VG + C.SL;
+    addLabel(wrap,C.SL+wbBandH+C.VG,C.SL,'💀 Losers Bracket','rgba(231,76,60,0.45)');
     const ph=document.createElement('div');
-    const lbSecTop = secLblH + wbH + BQ.SEC_GAP;
-    ph.style.cssText=`position:absolute;top:${lbSecTop}px;left:0;font-size:12px;color:var(--muted);font-family:'Barlow',sans-serif;padding:4px 0;`;
-    ph.textContent='💀 Losers Bracket — fills in as matches are played.';
+    ph.style.cssText=`position:absolute;top:${lbTop}px;left:${C.GAP}px;font-size:11px;color:var(--muted);font-family:'Barlow',sans-serif;`;
+    ph.textContent='Fills in as matches are played…';
     wrap.appendChild(ph);
   }
 
-  outer.appendChild(wrap);
-  return outer;
+  // ── Draw drop lines WB→LB ───────────────────────────────────────────────────
+  // LB round lri=0 gets losers from WB round 0 (paired).
+  // LB round lri=1 (drop) gets losers from WB round 1, etc.
+  // We draw a vertical drop line from each WB match's card bottom to its
+  // corresponding LB slot centre.
+  if(lbBase){
+    LBrounds.forEach((lbRIds, lri)=>{
+      lbRIds.forEach((lbId, lmi)=>{
+        const lbM=gm(lbId); if(!lbM) return;
+        // lbDropFrom stores the WB match IDs whose losers feed this LB slot
+        if(!lbM.lbDropFrom||!lbM.lbDropFrom.length) return;
+        // The destination Y is the LB card centre
+        const destY=cardY[lbId]; if(!destY) return;
+
+        lbM.lbDropFrom.forEach(wbId=>{
+          const srcY=cardY[wbId]; if(!srcY) return;
+          const m=gm(wbId); if(!m) return;
+          // srcX = right edge of wb card for that round
+          // Find which WB round this match is in
+          let wbRi=-1;
+          WBrounds.forEach((r,ri)=>{ if(r.includes(wbId)) wbRi=ri; });
+          if(wbRi<0) return;
+          const srcX = colX(wbRi) + pitW + C.W/2; // drop from card centre
+          const dstX = colX(lri) + pitW + C.W/2;  // LB card centre x
+
+          // Draw elbow: vertical from WB card bottom → LB card centre
+          // but only draw when below WB (srcY < destY)
+          const wbCardBot = srcY + C.MH/2;
+          const lbMidY    = destY;
+
+          // drop line: go right-down from WB card bottom-centre to LB slot
+          // Use an elbow: down from wbCardBot to halfway, then across, then to lbMidY
+          const elbX = Math.min(srcX, dstX) + Math.abs(srcX-dstX)/2;
+          svgLine(svg,svgNS, srcX, wbCardBot, srcX, lbMidY, C.DRP, '1', '3,3');
+        });
+      });
+    });
+  }
+
+  // ── Grand Final inline card ─────────────────────────────────────────────────
+  if(gfId){
+    const gfm=gm(gfId);
+    // Vertical centre: midpoint between WB final CY and LB final CY
+    const wbFinalId=WBrounds[WBrounds.length-1][0];
+    const lbFinalId=lbN>0?LBrounds[LBrounds.length-1][0]:null;
+    const wbCY=cardY[wbFinalId]||0;
+    const lbCY=lbFinalId?cardY[lbFinalId]:wbCY+C.SH*2;
+    const gfCY=lbBase?(wbCY+lbCY)/2:wbCY;
+    const gfCardTop=gfCY-C.MH/2;
+
+    // Connecting lines from WB final → GF and LB final → GF
+    const gfCardX=gfColX+pitW;
+    if(cardY[wbFinalId]){
+      svgLine(svg,svgNS, colX(wbN-1)+pitW+C.W, wbCY, gfCardX, gfCY, C.GFL, '1.2');
+    }
+    if(lbFinalId&&cardY[lbFinalId]){
+      const lbFinalRi=lbN-1;
+      svgLine(svg,svgNS, colX(lbFinalRi)+pitW+C.W, lbCY, gfCardX, gfCY, C.GFL, '1.2');
+    }
+
+    // GF label
+    const gfLbl=document.createElement('div');
+    gfLbl.style.cssText=`position:absolute;left:${gfCardX}px;top:${gfCardTop-18}px;`
+      +`width:${C.W}px;font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
+      +`text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.7);text-align:center;`;
+    gfLbl.textContent='⚡ Grand Final';
+    wrap.appendChild(gfLbl);
+
+    // GF match card (same style as other cards)
+    buildCard(wrap, gfm, 'gf', spec, gfCardX, gfCardTop, pitW, gfColX);
+
+    // Bracket reset card if present
+    if(gf2Id&&gm(gf2Id)){
+      const gf2m=gm(gf2Id);
+      const gf2Top=gfCardTop+C.MH+10;
+      const rst=document.createElement('div');
+      rst.style.cssText=`position:absolute;left:${gfCardX}px;top:${gf2Top-14}px;`
+        +`width:${C.W}px;font-family:'Barlow',sans-serif;font-size:8px;color:var(--accent);text-align:center;`;
+      rst.textContent='🔄 Bracket Reset';
+      wrap.appendChild(rst);
+      buildCard(wrap, gf2m, 'gf', spec, gfCardX, gf2Top, pitW, gfColX);
+    }
+  }
+
+  outer.appendChild(wrap); return outer;
 }
 
-function addSectionLabel(wrap, top, text, color){
-  const lbl=document.createElement('div');
-  lbl.style.cssText=`position:absolute;top:${top}px;left:0;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:${color};line-height:${BQ.SEC_LBL}px;`;
-  lbl.textContent=text;
-  wrap.appendChild(lbl);
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function mkCanvas(w,h){
+  const svgNS='http://www.w3.org/2000/svg';
+  const outer=document.createElement('div');
+  outer.className='bracket-scroll';
+  const wrap=document.createElement('div');
+  wrap.style.cssText=`position:relative;width:${w}px;height:${h}px;`;
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('style',`position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;`);
+  wrap.appendChild(svg);
+  return {outer,wrap,svg,svgNS};
 }
 
-// ── render one horizontal band of rounds ──────────────────────────────────────
-// bandTop = y offset from canvas top where this band starts (after its own lbl)
-// lblH    = height reserved above first card row for round labels
-function renderRoundBand(wrap, svg, rounds, type, spec, bandTop, lblH, lineColor, svgNS){
+function addLabel(wrap,top,h,text,color){
+  const el=document.createElement('div');
+  el.style.cssText=`position:absolute;top:${top}px;left:0;height:${h}px;`
+    +`display:flex;align-items:center;`
+    +`font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;`
+    +`text-transform:uppercase;letter-spacing:2px;color:${color};`;
+  el.textContent=text;
+  wrap.appendChild(el);
+}
+
+function svgLine(svg,svgNS,x1,y1,x2,y2,color,sw,dash){
+  const l=document.createElementNS(svgNS,'line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('stroke',color);l.setAttribute('stroke-width',sw||'1.2');
+  if(dash) l.setAttribute('stroke-dasharray',dash);
+  svg.appendChild(l);
+}
+
+// ── drawBand: render one horizontal strip of rounds onto the canvas ───────────
+// bandTopY = absolute Y where round labels start
+// slotH    = base slot height for round 0 of this band
+// cardY    = shared map {matchId→absoluteCentreY} — written by this fn
+// colXFn   = function(ri)→X — so WB and LB can share the same column grid
+function drawBand(wrap,svg,svgNS,rounds,type,spec,pitW,bandTopY,slotH,cardY,colXFn){
   if(!rounds.length) return;
-  const baseN=rounds[0].length;
-  const pitW=spec?0:BQ.PIT_W;
+  // default colX: each round left-to-right starting at C.GAP
+  if(!colXFn) colXFn=(ri)=>C.GAP+ri*(pitW+C.W+C.GAP);
 
-  // map matchId -> absolute cardCY within the canvas
-  const cY={};
+  const nR=rounds.length;
+  const LINE=type==='wb'?C.WBL:C.LBL;
 
-  rounds.forEach((roundIds, ri)=>{
-    const slotH=Math.pow(2,ri)*BQ.SLOT0;
-    const colLeft=BQ.GAP_X + ri*(pitW+BQ.CARD_W+BQ.GAP_X);
-    const cardLeft=colLeft+pitW;
+  rounds.forEach((roundIds,ri)=>{
+    const rSlotH=Math.pow(2,ri)*slotH; // doubles each round
+    const cx=colXFn(ri);
+    const cardLeft=cx+pitW;
 
     // Round label
-    const lblEl=document.createElement('div');
-    const lbls=['Final','Semis','Quarters','Rd of 16','Rd of 32','Rd of 64'];
-    const lbl=ri>=rounds.length-lbls.length?lbls[rounds.length-1-ri]:`Rd ${ri+1}`;
-    lblEl.style.cssText=`position:absolute;left:${cardLeft}px;top:${bandTop}px;width:${BQ.CARD_W}px;height:${lblH}px;`
-      +`display:flex;align-items:center;justify-content:center;`
-      +`font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);`;
-    lblEl.textContent=lbl;
-    wrap.appendChild(lblEl);
+    const lbls=['Final','Semis','Qtr-Final','Rd 16','Rd 32','Rd 64'];
+    const lbl=ri>=nR-lbls.length?lbls[nR-1-ri]:`Rd ${ri+1}`;
+    const lbEl=document.createElement('div');
+    lbEl.style.cssText=`position:absolute;left:${cardLeft}px;top:${bandTopY-C.LH}px;`
+      +`width:${C.W}px;height:${C.LH}px;display:flex;align-items:flex-end;justify-content:center;`
+      +`font-family:'Oswald',sans-serif;font-size:9px;font-weight:700;`
+      +`text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.28);padding-bottom:2px;`;
+    lbEl.textContent=lbl;
+    wrap.appendChild(lbEl);
 
-    const cardsTop=bandTop+lblH;
-
-    roundIds.forEach((matchId, mi)=>{
+    roundIds.forEach((matchId,mi)=>{
       const m=gm(matchId); if(!m) return;
+      const slotTop=bandTopY + mi*rSlotH;
+      const cardTop=slotTop + (rSlotH-C.MH)/2;
+      const cardCY =cardTop + C.MH/2;
+      cardY[matchId]=cardCY;
 
-      const slotTop=cardsTop + mi*slotH;
-      const cardTop=slotTop + (slotH-BQ.MATCH_H)/2;
-      const cardCY =cardTop + BQ.MATCH_H/2;
-      cY[matchId]=cardCY;
-
-      // Skip invisible slots
+      // Skip invisible
       if(m.bye||m.lbBye) return;
       if(type==='lb'&&!m.t1&&!m.t2&&!m.winner) return;
 
-      // ── Pit strip ────────────────────────────────────────────────────────
+      // Pit strip (admin only)
       if(!spec&&pitW>0){
         const cur=m.pit||'';
-        const pitBtn=document.createElement('div');
-        pitBtn.style.cssText=`position:absolute;left:${colLeft}px;top:${cardTop}px;`
-          +`width:${pitW}px;height:${BQ.MATCH_H}px;`
-          +`background:${cur?'rgba(212,175,55,0.18)':'rgba(255,255,255,0.03)'};`
-          +`border:1px solid ${cur?'rgba(212,175,55,0.35)':'rgba(255,255,255,0.06)'};`
+        const pb=document.createElement('div');
+        pb.style.cssText=`position:absolute;left:${cx}px;top:${cardTop}px;`
+          +`width:${pitW}px;height:${C.MH}px;`
+          +`background:${cur?'rgba(212,175,55,0.15)':'rgba(255,255,255,0.02)'};`
+          +`border:1px solid ${cur?'rgba(212,175,55,0.3)':'rgba(255,255,255,0.05)'};`
           +`border-right:none;border-radius:3px 0 0 3px;`
           +`display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;`;
-        pitBtn.title=cur?`Court ${cur}`:'Assign court';
-        pitBtn.innerHTML=`<span style="font-size:7px;color:${cur?'var(--gold)':'rgba(255,255,255,0.2)'};">🏟</span>`
+        pb.title=cur?`Court ${cur}`:'Assign court';
+        pb.innerHTML=`<span style="font-size:7px;color:${cur?'var(--gold)':'rgba(255,255,255,0.18)'};">🏟</span>`
           +(cur?`<span style="font-size:7px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif;">${cur}</span>`:'');
         let opts=`<option value="">—</option>`;
-        for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Court ${p}</option>`;
+        for(let p=1;p<=numPits;p++) opts+=`<option value="${p}" ${String(cur)===String(p)?'selected':''}>Ct ${p}</option>`;
         const sel=document.createElement('select');
         sel.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;';
         sel.innerHTML=opts;
         sel.addEventListener('change',e=>{e.stopPropagation();setPit(m.id,e.target.value);});
-        pitBtn.appendChild(sel);
-        wrap.appendChild(pitBtn);
+        pb.appendChild(sel);
+        wrap.appendChild(pb);
       }
 
-      // ── Match card ────────────────────────────────────────────────────────
-      const card=document.createElement('div');
-      const borderAccent=type==='wb'?'rgba(46,204,113,0.5)':'rgba(231,76,60,0.45)';
-      card.style.cssText=`position:absolute;left:${cardLeft}px;top:${cardTop}px;`
-        +`width:${BQ.CARD_W}px;height:${BQ.MATCH_H}px;`
-        +`background:#0c1824;border:1px solid rgba(255,255,255,0.08);`
-        +`border-left:2px solid ${borderAccent};`
-        +`border-radius:${spec||pitW===0?'3px':'0 3px 3px 0'};overflow:hidden;`;
+      // Match card
+      buildCard(wrap, m, type, spec, cardLeft, cardTop, pitW, cx);
 
-      ['t1','t2'].forEach((tk,ti)=>{
-        const sk=ti===0?'s1':'s2';
-        const name=m[tk], score=m[sk];
-        const isBye=name==='BYE';
-        const isLBBye=type==='lb'&&isBye;
-        const isWin=m.winner===name&&!!name&&!isBye;
-        const isEmpty=!name||isLBBye;
-        const canClick=!isEmpty&&!isBye&&!spec&&!m.winner;
-
-        const row=document.createElement('div');
-        row.style.cssText=`display:flex;align-items:center;height:${BQ.ROW_H}px;`
-          +`${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}`
-          +`background:${isWin?'rgba(46,204,113,0.1)':'transparent'};`
-          +`${canClick?'cursor:pointer;':''}transition:background 0.1s;`;
-        if(canClick){
-          row.onclick=()=>(type==='lb'?clickLB:clickWB)(m.id,tk);
-          row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.05)'; };
-          row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
-        }
-
-        // Seed
-        const seed=document.createElement('div');
-        seed.style.cssText=`width:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;`
-          +`height:100%;background:rgba(0,0,0,0.2);`
-          +`font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;`
-          +`color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.22)'};`;
-        seed.textContent=isEmpty||isBye?'':String(ti+1);
-        row.appendChild(seed);
-
-        // Name
-        const nameEl=document.createElement('div');
-        nameEl.style.cssText=`flex:1;padding:0 5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;`
-          +`font-weight:${isWin?'700':'500'};text-transform:uppercase;letter-spacing:0.2px;`
-          +`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
-          +`color:${isWin?'var(--success)':isEmpty?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.85)'};`
-          +`${isEmpty?'font-style:italic;':''}`;
-        nameEl.textContent=isEmpty?'—':name;
-        row.appendChild(nameEl);
-
-        // Score
-        if(!isEmpty&&!isBye){
-          const scoreBox=document.createElement('div');
-          scoreBox.style.cssText=`width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;`
-            +`height:100%;border-left:1px solid rgba(255,255,255,0.05);`
-            +`font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--accent);`;
-          if(!spec&&!m.winner){
-            const inp=document.createElement('input');
-            inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
-            inp.style.cssText='width:24px;background:transparent;border:none;outline:none;'
-              +'color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;'
-              +'text-align:center;height:100%;padding:0;cursor:pointer;';
-            inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
-            inp.addEventListener('click',e=>e.stopPropagation());
-            scoreBox.appendChild(inp);
-          } else {
-            scoreBox.textContent=(score||score===0)?score:'';
-          }
-          row.appendChild(scoreBox);
-
-          // Undo
-          if(isWin&&!spec){
-            const u=document.createElement('div');
-            u.style.cssText='width:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
-              +'height:100%;font-size:8px;color:rgba(255,255,255,0.15);cursor:pointer;border-left:1px solid rgba(255,255,255,0.04);';
-            u.title='Undo';u.textContent='↩';
-            u.onclick=e=>{e.stopPropagation();(type==='lb'?clickLB:clickWB)(m.id,tk);};
-            u.onmouseenter=()=>u.style.color='var(--danger)';
-            u.onmouseleave=()=>u.style.color='rgba(255,255,255,0.15)';
-            row.appendChild(u);
-          }
-        }
-        card.appendChild(row);
-      });
-      wrap.appendChild(card);
-
-      // ── SVG connectors (right-to-next-round) ─────────────────────────────
-      if(ri<rounds.length-1){
-        const xR=cardLeft+BQ.CARD_W;
-        const xMid=xR+BQ.GAP_X/2;
-        const y=cardCY;
-
-        line(svg, xR, y, xMid, y, lineColor, svgNS);
-
+      // Horizontal connector lines to next round
+      if(ri<nR-1){
+        const xRight=cardLeft+C.W;
+        const xMid  =xRight+C.GAP/2;
+        const y     =cardCY;
+        svgLine(svg,svgNS, xRight,y, xMid,y, LINE,'1.2');
         if(mi%2===0&&mi+1<roundIds.length){
-          const sibSlotTop=cardsTop+(mi+1)*slotH;
-          const sibCY=sibSlotTop+(slotH-BQ.MATCH_H)/2+BQ.MATCH_H/2;
-          const midY=(y+sibCY)/2;
-
-          line(svg, xR, sibCY, xMid, sibCY, lineColor, svgNS);   // sib horizontal
-          line(svg, xMid, y, xMid, sibCY, lineColor, svgNS);     // vertical bridge
-          const nextCardLeft=BQ.GAP_X+(ri+1)*(pitW+BQ.CARD_W+BQ.GAP_X)+pitW;
-          line(svg, xMid, midY, nextCardLeft, midY, lineColor, svgNS); // to next col
+          const sibSlot=bandTopY+(mi+1)*rSlotH;
+          const sibCY  =sibSlot+(rSlotH-C.MH)/2+C.MH/2;
+          const midY   =(y+sibCY)/2;
+          const nextLeft=colXFn(ri+1)+pitW;
+          svgLine(svg,svgNS, xRight,sibCY, xMid,sibCY, LINE,'1.2');
+          svgLine(svg,svgNS, xMid,y,       xMid,sibCY, LINE,'1.2');
+          svgLine(svg,svgNS, xMid,midY,    nextLeft,midY, LINE,'1.2');
         }
       }
     });
   });
 }
 
-function line(svg, x1,y1,x2,y2, color, svgNS){
-  const l=document.createElementNS(svgNS,'line');
-  l.setAttribute('x1',x1);l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2);l.setAttribute('y2',y2);
-  l.setAttribute('stroke',color);l.setAttribute('stroke-width','1.2');
-  svg.appendChild(l);
-}
+// ── build and place one match card ───────────────────────────────────────────
+function buildCard(wrap, m, type, spec, cardLeft, cardTop, pitW, colLeft){
+  const isGF=(type==='gf');
+  const borderColor=isGF?'rgba(212,175,55,0.6)'
+    :type==='wb'?'rgba(46,204,113,0.45)':'rgba(231,76,60,0.4)';
 
-function buildGFEl(spec){
-  const wrap=document.createElement('div');
-  if(!gfId){wrap.innerHTML='<p style="color:var(--muted);font-size:13px;padding-bottom:1rem;">Appears when both brackets finish.</p>';return wrap;}
-  const gf=gm(gfId);
-  const t1=gf.t1, t2=gf.t2;
-  const gfDone=!!gf.winner;
+  const card=document.createElement('div');
+  card.style.cssText=`position:absolute;left:${cardLeft}px;top:${cardTop}px;`
+    +`width:${C.W}px;height:${C.MH}px;`
+    +`background:#0c1a28;border:1px solid rgba(255,255,255,0.07);`
+    +`border-left:2px solid ${borderColor};`
+    +`border-radius:${pitW>0&&!isGF?'0 3px 3px 0':'3px'};overflow:hidden;`;
 
-  // Build court assignment pill
-  const buildCourtPicker=(matchId)=>{
-    if(spec) return '';
-    const currentPit=gm(matchId)&&gm(matchId).pit?gm(matchId).pit:'';
-    let pitOpts=`<option value="">No Court</option>`;
-    for(let i=1;i<=numPits;i++) pitOpts+=`<option value="${i}" ${String(currentPit)===String(i)?'selected':''}>Court ${i}</option>`;
-    return `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 12px;margin-bottom:1rem;">
-      <span style="font-size:12px;color:var(--muted);font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🏟 Court</span>
-      <select onchange="assignGFToCourt('${matchId}',this.value)" style="background:transparent;border:none;color:var(--gold);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;cursor:pointer;outline:none;">${pitOpts}</select>
-    </div>`;
-  };
+  ['t1','t2'].forEach((tk,ti)=>{
+    const sk=ti===0?'s1':'s2';
+    const name =m[tk], score=m[sk];
+    const isBye   =name==='BYE';
+    const isLBBye =type==='lb'&&isBye;
+    const isWin   =m.winner===name&&!!name&&!isBye;
+    const isEmpty =!name||isLBBye;
+    const canClick=!isEmpty&&!isBye&&!spec&&!m.winner&&!isGF;
 
-  let html=`<div class="gf-arena">
-    <div class="gf-title">⚡ Grand Final</div>
-    <div class="gf-subtitle">The championship match</div>
-    ${!spec?buildCourtPicker(gfId):''}
-    <div class="gf-note"><strong style="color:var(--wb);">Winners side</strong> needs 1 win &nbsp;·&nbsp; <strong style="color:var(--lb);">Losers side</strong> needs 2 wins</div>
-    <div class="gf-matchup">
-      <div class="gf-team wb-team${!t1?' is-tbd':''}${gf.winner===t1&&t1?' is-champ':''}${t1&&!spec?' can-click':''}" ${t1&&!spec?`onclick="clickGF(false,'t1')"`:''}>
-        <div class="gf-tag wb">🏆 Winners Side</div>
-        <div class="gf-name">${t1||'TBD'}</div>
-        ${!t1||spec||gfDone?'':`<div style="margin-top:8px;display:flex;gap:6px;justify-content:center;align-items:center;"><input type="number" class="score-box" value="${gf.s1}" placeholder="-" onchange="setScore('${gfId}','s1',this.value)" onclick="event.stopPropagation()"/></div>`}
-        ${gf.winner===t1&&t1?'<div class="gf-sub">✓ Champion</div>':''}
-        ${gf.winner===t1&&t1&&!spec?'<div class="gf-sub" style="font-size:9px;color:var(--muted);">↩ click to undo</div>':''}
-      </div>
-      <div class="gf-vs">VS</div>
-      <div class="gf-team lb-team${!t2?' is-tbd':''}${gf.winner===t2&&t2?' is-champ':''}${t2&&!spec?' can-click':''}" ${t2&&!spec?`onclick="clickGF(false,'t2')"`:''}>
-        <div class="gf-tag lb">💀 Losers Side</div>
-        <div class="gf-name">${t2||'TBD'}</div>
-        ${!t2||spec||gfDone?'':`<div style="margin-top:8px;display:flex;gap:6px;justify-content:center;align-items:center;"><input type="number" class="score-box" value="${gf.s2}" placeholder="-" onchange="setScore('${gfId}','s2',this.value)" onclick="event.stopPropagation()"/></div>`}
-        ${gf.winner===t2&&t2?'<div class="gf-sub">✓ Won — Bracket Reset!</div>':''}
-        ${gf.winner===t2&&t2&&!spec?'<div class="gf-sub" style="font-size:9px;color:var(--muted);">↩ click to undo</div>':''}
-      </div>
-    </div>`;
-
-  if(gf2Id&&gm(gf2Id)){
-    const gf2=gm(gf2Id);
-    if(gf2Id&&gm(gf2Id)){
-      const gf2M=gm(gf2Id);
-      html+=`<div class="reset-banner">🔄 Bracket Reset — both teams have 1 loss. One final match!</div>`;
-      if(!spec) html+=buildCourtPicker(gf2Id);
+    const row=document.createElement('div');
+    row.style.cssText=`display:flex;align-items:center;height:${C.RH}px;`
+      +`${ti===0?'border-bottom:1px solid rgba(255,255,255,0.05);':''}`
+      +`background:${isWin?'rgba(46,204,113,0.1)':'transparent'};`
+      +`${canClick?'cursor:pointer;':''}transition:background 0.1s;`;
+    if(canClick){
+      const fn=type==='lb'?clickLB:clickWB;
+      row.onclick=()=>fn(m.id,tk);
+      row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.05)'; };
+      row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
     }
-    html+=`<div class="gf-matchup" style="margin-top:1rem;">
-      <div class="gf-team wb-team${gf2.winner===gf2.t1&&gf2.t1?' is-champ':''}${gf2.t1&&!spec?' can-click':''}" ${gf2.t1&&!spec?`onclick="clickGF(true,'t1')"`:''}>
-        <div class="gf-tag wb">🏆 Winners Side</div>
-        <div class="gf-name">${gf2.t1||'TBD'}</div>
-        ${!gf2.t1||spec||gf2.winner?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf2.s1}" placeholder="-" onchange="setScore('${gf2Id}','s1',this.value)" onclick="event.stopPropagation()"/></div>`}
-      </div>
-      <div class="gf-vs">VS</div>
-      <div class="gf-team lb-team${gf2.winner===gf2.t2&&gf2.t2?' is-champ':''}${gf2.t2&&!spec?' can-click':''}" ${gf2.t2&&!spec?`onclick="clickGF(true,'t2')"`:''}>
-        <div class="gf-tag lb">💀 Losers Side</div>
-        <div class="gf-name">${gf2.t2||'TBD'}</div>
-        ${!gf2.t2||spec||gf2.winner?'':`<div style="margin-top:8px;"><input type="number" class="score-box" value="${gf2.s2}" placeholder="-" onchange="setScore('${gf2Id}','s2',this.value)" onclick="event.stopPropagation()"/></div>`}
-      </div>
-    </div>`;
-  }
-  html+=`</div>`;
-  wrap.innerHTML=html; return wrap;
+    if(isGF&&!spec&&!m.winner&&!isEmpty&&!isBye){
+      const fn2=(isReset)=>clickGF.bind(null,isReset);
+      row.style.cursor='pointer';
+      const isReset=m.isGF2||false;
+      row.onclick=()=>clickGF(isReset,tk);
+      row.onmouseenter=()=>{ if(!m.winner) row.style.background='rgba(255,255,255,0.05)'; };
+      row.onmouseleave=()=>{ row.style.background=isWin?'rgba(46,204,113,0.1)':'transparent'; };
+    }
+
+    // Seed
+    const seed=document.createElement('div');
+    seed.style.cssText=`width:14px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;`
+      +`background:rgba(0,0,0,0.18);`
+      +`font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;`
+      +`color:${isWin?'var(--success)':isEmpty||isBye?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.2)'};`;
+    seed.textContent=isEmpty||isBye?'':String(ti+1);
+    row.appendChild(seed);
+
+    // Name
+    const nameEl=document.createElement('div');
+    nameEl.style.cssText=`flex:1;padding:0 5px;height:100%;display:flex;align-items:center;`
+      +`font-family:'Barlow Condensed',sans-serif;font-size:11px;`
+      +`font-weight:${isWin?700:500};text-transform:uppercase;letter-spacing:0.15px;`
+      +`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`
+      +`color:${isWin?'var(--success)':isEmpty?'rgba(255,255,255,0.18)':'rgba(255,255,255,0.82)'};`
+      +`${isEmpty?'font-style:italic;':''}`;
+    nameEl.textContent=isEmpty?'—':name;
+    row.appendChild(nameEl);
+
+    // Score
+    if(!isEmpty&&!isBye){
+      const sb=document.createElement('div');
+      sb.style.cssText=`width:22px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;`
+        +`border-left:1px solid rgba(255,255,255,0.05);`
+        +`font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--accent);`;
+      if(!spec&&!m.winner){
+        const inp=document.createElement('input');
+        inp.type='number';inp.min='0';inp.value=score||'';inp.placeholder='–';
+        inp.style.cssText='width:22px;background:transparent;border:none;outline:none;'
+          +'color:var(--accent);font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;'
+          +'text-align:center;height:100%;padding:0;cursor:pointer;';
+        inp.addEventListener('change',e=>{e.stopPropagation();setScore(m.id,sk,e.target.value);});
+        inp.addEventListener('click',e=>e.stopPropagation());
+        sb.appendChild(inp);
+      } else { sb.textContent=(score||score===0)?score:''; }
+      row.appendChild(sb);
+
+      if(isWin&&!spec){
+        const u=document.createElement('div');
+        u.style.cssText='width:12px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;'
+          +'border-left:1px solid rgba(255,255,255,0.04);font-size:7px;color:rgba(255,255,255,0.12);cursor:pointer;';
+        u.title='Undo';u.textContent='↩';
+        u.onclick=e=>{
+          e.stopPropagation();
+          if(isGF) clickGF(m.isGF2||false,tk);
+          else (type==='lb'?clickLB:clickWB)(m.id,tk);
+        };
+        u.onmouseenter=()=>u.style.color='var(--danger)';
+        u.onmouseleave=()=>u.style.color='rgba(255,255,255,0.12)';
+        row.appendChild(u);
+      }
+    }
+    card.appendChild(row);
+  });
+  wrap.appendChild(card);
 }
+
+// Stubs kept for compatibility (buildMatchRow/buildPitTag/buildGFEl not called externally)
+function buildMatchRow(){return '';}
+function buildPitTag(){return '';}
+function buildGFEl(spec){ return buildGrandFinal(spec); }
 
 // ─── CHAMPION + STATUS ────────────────────────────────────────────────────────
 function checkChamp(spec){
