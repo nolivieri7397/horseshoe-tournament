@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
 <title>Godfathers Horseshoe Tournament</title>
 <link rel="icon" type="image/png" href="horseshoe.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -197,6 +197,50 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-t
 .s-pit-badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-top:4px;display:inline-block;}
 .s-pit-badge.playing{background:rgba(46,204,113,0.15);color:var(--success);}
 .s-pit-badge.open{background:rgba(212,175,55,0.1);color:var(--gold);}
+
+/* ONE-PAGE BRACKET BOARD */
+.one-page-bracket-scroll{border-radius:12px;background:rgba(255,255,255,0.018);}
+.bracket-lane{padding:0.25rem 0 0.45rem;}
+.bracket-lane .section-header{margin-bottom:6px;position:sticky;left:0;z-index:5;background:linear-gradient(90deg,var(--surface),rgba(15,30,53,0.86),transparent);padding:2px 0;}
+.compact-lane{padding-top:0;}
+.compact-lane .section-badge{font-size:12px;padding:4px 10px;}
+.compact-lane .section-header{margin-bottom:2px;}
+.gf-lane .gf-arena{padding:1.2rem;}
+.gf-lane .gf-title{font-size:24px;}
+.gf-lane .gf-team{padding:0.85rem 1rem;min-width:130px;}
+@media(max-width:700px){.one-page-bracket-board{gap:0.85rem!important;}.gf-lane .gf-arena{padding:1rem;}.gf-lane div[style*="min-width:520px"]{min-width:440px!important;}}
+
+
+/* BRACKETHQ-STYLE ZOOMABLE BRACKET BOARD */
+.bracket-hq-shell{background:#1f2026;border:1px solid rgba(245,236,215,0.08);border-radius:10px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.18);} 
+.bracket-zoom-toolbar{position:sticky;top:0;left:0;z-index:20;display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(180deg,#24262d,#1f2026);border-bottom:1px solid rgba(245,236,215,0.08);font-family:'Oswald',sans-serif;} 
+.bracket-zoom-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:rgba(245,236,215,0.48);margin-right:6px;white-space:nowrap;} 
+.bracket-zoom-btn{height:26px;min-width:30px;border:1px solid rgba(245,236,215,0.14);background:#1c1d23;color:rgba(245,236,215,0.78);border-radius:5px;font-family:'Oswald',sans-serif;font-size:12px;font-weight:800;cursor:pointer;} 
+.bracket-zoom-btn:hover{border-color:rgba(212,175,55,0.55);color:#f0c040;} 
+.bracket-zoom-label{min-width:44px;text-align:center;font-size:11px;font-weight:800;color:#f0c040;} 
+.bracket-zoom-range{width:130px;accent-color:#d4af37;} 
+.bracket-zoom-help{margin-left:auto;font-size:10px;color:rgba(245,236,215,0.34);white-space:nowrap;} 
+.bracket-zoom-viewport{overflow:auto;background:#1f2026;padding:10px;max-height:72vh;touch-action:pan-x pan-y;} 
+.bracket-scale-stage{position:relative;transform-origin:0 0;} 
+.bracket-hq-board{position:relative;background:#1f2026;transform-origin:0 0;font-family:'Oswald',sans-serif;} 
+.hq-match{position:absolute;display:flex;align-items:stretch;} 
+.hq-card{height:38px;background:#1f2026;border:1px solid rgba(206,210,219,0.46);border-radius:0;overflow:hidden;box-shadow:none;} 
+.hq-card.is-active{border-color:rgba(212,175,55,0.68);box-shadow:0 0 0 1px rgba(212,175,55,0.08);} 
+.hq-row{height:19px;display:flex;align-items:center;border-bottom:1px solid rgba(206,210,219,0.32);background:#1f2026;transition:background .12s,color .12s;} 
+.hq-row:last-child{border-bottom:none;} 
+.hq-row.can-click{cursor:pointer;} 
+.hq-row.can-click:hover{background:rgba(212,175,55,0.13);} 
+.hq-row.is-winner{background:rgba(212,175,55,0.10);} 
+.hq-seed{width:18px;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(245,236,215,0.72);font-size:8px;font-weight:900;background:rgba(255,255,255,0.02);flex-shrink:0;} 
+.hq-name{flex:1;min-width:0;padding:0 5px;color:rgba(245,236,215,0.88);font-size:9px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;} 
+.hq-name.is-placeholder{color:rgba(245,236,215,0.48);font-size:8px;font-style:italic;text-transform:none;} 
+.hq-row.is-winner .hq-name{color:#f0c040;} 
+.hq-row.is-loser .hq-name{color:rgba(245,236,215,0.42);} 
+.hq-score{width:18px;height:100%;display:flex;align-items:center;justify-content:center;color:#f0c040;font-size:9px;font-weight:900;border-left:1px solid rgba(206,210,219,0.22);flex-shrink:0;} 
+.hq-undo{width:16px;height:100%;border:none;border-left:1px solid rgba(206,210,219,0.18);background:transparent;color:rgba(245,236,215,0.45);font-size:9px;cursor:pointer;flex-shrink:0;} 
+.hq-if-needed{opacity:.58;} 
+@media(max-width:700px){.bracket-zoom-toolbar{gap:4px;overflow-x:auto;}.bracket-zoom-help{display:none;}.bracket-zoom-range{width:96px;}.bracket-zoom-viewport{max-height:76vh;}}
+
 @media(max-width:600px){.format-grid{grid-template-columns:1fr;}.qr-card{flex-direction:column;}.prize-inputs{grid-template-columns:1fr;}.prize-splits{grid-template-columns:1fr;}.gf-matchup{flex-direction:column;}}
 </style>
 </head>
@@ -450,6 +494,15 @@ function applyState(data){
   pct2 = data.pct2||30;
   _mid = data._mid||0;
   numPits = data.numPits||2;
+  normalizeBracketState();
+}
+
+function normalizeBracketState(){
+  // Keeps older saved Firebase brackets compatible with the newer BracketHQ-style renderer.
+  WBrounds.flat().forEach(id=>{ const m=gm(id); if(m){ m.type='W'; if(m.t1==='BYE'||m.t2==='BYE') m.bye=true; }});
+  LBrounds.flat().forEach(id=>{ const m=gm(id); if(m){ m.type='L'; }});
+  if(gfId&&gm(gfId)) gm(gfId).type='GF';
+  if(gf2Id&&gm(gf2Id)) gm(gf2Id).type='GF2';
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -463,12 +516,47 @@ let WBrounds = []; // array of arrays of match ids
 let LBrounds = []; // array of arrays of match ids
 let gfId = null, gf2Id = null;
 let buyIn=20, pct1=70, pct2=30;
+let bracketBoardZoom = (() => {
+  try {
+    const saved = localStorage.getItem('bracketBoardZoom');
+    const z = saved ? parseFloat(saved) : 0.62;
+    return Number.isFinite(z) ? Math.max(0.25, Math.min(1.5, z)) : 0.62;
+  } catch(e) { return 0.62; }
+})();
+function clampBracketZoom(z){ return Math.max(0.25, Math.min(1.5, z)); }
+function applyBracketZoomToStage(stage){
+  if(!stage) return;
+  const board = stage.querySelector('.bracket-hq-board');
+  const w = parseFloat(stage.dataset.boardW || '0');
+  const h = parseFloat(stage.dataset.boardH || '0');
+  const z = clampBracketZoom(bracketBoardZoom);
+  if(board){ board.style.transform = `scale(${z})`; }
+  if(w) stage.style.width = `${w*z}px`;
+  if(h) stage.style.height = `${h*z}px`;
+}
+function syncBracketZoomControls(){
+  const pct = `${Math.round(clampBracketZoom(bracketBoardZoom)*100)}%`;
+  document.querySelectorAll('.bracket-zoom-label').forEach(el=>el.textContent=pct);
+  document.querySelectorAll('.bracket-zoom-range').forEach(el=>{ el.value=String(clampBracketZoom(bracketBoardZoom)); });
+}
+function setBracketBoardZoom(z){
+  bracketBoardZoom = clampBracketZoom(z);
+  try { localStorage.setItem('bracketBoardZoom', String(bracketBoardZoom)); } catch(e) {}
+  document.querySelectorAll('.bracket-scale-stage').forEach(applyBracketZoomToStage);
+  syncBracketZoomControls();
+}
+function fitBracketBoardZoom(viewport, boardW){
+  if(!viewport || !boardW) return;
+  const rect = viewport.getBoundingClientRect();
+  const z = Math.min(1, Math.max(0.25, (rect.width - 28) / boardW));
+  setBracketBoardZoom(z);
+}
 
 // ─── MATCH FACTORY ───────────────────────────────────────────────────────────
 let _mid = 0;
 function mkMatch(t1, t2){
   const id = 'm' + (_mid++);
-  matches[id] = {id, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:'W', bye:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
+  matches[id] = {id, gameNo:_mid, t1:t1||null, t2:t2||null, s1:'', s2:'', winner:null, type:'W', bye:false, autoBye:false, noContest:false, fromWin:null, fromLoss:null, fromLB:null, fromLB2:null};
   return id;
 }
 function gm(id){ return id ? matches[id] : null; }
@@ -625,38 +713,41 @@ function pairTeams(){
 function generateBracket(){
   if(teams.length<2) return;
   matches={}; _mid=0; WBrounds=[]; LBrounds=[]; gfId=null; gf2Id=null;
-  const N=teams.length;
+
   const shuffled=shuffle(teams);
-
-  // Pad to next power of 2
+  const N=shuffled.length;
   let size=1; while(size<N) size*=2;
-  const r1Count=size/2;
-  const realPairs=N-r1Count;
-  const byeCount=r1Count-realPairs;
 
-  const r1ids=[];
-  // BYE teams auto-advance
-  for(let i=0;i<byeCount;i++){
-    const id=mkMatch(shuffled[i].name,'BYE');
-    matches[id].winner=shuffled[i].name;
-    r1ids.push(id);
-  }
-  // Real matches
-  for(let i=byeCount;i<N;i+=2){
-    if(i+1<N) r1ids.push(mkMatch(shuffled[i].name, shuffled[i+1].name));
-  }
-  WBrounds.push(r1ids);
+  // Fill a full power-of-two winners bracket. BYE matches are real bracket slots,
+  // but they are hidden and auto-advance without dropping BYE into the losers bracket.
+  const slots=[...shuffled.map(t=>t.name)];
+  while(slots.length<size) slots.push('BYE');
 
-  // Remaining WB rounds — always power-of-2
-  let prev=r1ids;
+  const r1=[];
+  for(let i=0;i<size;i+=2){
+    const id=mkMatch(slots[i],slots[i+1]);
+    const m=gm(id);
+    m.type='W';
+    if(m.t1==='BYE'||m.t2==='BYE'){
+      m.bye=true;
+      m.winner=m.t1==='BYE'?m.t2:m.t1;
+    }
+    r1.push(id);
+  }
+  WBrounds.push(r1);
+
+  let prev=r1;
   while(prev.length>1){
     const next=[];
-    for(let i=0;i+1<prev.length;i+=2){
+    for(let i=0;i<prev.length;i+=2){
       const id=mkMatch(null,null);
-      matches[id].fromWin=[prev[i],prev[i+1]];
+      const m=gm(id);
+      m.type='W';
+      m.fromWin=[prev[i],prev[i+1]];
       next.push(id);
     }
-    WBrounds.push(next); prev=next;
+    WBrounds.push(next);
+    prev=next;
   }
 
   if(format==='double'){
@@ -665,14 +756,25 @@ function generateBracket(){
     matches[gfId].type='GF';
   }
 
+  // Auto-advance all BYE slots through the winners bracket before saving/rendering.
+  for(let guard=0; guard<WBrounds.length+2; guard++){
+    let changed=false;
+    WBrounds.flat().forEach(id=>{
+      const m=gm(id);
+      if(m&&m.bye&&m.winner){
+        advanceWB(id);
+        changed=true;
+      }
+    });
+    if(!changed) break;
+  }
+  autoAdvanceLBByes();
+
   save();
   document.getElementById('panel-players').style.display='none';
   document.getElementById('panel-teams').style.display='none';
   document.getElementById('panel-bracket').style.display='';
   setStep(3);
-
-  // Auto-advance BYE matches
-  r1ids.forEach(id=>{const m=gm(id);if(m&&m.winner) advanceWB(id);});
 
   document.getElementById('buyin').value=buyIn;
   document.getElementById('pct1').value=pct1;
@@ -682,145 +784,176 @@ function generateBracket(){
 
 function buildLB(){
   LBrounds=[];
-  // LB receives losers from every WB round
-  // Standard double-elim pairing:
-  // LB-R1: losers from WB-R1 paired together
-  // LB-R2 (drop): LB-R1 winners vs losers from WB-R2
-  // LB-R3 (consolidation): LB-R2 winners play each other
-  // LB-R4 (drop): LB-R3 winners vs losers from WB-R3
-  // ... repeat until 1 team remains
+  if(!WBrounds.length||WBrounds[0].length<2) return;
 
-  const wbR1=WBrounds[0].filter(id=>!gm(id).bye);
-  if(wbR1.length===0) return;
-
-  // LB Round 1: WB-R1 losers vs each other
-  const lb0=[];
-  for(let i=0;i+1<wbR1.length;i+=2){
+  // Standard double-elimination layout for a power-of-two winners bracket.
+  // Example 16 teams: 4, 4, 2, 2, 1, 1 losers-bracket matches.
+  const makeLBMatch=(setup={})=>{
     const id=mkMatch(null,null);
-    gm(id).lbDropFrom=[wbR1[i], wbR1[i+1]]; // losers from these WB matches
-    lb0.push(id);
-  }
-  if(wbR1.length%2===1){
-    // odd loser gets a bye slot — will be filled when that WB match is decided
-    const id=mkMatch(null,null);
-    gm(id).lbDropFrom=[wbR1[wbR1.length-1]];
-    gm(id).lbBye=true; // only one team, auto advances
-    lb0.push(id);
-  }
-  if(lb0.length) LBrounds.push(lb0);
+    const m=gm(id);
+    m.type='L';
+    Object.assign(m,setup);
+    return id;
+  };
 
-  let lbPrev=lb0;
+  const first=[];
+  const wbR1=WBrounds[0];
+  for(let i=0;i<wbR1.length;i+=2){
+    first.push(makeLBMatch({lbDropFrom:[wbR1[i],wbR1[i+1]]}));
+  }
+  if(first.length) LBrounds.push(first);
+  let lbPrev=first;
 
   for(let wbRi=1; wbRi<WBrounds.length; wbRi++){
-    const wbRound=WBrounds[wbRi].filter(id=>!gm(id).bye);
-    if(!wbRound.length) continue;
-
-    // Drop round: LB survivors vs WB-Ri losers
-    const dropRound=[];
-    for(let i=0;i<lbPrev.length;i++){
-      const id=mkMatch(null,null);
-      gm(id).lbWinFrom=lbPrev[i];           // winner of this LB match comes here
-      if(wbRound[i]) gm(id).lbDropFrom=[wbRound[i]]; // loser of this WB match comes here
-      dropRound.push(id);
+    const wbRound=WBrounds[wbRi];
+    const drop=[];
+    const count=Math.max(lbPrev.length, wbRound.length);
+    for(let i=0;i<count;i++){
+      drop.push(makeLBMatch({
+        lbWinFrom:lbPrev[i]||null,
+        lbDropFrom:wbRound[i]?[wbRound[i]]:[]
+      }));
     }
-    LBrounds.push(dropRound); lbPrev=dropRound;
+    if(drop.length) LBrounds.push(drop);
+    lbPrev=drop;
 
-    // Consolidation round: LB survivors play each other (if >1)
     if(lbPrev.length>1){
-      const consRound=[];
-      for(let i=0;i+1<lbPrev.length;i+=2){
-        const id=mkMatch(null,null);
-        gm(id).lbWinFrom2=[lbPrev[i], lbPrev[i+1]];
-        consRound.push(id);
+      const consolidation=[];
+      for(let i=0;i<lbPrev.length;i+=2){
+        consolidation.push(makeLBMatch({lbWinFrom2:[lbPrev[i],lbPrev[i+1]]}));
       }
-      if(lbPrev.length%2===1){
-        // carry the odd one over
-        consRound.push(lbPrev[lbPrev.length-1]);
-      }
-      if(consRound.length<lbPrev.length){ LBrounds.push(consRound); lbPrev=consRound; }
+      if(consolidation.length) LBrounds.push(consolidation);
+      lbPrev=consolidation;
     }
-  }
-  // Final consolidation rounds until 1 LB match remains
-  while(lbPrev.length>1){
-    const r=[];
-    for(let i=0;i+1<lbPrev.length;i+=2){
-      const id=mkMatch(null,null);
-      gm(id).lbWinFrom2=[lbPrev[i],lbPrev[i+1]];
-      r.push(id);
-    }
-    if(lbPrev.length%2===1) r.push(lbPrev[lbPrev.length-1]);
-    LBrounds.push(r); lbPrev=r;
   }
 }
 
 // ─── ADVANCE LOGIC ────────────────────────────────────────────────────────────
 // After any match gets a winner, call this to push teams into next matches
+function realTeam(x){ return !!x && x!=='BYE'; }
+function matchLoser(m){
+  if(!m||!m.winner) return null;
+  const loser=m.t1===m.winner?m.t2:m.t1;
+  return realTeam(loser)?loser:null;
+}
+function sourceResolved(id){
+  const m=gm(id);
+  if(!m) return true;
+  return !!m.winner || !!m.noContest || !!m.bye;
+}
+function lbSourcesResolved(m){
+  const src=[];
+  if(m.lbDropFrom) src.push(...m.lbDropFrom);
+  if(m.lbWinFrom) src.push(m.lbWinFrom);
+  if(m.lbWinFrom2) src.push(...m.lbWinFrom2);
+  return src.every(sourceResolved);
+}
+
 function advanceWB(matchId){
   const m=gm(matchId); if(!m||!m.winner) return;
-  const loser = m.t1===m.winner ? m.t2 : m.t1;
+  const loser = matchLoser(m);
 
-  // Find WB match that receives winner from this match
+  // Push winners forward in the winners bracket.
   Object.values(matches).forEach(nm=>{
-    if(!nm.fromWin) return;
-    if(nm.fromWin[0]===matchId && !nm.t1){ nm.t1=m.winner; }
-    else if(nm.fromWin[1]===matchId && !nm.t2){ nm.t2=m.winner; }
+    if(!nm||!nm.fromWin) return;
+    if(nm.fromWin[0]===matchId && nm.t1!==m.winner){ nm.t1=m.winner; nm.noContest=false; }
+    else if(nm.fromWin[1]===matchId && nm.t2!==m.winner){ nm.t2=m.winner; nm.noContest=false; }
+
+    // Auto-complete a future winners match if it is now Team vs BYE.
+    if(nm.fromWin&&(!nm.winner)&&(nm.t1==='BYE'||nm.t2==='BYE')){
+      nm.bye=true;
+      nm.winner=nm.t1==='BYE'?nm.t2:nm.t1;
+      if(realTeam(nm.winner)) advanceWB(nm.id);
+    }
   });
 
-  // Send loser to LB drop slot
-  if(format==='double' && loser){
-    sendToLB(matchId, loser);
+  if(format==='double'){
+    if(loser) sendToLB(matchId, loser);
+    autoAdvanceLBByes();
   }
 
-  // Check if this was WB final → send winner to GF t1
-  const wbFinalId=WBrounds[WBrounds.length-1][0];
+  const wbFinalId=WBrounds[WBrounds.length-1]&&WBrounds[WBrounds.length-1][0];
   if(matchId===wbFinalId && gfId){
     gm(gfId).t1=m.winner;
+    // With only two teams, there may not be a losers bracket; the WB-final loser is the LB side.
+    if(loser && !LBrounds.length) gm(gfId).t2=loser;
     autoAssignChampionship();
   }
 }
 
 function sendToLB(wbMatchId, loser){
-  // Find LB match that has this wbMatchId in its lbDropFrom
+  if(!realTeam(loser)) return;
   const allLB=LBrounds.flat();
   for(const lbId of allLB){
     const lm=gm(lbId);
-    if(lm.lbDropFrom && lm.lbDropFrom.includes(wbMatchId)){
-      if(!lm.t1) lm.t1=loser;
-      else if(!lm.t2) lm.t2=loser;
-      // If lbBye (only 1 team), auto advance
-      if(lm.lbBye && lm.t1 && !lm.winner){
-        lm.winner=lm.t1;
-        advanceLB(lbId);
+    if(lm&&lm.lbDropFrom&&lm.lbDropFrom.includes(wbMatchId)){
+      if(lm.t1!==loser && lm.t2!==loser){
+        if(!lm.t1) lm.t1=loser;
+        else if(!lm.t2) lm.t2=loser;
       }
+      lm.noContest=false;
+      autoAdvanceLBByes();
       return;
     }
   }
 }
 
 function advanceLB(matchId){
-  const m=gm(matchId); if(!m||!m.winner) return;
+  const m=gm(matchId); if(!m||!realTeam(m.winner)) return;
   const allLB=LBrounds.flat();
 
-  // Find LB match that receives winner via lbWinFrom
   for(const lbId of allLB){
-    const lm=gm(lbId);
+    const lm=gm(lbId); if(!lm) continue;
     if(lm.lbWinFrom===matchId){
-      if(!lm.t1) lm.t1=m.winner;
-      else if(!lm.t2) lm.t2=m.winner;
+      if(lm.t1!==m.winner && lm.t2!==m.winner){
+        if(!lm.t1) lm.t1=m.winner;
+        else if(!lm.t2) lm.t2=m.winner;
+      }
+      lm.noContest=false;
+      autoAdvanceLBByes();
       return;
     }
-    if(lm.lbWinFrom2 && lm.lbWinFrom2.includes(matchId)){
+    if(lm.lbWinFrom2&&lm.lbWinFrom2.includes(matchId)){
       const i=lm.lbWinFrom2.indexOf(matchId);
-      if(i===0 && !lm.t1) lm.t1=m.winner;
-      else if(i===1 && !lm.t2) lm.t2=m.winner;
+      if(i===0 && lm.t1!==m.winner) lm.t1=m.winner;
+      else if(i===1 && lm.t2!==m.winner) lm.t2=m.winner;
+      lm.noContest=false;
+      autoAdvanceLBByes();
       return;
     }
   }
 
-  // If no LB match found, this is the LB final winner → GF t2
-  if(gfId && !gm(gfId).t2){
+  if(gfId && gm(gfId) && !gm(gfId).t2){
     gm(gfId).t2=m.winner;
+    autoAssignChampionship();
   }
+}
+
+function autoAdvanceLBByes(){
+  if(format!=='double'||!LBrounds.length) return;
+  let changed=true, guard=0;
+  while(changed && guard++<100){
+    changed=false;
+    for(const lbId of LBrounds.flat()){
+      const m=gm(lbId); if(!m||m.winner||m.noContest) continue;
+      if(!lbSourcesResolved(m)) continue;
+      const real=[m.t1,m.t2].filter(realTeam);
+      if(real.length===1){
+        m.winner=real[0];
+        m.autoBye=true;
+        changed=true;
+        advanceLB(m.id);
+      } else if(real.length===0){
+        m.noContest=true;
+        m.autoBye=true;
+        changed=true;
+      }
+    }
+  }
+}
+
+function autoAssignChampionship(){
+  // Hook for future auto-court assignment. Kept intentionally quiet so it never interrupts scoring.
 }
 
 // ─── UNDO LOGIC ───────────────────────────────────────────────────────────────
@@ -919,10 +1052,13 @@ function clickGF(isReset, slot){
   if(m.winner) return;
   m.winner=clicked;
   if(!isReset && clicked===m.t2){
-    // LB side won — bracket reset
+    // LB side won — bracket reset. Carry the same sides, colors, and court.
     gf2Id=mkMatch(m.t1,m.t2);
-    gm(gf2Id).isGF2=true;
+    const r=gm(gf2Id);
+    r.isGF2=true; r.type='GF2'; r.color1=m.color1; r.color2=m.color2; r.pit=m.pit||'';
+    m.pit='';
   }
+  autoUpdatePitOnMatchEnd(id);
   save(); renderAll(); checkChamp(false);
 }
 
@@ -1099,42 +1235,449 @@ function renderAll(){ renderBracket('bracket-container',false); updateStatus(); 
 function renderSpectator(){
   if(!WBrounds.length){ const el=document.getElementById('s-bracket-container'); if(el) el.innerHTML='<div style="color:var(--muted);padding:2rem;">No bracket yet — check back soon!</div>'; return; }
   renderBracket('s-bracket-container',true);
-  const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye), done=all.filter(m=>m.winner).length;
+  const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye&&!m.noContest&&!m.autoBye), done=all.filter(m=>m.winner).length;
   document.getElementById('s-status-bar').innerHTML=`<div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div><div class="stat-pill"><div class="dot dot-amber"></div>${done}/${all.length} Done</div>`;
   renderSpectatorPrize(); checkChamp(true); renderChampionshipLive(); renderSpectatorPits(); renderRoster();
 }
 
 function renderBracket(containerId, spec){
-  const el=document.getElementById(containerId); if(!el) return;
-  el.innerHTML='';
-
-  // Winners Bracket
-  const wbSec=document.createElement('div'); wbSec.className='bracket-section';
-  wbSec.appendChild(makeSecHeader('🏆 Winners Bracket','wb'));
-  const wbScroll=document.createElement('div'); wbScroll.className='bracket-scroll';
-  wbScroll.appendChild(buildRoundsEl(WBrounds,'wb',spec));
-  wbSec.appendChild(wbScroll); el.appendChild(wbSec);
-
-  if(format==='double'){
-    // Losers Bracket
-    const lbSec=document.createElement('div'); lbSec.className='bracket-section';
-    lbSec.appendChild(makeSecHeader('💀 Losers Bracket','lb'));
-    if(LBrounds.length){
-      const lbScroll=document.createElement('div'); lbScroll.className='bracket-scroll';
-      lbScroll.appendChild(buildRoundsEl(LBrounds,'lb',spec));
-      lbSec.appendChild(lbScroll);
-    } else {
-      const msg=document.createElement('p'); msg.style.cssText='color:var(--muted);font-size:13px;padding-bottom:1rem;'; msg.textContent='Fills in as matches are played.'; lbSec.appendChild(msg);
-    }
-    el.appendChild(lbSec);
-
-    // Grand Final
-    const gfSec=document.createElement('div'); gfSec.className='bracket-section';
-    gfSec.appendChild(makeSecHeader('⚡ Grand Final','gf'));
-    gfSec.appendChild(buildGFEl(spec));
-    el.appendChild(gfSec);
-  }
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = '';
+  if(!WBrounds.length) return;
+  el.appendChild(buildBracketBoard(spec));
 }
+
+// ─── MAIN BRACKET BOARD ───────────────────────────────────────────────────────
+// Single scrollable board: WB on top, LB below, GF to the right.
+// Exact brackethq.com visual: thin border cards, SVG elbow connectors,
+// zoom toolbar, score inputs, pit picker on each card.
+function buildBracketBoard(spec){
+  const admin = !spec;
+
+  // ── shell + toolbar ────────────────────────────────────────────────
+  const shell = document.createElement('div');
+  shell.className = 'bracket-hq-shell';
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'bracket-zoom-toolbar';
+  toolbar.innerHTML = `<div class="bracket-zoom-title">Bracket Board</div>`;
+  const minus = document.createElement('button'); minus.type='button'; minus.className='bracket-zoom-btn'; minus.textContent='−';
+  const zLabel = document.createElement('div'); zLabel.className='bracket-zoom-label';
+  const plus  = document.createElement('button'); plus.type='button';  plus.className='bracket-zoom-btn'; plus.textContent='+';
+  const fit   = document.createElement('button'); fit.type='button';   fit.className='bracket-zoom-btn'; fit.textContent='Fit'; fit.style.minWidth='42px';
+  const range = document.createElement('input');  range.type='range';  range.className='bracket-zoom-range'; range.min='0.25'; range.max='1.5'; range.step='0.01';
+  const help  = document.createElement('div');    help.className='bracket-zoom-help'; help.textContent='Ctrl + scroll to zoom';
+  toolbar.append(minus, zLabel, plus, fit, range, help);
+
+  const viewport = document.createElement('div'); viewport.className='bracket-zoom-viewport';
+  const stage    = document.createElement('div'); stage.className='bracket-scale-stage';
+  viewport.appendChild(stage);
+  shell.append(toolbar, viewport);
+
+  // ── geometry ───────────────────────────────────────────────────────
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const CW    = spec ? 136 : 152;  // card width
+  const CH    = 38;                 // card height (2 rows of 19px)
+  const RH    = CH / 2;            // row height
+  const HGAP  = 68;                 // horizontal gap between rounds
+  const LEFT  = 20;                 // left margin
+  const TOP   = 22;                 // top margin
+
+  const isDbl   = format === 'double';
+  const hasGF   = isDbl && !!gfId;
+  const wbBase  = WBrounds[0] ? WBrounds[0].length : 1;
+  const lbBase  = LBrounds[0] ? LBrounds[0].length : 0;
+  const nWB     = WBrounds.length;
+  const nLB     = LBrounds.length;
+
+  // Slot height: WB round ri gets 2^ri multiples of the base slot
+  const pitch  = CH + 12;          // base slot (round 0)
+  const wbSlot = ri => Math.pow(2, ri) * pitch;
+  // LB slot: every two LB rounds double (drop + consolation pattern)
+  const lbSlot = ri => Math.pow(2, Math.floor(ri / 2)) * pitch;
+
+  const wbH  = wbBase * pitch;
+  const lbH  = lbBase > 0 ? Math.max(...LBrounds.map((ids,ri) => ids.length * lbSlot(ri))) : 0;
+
+  const VGAP   = 72;               // gap between WB bottom and LB top
+  const lbTop  = TOP + wbH + VGAP;
+
+  // GF column: one step past the last WB column (or LB if wider)
+  const wbRight = LEFT + nWB * (CW + HGAP);
+  const lbRight = LEFT + nLB * (CW + HGAP);
+  const gfX     = Math.max(wbRight, lbRight) + 12;
+
+  const boardW  = gfX + CW + 80;
+  const boardH  = Math.max(lbTop + lbH + 80, TOP + wbH + 160);
+
+  // ── board canvas ───────────────────────────────────────────────────
+  const board = document.createElement('div');
+  board.className = 'bracket-hq-board';
+  board.style.width  = boardW + 'px';
+  board.style.height = boardH + 'px';
+  stage.dataset.boardW = String(boardW);
+  stage.dataset.boardH = String(boardH);
+  stage.appendChild(board);
+
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width',  boardW);
+  svg.setAttribute('height', boardH);
+  svg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;';
+  board.appendChild(svg);
+
+  // ── SVG helpers ────────────────────────────────────────────────────
+  const LC  = 'rgba(206,210,219,0.42)';   // default line colour
+  const LLC = 'rgba(206,210,219,0.20)';   // faint (drop lines)
+  const GLC = 'rgba(212,175,55,0.80)';    // gold (live / GF)
+
+  function line(x1,y1,x2,y2, col=LC, w=1.1, dash=''){
+    const l = document.createElementNS(svgNS,'line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke',col); l.setAttribute('stroke-width',w);
+    l.setAttribute('stroke-linecap','square');
+    if(dash) l.setAttribute('stroke-dasharray',dash);
+    svg.appendChild(l);
+  }
+  // L-shaped connector from a point to a target point
+  function elbow(from, to, col=LC, w=1.1){
+    if(!from||!to) return;
+    const midX = from.x + Math.max(14, (to.x - from.x)/2);
+    line(from.x, from.y,  midX,  from.y, col, w);
+    line(midX,   from.y,  midX,  to.y,   col, w);
+    line(midX,   to.y,    to.x,  to.y,   col, w);
+  }
+  // Pair of matches connecting to the next single match
+  function pairElbow(a, b, to, col=LC, w=1.1){
+    if(!a && !b) return;
+    if(!a){ elbow(b, to, col, w); return; }
+    if(!b){ elbow(a, to, col, w); return; }
+    if(!to) return;
+    const midX = a.x + Math.max(14, (to.x - a.x)/2);
+    line(a.x,  a.y,   midX, a.y,  col, w);
+    line(b.x,  b.y,   midX, b.y,  col, w);
+    line(midX, a.y,   midX, b.y,  col, w);
+    line(midX, to.y,  to.x, to.y, col, w);
+  }
+
+  // ── centres map: matchId → {left,right,x,y} ─────────────────────
+  const centers = {};
+
+  // ── section labels ──────────────────────────────────────────────
+  function sectionLabel(text, x, y, color){
+    const d = document.createElement('div');
+    d.style.cssText = `position:absolute;left:${x}px;top:${y}px;`
+      + `font-family:'Oswald',sans-serif;font-size:9px;font-weight:800;`
+      + `text-transform:uppercase;letter-spacing:2px;color:${color};`;
+    d.textContent = text;
+    board.appendChild(d);
+  }
+  if(nWB) sectionLabel('🏆 Winners Bracket', LEFT, TOP - 18, 'rgba(46,204,113,0.75)');
+  if(isDbl && nLB) sectionLabel('💀 Losers Bracket', LEFT, lbTop - 18, 'rgba(231,76,60,0.7)');
+
+  // ── placeholder text ────────────────────────────────────────────
+  function placeholder(m, slot, type){
+    const no = id => {
+      if(!id) return '?';
+      const mm = gm(id);
+      if(mm && mm.gameNo) return `#${mm.gameNo}`;
+      const n = parseInt(String(id||'').replace('m',''), 10);
+      return Number.isFinite(n) ? `#${n+1}` : '#?';
+    };
+    if(type === 'wb' && m.fromWin){
+      const idx = slot==='t1' ? 0 : 1;
+      return `Winner of ${no(m.fromWin[idx])}`;
+    }
+    if(type === 'lb'){
+      if(m.lbDropFrom && m.lbDropFrom.length > 1){
+        const idx = slot==='t1' ? 0 : 1;
+        return `Loser of ${no(m.lbDropFrom[idx])}`;
+      }
+      if(slot==='t1' && m.lbWinFrom)    return `Winner of ${no(m.lbWinFrom)}`;
+      if(slot==='t2' && m.lbDropFrom && m.lbDropFrom[0]) return `Loser of ${no(m.lbDropFrom[0])}`;
+      if(m.lbWinFrom2){ const idx=slot==='t1'?0:1; return `Winner of ${no(m.lbWinFrom2[idx])}`; }
+    }
+    if(type === 'gf'){
+      const wbFin = WBrounds[nWB-1] && WBrounds[nWB-1][0];
+      const lbFin = nLB ? LBrounds[nLB-1][0] : null;
+      return slot==='t1' ? `Winner of ${no(wbFin)}` : `Winner of ${no(lbFin)}`;
+    }
+    return '—';
+  }
+
+  // ── build one match card ────────────────────────────────────────
+  function makeCard(m, type, isReset=false, ghost=false){
+    const card = document.createElement('div');
+
+    if(!m || ghost){
+      // "If necessary" ghost card
+      card.className = 'hq-card hq-if-needed';
+      card.style.width = CW + 'px';
+      const row = document.createElement('div');
+      row.className = 'hq-row';
+      row.style.height = CH + 'px';
+      const nm = document.createElement('div');
+      nm.className = 'hq-name is-placeholder';
+      nm.style.textAlign = 'center';
+      nm.textContent = 'If necessary';
+      row.appendChild(nm); card.appendChild(row);
+      return card;
+    }
+
+    const isActive = m.t1 && m.t2 && !m.winner;
+    card.className = 'hq-card' + (isActive ? ' is-active' : '');
+    card.style.width = CW + 'px';
+
+    // Pit number badge + picker (admin only, not on GF card when type is gf)
+    if(admin){
+      const cur = m.pit || '';
+      const pitBar = document.createElement('div');
+      pitBar.style.cssText = `display:flex;align-items:center;justify-content:space-between;`
+        + `padding:0 5px;height:14px;border-bottom:1px solid rgba(206,210,219,0.18);`
+        + `background:${cur ? 'rgba(212,175,55,0.08)' : 'rgba(0,0,0,0.12)'};`;
+      const pitLabel = document.createElement('span');
+      pitLabel.style.cssText = `font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:1px;`
+        + `color:${cur ? '#f0c040' : 'rgba(206,210,219,0.35)'};font-family:'Oswald',sans-serif;`;
+      pitLabel.textContent = cur ? `🏟 Court ${cur}` : '🏟 Assign Court';
+      let opts = '<option value="">— Court —</option>';
+      for(let p=1; p<=numPits; p++)
+        opts += `<option value="${p}" ${String(cur)===String(p)?'selected':''}>Court ${p}</option>`;
+      const sel = document.createElement('select');
+      sel.style.cssText = 'font-size:7px;background:transparent;border:none;color:rgba(206,210,219,0.5);'
+        + 'cursor:pointer;outline:none;max-width:70px;';
+      sel.innerHTML = opts;
+      sel.addEventListener('change', e => { e.stopPropagation(); setPit(m.id, e.target.value); });
+      pitBar.appendChild(pitLabel);
+      pitBar.appendChild(sel);
+      card.appendChild(pitBar);
+    } else if(m.pit){
+      // Spectator: just show court number
+      const pitBar = document.createElement('div');
+      pitBar.style.cssText = `height:13px;display:flex;align-items:center;justify-content:center;`
+        + `background:rgba(212,175,55,0.08);border-bottom:1px solid rgba(212,175,55,0.2);`
+        + `font-size:7px;font-weight:800;color:#f0c040;font-family:'Oswald',sans-serif;letter-spacing:1px;`;
+      pitBar.textContent = `🏟 Court ${m.pit}`;
+      card.appendChild(pitBar);
+    }
+
+    // Two team rows
+    ['t1','t2'].forEach((slot, i) => {
+      const sk = i===0 ? 's1' : 's2';
+      const nm = m[slot];
+      const hasTeam  = realTeam(nm);
+      const isWin    = hasTeam && m.winner === nm;
+      const isLose   = hasTeam && m.winner && !isWin;
+      const canClick = admin && hasTeam && (!m.winner || isWin);
+
+      const row = document.createElement('div');
+      row.className = 'hq-row'
+        + (canClick ? ' can-click' : '')
+        + (isWin    ? ' is-winner' : '')
+        + (isLose   ? ' is-loser'  : '');
+      if(canClick){
+        row.title   = isWin ? 'Click to undo' : 'Click to advance';
+        row.onclick = () => {
+          if(type==='gf') clickGF(!!isReset, slot);
+          else if(type==='lb') clickLB(m.id, slot);
+          else clickWB(m.id, slot);
+        };
+      }
+
+      // Seed
+      const seed = document.createElement('div');
+      seed.className = 'hq-seed';
+      seed.textContent = hasTeam ? String(i+1) : '';
+      row.appendChild(seed);
+
+      // Name
+      const nameEl = document.createElement('div');
+      nameEl.className = 'hq-name' + (hasTeam ? '' : ' is-placeholder');
+      nameEl.textContent = hasTeam ? nm : placeholder(m, slot, type);
+      row.appendChild(nameEl);
+
+      // Score: editable input if live, plain display if done
+      if(hasTeam){
+        const val = m[sk];
+        if(admin && !m.winner){
+          const inp = document.createElement('input');
+          inp.type = 'number'; inp.min = '0';
+          inp.value = (val !== '' && val != null) ? val : '';
+          inp.placeholder = '–';
+          inp.className = 'hq-score-input';
+          inp.style.cssText = 'width:22px;height:100%;border:none;border-left:1px solid rgba(206,210,219,0.18);'
+            + 'background:transparent;color:#f0c040;font-family:"Oswald",sans-serif;font-size:9px;'
+            + 'font-weight:900;text-align:center;outline:none;cursor:pointer;padding:0;';
+          inp.addEventListener('change', e => { e.stopPropagation(); setScore(m.id, sk, e.target.value); });
+          inp.addEventListener('click', e => e.stopPropagation());
+          row.appendChild(inp);
+        } else if(val !== '' && val != null){
+          const scoreEl = document.createElement('div');
+          scoreEl.className = 'hq-score';
+          scoreEl.textContent = val;
+          row.appendChild(scoreEl);
+        }
+      }
+
+      // Undo arrow (winner row only, admin)
+      if(isWin && admin){
+        const undo = document.createElement('button');
+        undo.type = 'button'; undo.className = 'hq-undo'; undo.textContent = '↩'; undo.title = 'Undo';
+        undo.onclick = e => {
+          e.stopPropagation();
+          if(type==='gf') clickGF(!!isReset, slot);
+          else if(type==='lb') clickLB(m.id, slot);
+          else clickWB(m.id, slot);
+        };
+        row.appendChild(undo);
+      }
+
+      card.appendChild(row);
+    });
+    return card;
+  }
+
+  // ── place a card on the board ────────────────────────────────────
+  function place(m, type, x, y, isReset=false, ghost=false){
+    // always register centre so connectors know where to point
+    if(m) centers[m.id] = { left:x, right:x+CW, x:x+CW, y:y+CH/2, top:y, bottom:y+CH };
+    // skip invisible (bye, noContest) unless it's a ghost
+    if(m && !ghost && (m.bye || m.noContest)) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'hq-match';
+    wrap.style.left = x + 'px';
+    wrap.style.top  = y + 'px';
+    wrap.appendChild(makeCard(m, type, isReset, ghost));
+    board.appendChild(wrap);
+  }
+
+  // ── Winners Bracket ──────────────────────────────────────────────
+  WBrounds.forEach((ids, ri) => {
+    const x  = LEFT + ri*(CW+HGAP);
+    const sh = wbSlot(ri);
+    ids.forEach((id, mi) => {
+      const y = TOP + mi*sh + (sh-CH)/2;
+      place(gm(id), 'wb', x, y);
+    });
+  });
+
+  // WB connectors
+  WBrounds.forEach((ids, ri) => {
+    if(ri >= nWB-1) return;
+    const next = WBrounds[ri+1] || [];
+    for(let i=0; i<ids.length; i+=2){
+      const to   = next[Math.floor(i/2)];
+      const toC  = to ? centers[to] : null;
+      const live = (gm(ids[i])&&gm(ids[i]).winner) || (gm(ids[i+1])&&gm(ids[i+1]).winner);
+      pairElbow(
+        centers[ids[i]], centers[ids[i+1]],
+        toC ? {x:toC.left, y:toC.y} : null,
+        live ? GLC : LC, live ? 1.4 : 1.1
+      );
+    }
+  });
+
+  // ── Losers Bracket ───────────────────────────────────────────────
+  if(isDbl && nLB){
+    LBrounds.forEach((ids, lri) => {
+      const x  = LEFT + lri*(CW+HGAP);
+      const sh = lbSlot(lri);
+      const totalH = ids.length * sh;
+      const yOff   = lbTop + (lbH - totalH) / 2;
+      ids.forEach((id, mi) => {
+        const m = gm(id);
+        // skip matches where both teams are still empty (not yet dropped)
+        if(m && !m.t1 && !m.t2 && !m.winner && !m.lbBye) return;
+        const y = yOff + mi*sh + (sh-CH)/2;
+        place(m, 'lb', x, y);
+      });
+    });
+
+    // LB connectors
+    LBrounds.flat().forEach(id => {
+      const m   = gm(id);
+      const tgt = centers[id];
+      if(!m || !tgt) return;
+      const to     = {x: tgt.left, y: tgt.y};
+      const active = m.t1 && m.t2 && !m.winner;
+      const col    = active ? GLC : LC;
+      const w      = active ? 1.4 : 1.1;
+
+      // winner feeds
+      if(m.lbWinFrom && centers[m.lbWinFrom])
+        elbow(centers[m.lbWinFrom], to, col, w);
+      if(m.lbWinFrom2)
+        pairElbow(centers[m.lbWinFrom2[0]], centers[m.lbWinFrom2[1]], to, col, w);
+
+      // loser drop — faint dashed stub coming down from WB card
+      if(m.lbDropFrom){
+        m.lbDropFrom.forEach(wbId => {
+          const src = centers[wbId];
+          if(src) line(src.x, src.y, src.x, Math.min(src.y+28, to.y), LLC, 0.9, '3 4');
+        });
+      }
+    });
+  }
+
+  // ── Grand Final ──────────────────────────────────────────────────
+  if(isDbl){
+    const wbFinId = WBrounds[nWB-1] && WBrounds[nWB-1][0];
+    const lbFinId = nLB ? LBrounds[nLB-1][0] : null;
+
+    // GF Y: midpoint between WB final and LB final, clamped to board
+    let gfY = TOP + wbH/2 - CH/2;
+    if(centers[wbFinId] && lbFinId && centers[lbFinId])
+      gfY = Math.max(TOP, Math.min(boardH-CH-20, (centers[wbFinId].y + centers[lbFinId].y)/2 - CH/2));
+    else if(centers[wbFinId])
+      gfY = centers[wbFinId].y - CH/2;
+
+    const gf = gfId ? gm(gfId) : null;
+    place(gf, 'gf', gfX, gfY);
+
+    // Connectors from WB final and LB final into GF rows
+    if(centers[wbFinId])
+      elbow(centers[wbFinId], {x:gfX, y:gfY+RH/2},     GLC, 1.4);
+    if(lbFinId && centers[lbFinId])
+      elbow(centers[lbFinId], {x:gfX, y:gfY+RH+RH/2},  GLC, 1.4);
+
+    // GF label
+    const gfl = document.createElement('div');
+    gfl.style.cssText = `position:absolute;left:${gfX}px;top:${gfY-16}px;`
+      + `font-family:'Oswald',sans-serif;font-size:8px;font-weight:800;`
+      + `text-transform:uppercase;letter-spacing:1.5px;color:rgba(212,175,55,0.7);`;
+    gfl.textContent = '⚡ Grand Final';
+    board.appendChild(gfl);
+
+    // Bracket reset
+    const resetY = gfY + CH + 30;
+    if(gf2Id && gm(gf2Id)){
+      place(gm(gf2Id), 'gf', gfX, resetY, true);
+      elbow({x:gfX+CW, y:gfY+CH/2}, {x:gfX, y:resetY+CH/2}, LLC, 1.0);
+      const rl = document.createElement('div');
+      rl.style.cssText = `position:absolute;left:${gfX}px;top:${resetY-12}px;`
+        + `font-family:'Oswald',sans-serif;font-size:7px;font-weight:800;`
+        + `text-transform:uppercase;letter-spacing:1px;color:rgba(212,175,55,0.5);`;
+      rl.textContent = '🔄 Reset Match';
+      board.appendChild(rl);
+    } else {
+      place(null, 'gf', gfX, resetY, true, true);
+    }
+  }
+
+  // ── zoom controls ────────────────────────────────────────────────
+  applyBracketZoomToStage(stage);
+  syncBracketZoomControls();
+  minus.onclick  = () => setBracketBoardZoom(bracketBoardZoom - 0.08);
+  plus.onclick   = () => setBracketBoardZoom(bracketBoardZoom + 0.08);
+  fit.onclick    = () => fitBracketBoardZoom(viewport, boardW);
+  range.oninput  = e  => setBracketBoardZoom(parseFloat(e.target.value));
+  viewport.addEventListener('wheel', e => {
+    if(e.ctrlKey || e.metaKey){ e.preventDefault(); setBracketBoardZoom(bracketBoardZoom + (e.deltaY<0?0.05:-0.05)); }
+  }, {passive:false});
+
+  return shell;
+}
+
 
 function makeSecHeader(label,cls){
   const d=document.createElement('div'); d.className='section-header';
@@ -1142,16 +1685,17 @@ function makeSecHeader(label,cls){
   return d;
 }
 
-function buildRoundsEl(rounds, type, spec){
+function buildRoundsEl(rounds, type, spec, opts={}){
   // BracketHQ-style renderer: stable round columns, centered match rows, and clean SVG connectors.
-  // Keeps your existing click handlers, scores, pit assignment, and Firebase state intact.
-  const CARD_W = spec ? 190 : 220;
-  const MATCH_H = 70;
+  // opts.compact is used for the losers bracket so more of it fits on one page.
+  const compact = !!opts.compact;
+  const CARD_W = compact ? (spec ? 150 : 172) : (spec ? 190 : 220);
+  const MATCH_H = compact ? 54 : 70;
   const ROW_H = MATCH_H / 2;
-  const ROUND_GAP = 58;
-  const BASE_GAP = 18;
-  const SEED_W = 28;
-  const PIT_W = spec ? 0 : 28;
+  const ROUND_GAP = compact ? 34 : 58;
+  const BASE_GAP = compact ? 10 : 18;
+  const SEED_W = compact ? 20 : 28;
+  const PIT_W = spec ? 0 : (compact ? 22 : 28);
   const LINE = type === 'lb' ? 'rgba(231,76,60,0.35)' : 'rgba(46,204,113,0.35)';
   const ACTIVE_LINE = 'rgba(212,175,55,0.75)';
   const nRounds = rounds.length;
@@ -1167,7 +1711,7 @@ function buildRoundsEl(rounds, type, spec){
   const totalW = nRounds * (CARD_W + PIT_W) + Math.max(0, nRounds - 1) * ROUND_GAP + 18;
 
   const outer = document.createElement('div');
-  outer.style.cssText = 'overflow-x:auto;overflow-y:visible;padding:0.25rem 0 0.75rem;';
+  outer.style.cssText = opts.inline ? 'overflow:visible;padding:0.15rem 0 0.35rem;' : 'overflow-x:auto;overflow-y:visible;padding:0.25rem 0 0.75rem;';
 
   const board = document.createElement('div');
   board.style.cssText = `position:relative;width:${totalW}px;min-width:100%;height:${totalH + 34}px;padding-top:30px;`;
@@ -1235,7 +1779,7 @@ function buildRoundsEl(rounds, type, spec){
     row.appendChild(seed);
 
     const nm = document.createElement('div');
-    nm.style.cssText = `flex:1;min-width:0;padding:0 9px;font-family:'Oswald',sans-serif;font-size:${isBye?'11px':'14px'};font-weight:${isWin?'800':'650'};letter-spacing:0.25px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${isWin?'var(--success)':isLoser?'rgba(245,236,215,0.5)':isEmpty||isBye?'rgba(255,255,255,0.22)':'var(--text)'};${isBye?'font-style:italic;':''}`;
+    nm.style.cssText = `flex:1;min-width:0;padding:0 9px;font-family:'Oswald',sans-serif;font-size:${isBye?(compact?'9px':'11px'):(compact?'11px':'14px')};font-weight:${isWin?'800':'650'};letter-spacing:0.25px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${isWin?'var(--success)':isLoser?'rgba(245,236,215,0.5)':isEmpty||isBye?'rgba(255,255,255,0.22)':'var(--text)'};${isBye?'font-style:italic;':''}`;
     nm.textContent = isEmpty ? 'TBD' : name;
     row.appendChild(nm);
 
@@ -1243,13 +1787,13 @@ function buildRoundsEl(rounds, type, spec){
       if(!spec && !m.winner){
         const inp = document.createElement('input');
         inp.type = 'number'; inp.min = '0'; inp.value = score || ''; inp.placeholder = '-';
-        inp.style.cssText = 'width:36px;height:100%;border:none;border-left:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.28);color:var(--gold);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;text-align:center;outline:none;padding:0;';
+        inp.style.cssText = `width:${compact?28:36}px;height:100%;border:none;border-left:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.28);color:var(--gold);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;text-align:center;outline:none;padding:0;`;
         inp.addEventListener('change',e=>{ e.stopPropagation(); setScore(m.id,sk,e.target.value); });
         inp.addEventListener('click',e=>e.stopPropagation());
         row.appendChild(inp);
       } else if(score !== '' && score != null){
         const sc = document.createElement('div');
-        sc.style.cssText = 'width:36px;height:100%;display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,0.07);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;color:var(--gold);';
+        sc.style.cssText = `width:${compact?28:36}px;height:100%;display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,0.07);font-family:"Oswald",sans-serif;font-size:14px;font-weight:800;color:var(--gold);`;
         sc.textContent = score;
         row.appendChild(sc);
       }
@@ -1281,7 +1825,7 @@ function buildRoundsEl(rounds, type, spec){
   rounds.forEach((roundIds, ri) => {
     const x = colX(ri);
     const label = document.createElement('div');
-    label.style.cssText = `position:absolute;left:${x}px;top:2px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.8px;color:var(--muted);`;
+    label.style.cssText = `position:absolute;left:${x}px;top:2px;width:${CARD_W}px;font-family:'Oswald',sans-serif;font-size:${compact?'9px':'11px'};font-weight:800;text-transform:uppercase;letter-spacing:${compact?'1.2px':'1.8px'};color:var(--muted);`;
     label.textContent = roundName(ri);
     board.appendChild(label);
 
@@ -1493,7 +2037,7 @@ function checkChamp(spec){
 }
 
 function updateStatus(){
-  const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye);
+  const all=Object.values(matches).filter(m=>m&&!m.bye&&!m.lbBye&&!m.noContest&&!m.autoBye);
   const done=all.filter(m=>m.winner).length;
   document.getElementById('status-bar').innerHTML=`
     <div class="stat-pill"><div class="dot dot-blue"></div>${teams.length} Teams</div>
@@ -2045,11 +2589,26 @@ function liveScore(matchId, slot, val){
 function pitWinner(matchId, slot){
   const m=gm(matchId); if(!m||!m[slot]) return;
   if(m.winner){ alert('This match already has a winner. Click the bracket to undo.'); return; }
-  const clicked=m[slot];
-  m.winner=clicked;
-  if(m.type==='L') advanceLB(matchId);
-  else advanceWB(matchId);
-  autoUpdatePitOnMatchEnd(matchId);
+  m.winner=m[slot];
+
+  if(m.id===gfId||m.type==='GF'){
+    if(m.winner===m.t2){
+      gf2Id=mkMatch(m.t1,m.t2);
+      const r=gm(gf2Id);
+      r.isGF2=true; r.type='GF2'; r.color1=m.color1; r.color2=m.color2; r.pit=m.pit||'';
+      m.pit='';
+    } else {
+      autoUpdatePitOnMatchEnd(matchId);
+    }
+  } else if(m.id===gf2Id||m.type==='GF2'){
+    autoUpdatePitOnMatchEnd(matchId);
+  } else if(m.type==='L'){
+    advanceLB(matchId);
+    autoUpdatePitOnMatchEnd(matchId);
+  } else {
+    advanceWB(matchId);
+    autoUpdatePitOnMatchEnd(matchId);
+  }
   save(); renderAll(); checkChamp(false);
 }
 
